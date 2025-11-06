@@ -1,2 +1,2 @@
 # MAX-VK-Hack
-Репозиторий для Хакатон от MAX и VK Education
+Репозиторий для Хакатонa от MAX и VK Education
