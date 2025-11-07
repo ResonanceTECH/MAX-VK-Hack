@@ -33,6 +33,12 @@ def get_user_role(user_id: int) -> Optional[str]:
     return user_roles.get(user_id)
 
 
+def clear_user_role(user_id: int) -> None:
+    """Очищает роль пользователя"""
+    if user_id in user_roles:
+        del user_roles[user_id]
+
+
 def set_user_data(user_id: int, key: str, value: any) -> None:
     """Сохраняет данные пользователя"""
     if user_id not in user_data:

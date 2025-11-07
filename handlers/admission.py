@@ -10,7 +10,7 @@ from utils.keyboard import (
     create_inline_keyboard,
     create_callback_button
 )
-from utils.states import get_user_role, set_user_state, get_user_state
+from utils.states import get_user_role, set_user_role, set_user_state, get_user_state
 from utils.storage import (
     get_faculty_info,
     create_application,
@@ -26,11 +26,15 @@ class AdmissionHandler(BaseHandler):
         """Проверяет, относится ли обновление к модулю Поступление"""
         if update.get('update_type') == 'message_callback':
             payload = update.get('callback', {}).get('payload', '')
-            return payload.startswith(('admission_', 'faculty_', 'apply_'))
+            # Обрабатываем payload'ы модуля поступления и menu_admission для абитуриентов
+            return payload.startswith(('admission_', 'faculty_', 'apply_')) or payload == 'menu_admission'
         return False
     
     def handle(self, update: Dict[str, Any], api) -> None:
         """Обрабатывает обновление модуля Поступление"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
         callback = update.get('callback', {})
         payload = callback.get('payload', '')
         user = callback.get('user', {})
@@ -40,19 +44,26 @@ class AdmissionHandler(BaseHandler):
         recipient = message.get('recipient', {})
         chat_id = recipient.get('chat_id')
         
+        logger.debug(f"AdmissionHandler обрабатывает payload: {payload}")
+        
         role = get_user_role(user_id)
         
-        # Проверка роли
+        # Главное меню модуля Поступление - обрабатываем даже если роль не установлена
+        # (пользователь может вернуться из главного меню)
+        if payload == 'menu_admission':
+            # Если роль не установлена, устанавливаем роль абитуриента
+            if role != 'applicant':
+                set_user_role(user_id, 'applicant')
+            self._show_admission_main(chat_id, user_name, api)
+            return
+        
+        # Проверка роли для остальных действий
         if role != 'applicant':
             api.send_message(
                 chat_id=chat_id,
                 text="⚠️ Этот раздел доступен только для абитуриентов.\nИспользуйте /role для смены роли."
             )
             return
-        
-        # Главное меню модуля Поступление
-        if payload == 'menu_admission':
-            self._show_admission_main(chat_id, user_name, api)
         
         # Информация о вузе - показываем список факультетов
         elif payload == 'admission_info':
@@ -86,6 +97,14 @@ class AdmissionHandler(BaseHandler):
         # Запись на мероприятия
         elif payload == 'admission_events':
             self._show_events(chat_id, api)
+        
+        # Неизвестный payload
+        else:
+            logger.warning(f"Неизвестный payload в AdmissionHandler: {payload}")
+            api.send_message(
+                chat_id=chat_id,
+                text="❌ Произошла ошибка. Попробуйте использовать /menu для возврата в меню."
+            )
     
     def _show_admission_main(self, chat_id: int, user_name: str, api) -> None:
         """Показывает главное меню модуля Поступление"""

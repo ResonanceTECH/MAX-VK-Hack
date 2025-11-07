@@ -6,7 +6,7 @@ from utils.keyboard import (
     create_role_selection_keyboard,
     create_back_to_menu_button
 )
-from utils.states import set_user_role, get_user_role, set_user_state
+from utils.states import set_user_role, get_user_role, set_user_state, clear_user_role
 
 
 class CallbackHandler(BaseHandler):
@@ -78,21 +78,28 @@ class CallbackHandler(BaseHandler):
     
     def _handle_menu(self, chat_id: int, user_id: int, user_name: str, payload: str, api) -> None:
         """Обработка выбора пункта меню"""
-        from utils.keyboard import create_admission_main_keyboard
-        from handlers.admission import AdmissionHandler
-        
         role = get_user_role(user_id)
         
         if payload == 'menu_main':
-            # Для абитуриента показываем меню модуля "Поступление"
-            if role == 'applicant':
-                admission_handler = AdmissionHandler()
-                admission_handler._show_admission_main(chat_id, user_name, api)
-            else:
-                keyboard = create_main_menu_keyboard()
-                text = "🏠 Главное меню:\n\nВыберите интересующий раздел:"
-                attachments = [keyboard]
-                api.send_message(chat_id=chat_id, text=text, attachments=attachments)
+            # Главное меню всегда возвращает к выбору роли
+            keyboard = create_role_selection_keyboard()
+            text = (
+                "👋 Добро пожаловать в бот университета!\n\n"
+                "Я помогу вам с:\n"
+                "• 📚 Поступлением\n"
+                "• 🎓 Обучением\n"
+                "• 🚀 Проектной деятельностью\n"
+                "• 💼 Карьерой\n"
+                "• 📋 Работой деканата\n"
+                "• 🏠 Общежитием\n"
+                "• 📖 Библиотекой\n\n"
+                "Для начала выберите вашу роль:"
+            )
+            attachments = [keyboard]
+            api.send_message(chat_id=chat_id, text=text, attachments=attachments)
+            # Сбрасываем роль при возврате в главное меню
+            clear_user_role(user_id)
+            set_user_state(user_id, 'idle')
             return
         
         # Проверка роли для некоторых разделов

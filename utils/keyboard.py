@@ -83,8 +83,8 @@ def create_admission_main_keyboard() -> Dict[str, Any]:
         [create_callback_button('📋 Информация о вузе', 'admission_info')],
         [create_callback_button('📝 Подать документы', 'admission_apply')],
         [create_callback_button('📄 Мои заявления', 'admission_my_applications')],
-        [create_callback_button('📅 Запись на мероприятия', 'admission_events')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('📅 Ближайшие мероприятия', 'admission_events')],
+        [create_callback_button('🔙 Вернуться', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -106,7 +106,7 @@ def create_faculty_info_keyboard(faculty_key: str) -> Dict[str, Any]:
     buttons = [
         [create_callback_button('📝 Подать документы', 'admission_apply')],
         [
-            create_callback_button('🔙 Назад', 'admission_faculties'),
+            create_callback_button('🔙 Назад', 'admission_info'),
             create_callback_button('🏠 Главное меню', 'menu_main')
         ]
     ]
@@ -119,7 +119,7 @@ def create_application_method_keyboard() -> Dict[str, Any]:
         [create_callback_button('💻 Онлайн-заявление', 'apply_online')],
         [create_callback_button('📅 Запись на очную подачу', 'apply_offline')],
         [create_callback_button('💬 Консультация', 'apply_consultation')],
-        [create_callback_button('🔙 Назад', 'admission_apply')]
+        [create_callback_button('🔙 Назад', 'menu_admission')]
     ]
     return create_inline_keyboard(buttons)
 
