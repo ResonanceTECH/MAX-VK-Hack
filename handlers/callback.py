@@ -60,10 +60,18 @@ class CallbackHandler(BaseHandler):
             
             # Для абитуриента сразу показываем меню модуля Поступление
             if role == 'applicant':
+                from utils.keyboard import create_admission_main_keyboard
                 text = (
                     f"{user_name}, раздел для абитуриентов:"
                 )
                 keyboard = create_admission_main_keyboard()
+            # Для студента показываем главное меню студентов
+            elif role == 'student':
+                from handlers.student import StudentHandler
+                student_handler = StudentHandler()
+                student_handler._show_student_main(chat_id, user_name, api)
+                set_user_state(user_id, 'idle')
+                return
             else:
                 text = (
                     f"✅ Роль установлена: {role_names[role]}\n\n"

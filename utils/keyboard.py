@@ -136,3 +136,71 @@ def create_application_created_keyboard() -> Dict[str, Any]:
     ]
     return create_inline_keyboard(buttons)
 
+
+# ========== Клавиатуры для студентов ==========
+
+def create_student_main_keyboard() -> Dict[str, Any]:
+    """Создает главное меню для студентов"""
+    buttons = [
+        [create_callback_button('📅 Расписание', 'student_schedule')],
+        [create_callback_button('📋 Заявки', 'student_requests')],
+        [create_callback_button('🏠 Общежитие', 'student_dormitory')],
+        [create_callback_button('🚀 Проекты', 'student_projects')],
+        [create_callback_button('📖 Библиотека', 'student_library')],
+        [create_callback_button('🎉 Мероприятия', 'student_events')],
+        [create_callback_button('🔙 Вернуться', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_schedule_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для расписания"""
+    buttons = [
+        [create_callback_button('📆 На неделю', 'schedule_week')],
+        [create_callback_button('🔔 Изменения', 'schedule_changes')],
+        [create_callback_button('⚙️ Настройка напоминаний', 'schedule_notifications')],
+        [create_callback_button('🔙 Назад', 'student_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_requests_main_keyboard() -> Dict[str, Any]:
+    """Создает главное меню заявок студентов"""
+    buttons = [
+        [create_callback_button('📄 Заказать справку', 'request_certificate')],
+        [create_callback_button('📝 Академический отпуск', 'request_academic_leave')],
+        [create_callback_button('📋 Мои заявки', 'request_my_requests')],
+        [create_callback_button('🔙 Назад', 'student_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_certificate_types_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру выбора типа справки"""
+    buttons = [
+        [create_callback_button('📚 Об обучении', 'certificate_study')],
+        [create_callback_button('💰 О стипендии', 'certificate_scholarship')],
+        [create_callback_button('🏫 С места учебы', 'certificate_enrollment')],
+        [create_callback_button('🔙 Назад', 'student_requests')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_request_created_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру после создания заявки"""
+    buttons = [
+        [create_callback_button('📋 Мои заявки', 'request_my_requests')],
+        [create_callback_button('➕ Новая заявка', 'request_certificate')],
+        [create_callback_button('🔙 Главное меню', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_my_requests_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для просмотра заявок"""
+    buttons = [
+        [create_callback_button('🔄 Обновить', 'request_my_requests')],
+        [create_callback_button('🔙 Главное меню', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+

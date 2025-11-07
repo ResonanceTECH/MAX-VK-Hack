@@ -5,6 +5,7 @@ from api.max_api import MaxAPI
 from handlers.commands import CommandsHandler
 from handlers.callback import CallbackHandler
 from handlers.admission import AdmissionHandler
+from handlers.student import StudentHandler
 from handlers.message import MessageHandler
 from config import POLLING_TIMEOUT, POLLING_LIMIT
 
@@ -41,6 +42,7 @@ def main():
     handlers = [
         CommandsHandler(),   # Обработка команд (должен быть первым)
         AdmissionHandler(),  # Обработка модуля Поступление (перед общим CallbackHandler)
+        StudentHandler(),    # Обработка модуля Студенты (перед общим CallbackHandler)
         CallbackHandler(),   # Обработка нажатий кнопок (общие)
         MessageHandler(),    # Обработка обычных сообщений
     ]
