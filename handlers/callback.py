@@ -72,6 +72,13 @@ class CallbackHandler(BaseHandler):
                 student_handler._show_student_main(chat_id, user_name, api)
                 set_user_state(user_id, 'idle')
                 return
+            # Для сотрудника показываем главное меню сотрудников
+            elif role == 'staff':
+                from handlers.staff import StaffHandler
+                staff_handler = StaffHandler()
+                staff_handler._show_staff_main(chat_id, user_name, api)
+                set_user_state(user_id, 'idle')
+                return
             else:
                 text = (
                     f"✅ Роль установлена: {role_names[role]}\n\n"

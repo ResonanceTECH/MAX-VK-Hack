@@ -167,3 +167,42 @@ def get_active_student_requests(user_id: int) -> List[Dict]:
     all_requests = get_student_requests(user_id)
     return [req for req in all_requests if req['status'] not in ['Завершено', 'Отклонено']]
 
+
+# Хранение командировок сотрудников
+staff_business_trips: Dict[int, List[Dict]] = {}
+
+# Счетчик для генерации ID командировок
+business_trip_counter = 0
+
+
+def generate_business_trip_id() -> str:
+    """Генерирует ID командировки"""
+    global business_trip_counter
+    business_trip_counter += 1
+    return f"СО-{str(business_trip_counter).zfill(3)}"
+
+
+def create_business_trip(user_id: int, purpose: str, city: str, date_from: str, date_to: str) -> Dict:
+    """Создает новую командировку"""
+    if user_id not in staff_business_trips:
+        staff_business_trips[user_id] = []
+    
+    trip = {
+        'id': generate_business_trip_id(),
+        'purpose': purpose,
+        'city': city,
+        'date_from': date_from,
+        'date_to': date_to,
+        'status': 'На согласовании',
+        'created_at': datetime.now().isoformat(),
+        'updated_at': datetime.now().isoformat()
+    }
+    
+    staff_business_trips[user_id].append(trip)
+    return trip
+
+
+def get_business_trips(user_id: int) -> List[Dict]:
+    """Получает все командировки сотрудника"""
+    return staff_business_trips.get(user_id, [])
+

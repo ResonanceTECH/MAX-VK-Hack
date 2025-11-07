@@ -50,3 +50,13 @@ def get_user_data(user_id: int, key: str, default: any = None) -> any:
     """Получает данные пользователя"""
     return user_data.get(user_id, {}).get(key, default)
 
+
+def clear_user_data(user_id: int, key: str = None) -> None:
+    """Очищает данные пользователя (все или по ключу)"""
+    if user_id in user_data:
+        if key:
+            if key in user_data[user_id]:
+                del user_data[user_id][key]
+        else:
+            user_data[user_id] = {}
+

@@ -204,3 +204,56 @@ def create_my_requests_keyboard() -> Dict[str, Any]:
     ]
     return create_inline_keyboard(buttons)
 
+
+# ========== Клавиатуры для сотрудников ==========
+
+def create_staff_main_keyboard() -> Dict[str, Any]:
+    """Создает главное меню для сотрудников"""
+    buttons = [
+        [create_callback_button('✈️ Командировки', 'staff_business_trips')],
+        [create_callback_button('🏖️ Отпуск', 'staff_vacation')],
+        [create_callback_button('📋 Служебные запросы', 'staff_requests')],
+        [create_callback_button('📅 Расписание', 'staff_schedule')],
+        [create_callback_button('🔙 Вернуться', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_business_trips_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру управления командировками"""
+    buttons = [
+        [create_callback_button('📝 Подать заявку', 'trip_create')],
+        [create_callback_button('📋 Мои командировки', 'trip_my_trips')],
+        [create_callback_button('📄 Отчет по командировке', 'trip_report')],
+        [create_callback_button('🔙 Назад', 'staff_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_trip_dates_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру выбора дат командировки"""
+    buttons = [
+        [create_callback_button('📅 15.04.2025 - 18.04.2025', 'trip_date_15-18')],
+        [create_callback_button('📅 Выбрать другие даты', 'trip_date_custom')],
+        [create_callback_button('❌ Отмена', 'trip_cancel')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_trip_created_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру после создания заявки на командировку"""
+    buttons = [
+        [create_callback_button('📋 Мои заявки', 'trip_my_trips')],
+        [create_callback_button('🔙 Главное меню', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_my_trips_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для просмотра командировок"""
+    buttons = [
+        [create_callback_button('🔄 Обновить', 'trip_my_trips')],
+        [create_callback_button('🔙 Назад', 'staff_business_trips')]
+    ]
+    return create_inline_keyboard(buttons)
+

@@ -41,7 +41,14 @@ class MessageHandler(BaseHandler):
             attachments = [keyboard]
             api.send_message(chat_id=chat_id, text=response, attachments=attachments)
         else:
-            # Обработка состояний (для будущих форм)
+            # Проверяем, не является ли это вводом данных для заявки на командировку
+            from handlers.staff import StaffHandler
+            staff_handler = StaffHandler()
+            if staff_handler.handle_text_input(chat_id, user_id, text, api):
+                # Текстовый ввод обработан
+                return
+            
+            # Обработка других состояний (для будущих форм)
             api.send_message(
                 chat_id=chat_id,
                 text="Обработка в разработке. Используйте /menu для возврата в главное меню."
