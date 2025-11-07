@@ -206,3 +206,76 @@ def get_business_trips(user_id: int) -> List[Dict]:
     """Получает все командировки сотрудника"""
     return staff_business_trips.get(user_id, [])
 
+
+# ========== Данные для администраторов ==========
+
+# Ключевые показатели вуза
+UNIVERSITY_METRICS = {
+    'students': {
+        'total': 4567,
+        'change': 2,  # процент изменения
+        'change_type': 'increase'
+    },
+    'attendance': 87,  # процент
+    'performance': 4.2,  # средний балл из 5.0
+    'campus_occupancy': 65  # процент
+}
+
+# Посещаемость по факультетам
+FACULTY_ATTENDANCE = {
+    'informatics': {
+        'name': 'Факультет информатики',
+        'attendance': 92,
+        'previous_month': 89
+    },
+    'economics': {
+        'name': 'Экономический',
+        'attendance': 85,
+        'previous_month': 83
+    },
+    'law': {
+        'name': 'Юридический',
+        'attendance': 78,
+        'previous_month': 80
+    },
+    'philology': {
+        'name': 'Филологический',
+        'attendance': 81,
+        'previous_month': 79
+    }
+}
+
+# Успеваемость по факультетам
+FACULTY_PERFORMANCE = {
+    'informatics': {'name': 'Факультет информатики', 'average': 4.5},
+    'economics': {'name': 'Экономический', 'average': 4.1},
+    'law': {'name': 'Юридический', 'average': 4.3},
+    'philology': {'name': 'Филологический', 'average': 4.0}
+}
+
+# Заявки и обращения
+REQUESTS_STATISTICS = {
+    'total': 234,
+    'pending': 45,
+    'in_progress': 67,
+    'completed': 122,
+    'by_type': {
+        'certificates': 89,
+        'business_trips': 34,
+        'academic_leave': 12,
+        'other': 99
+    }
+}
+
+# Финансовые показатели
+FINANCIAL_METRICS = {
+    'budget': 125000000,  # руб
+    'expenses': 98000000,  # руб
+    'revenue': 145000000,  # руб
+    'by_category': {
+        'education': 65000000,
+        'research': 18000000,
+        'infrastructure': 15000000
+    }
+}
+

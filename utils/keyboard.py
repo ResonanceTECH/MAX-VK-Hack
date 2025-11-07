@@ -257,3 +257,49 @@ def create_my_trips_keyboard() -> Dict[str, Any]:
     ]
     return create_inline_keyboard(buttons)
 
+
+# ========== Клавиатуры для администраторов ==========
+
+def create_admin_main_keyboard() -> Dict[str, Any]:
+    """Создает главное меню для администраторов"""
+    buttons = [
+        [create_callback_button('📊 Дашборд', 'admin_dashboard')],
+        [create_callback_button('📈 Аналитика', 'admin_analytics')],
+        [create_callback_button('👁️ Мониторинг', 'admin_monitoring')],
+        [create_callback_button('📰 Новости', 'admin_news')],
+        [create_callback_button('🔙 Вернуться', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_dashboard_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для дашборда"""
+    buttons = [
+        [create_callback_button('📈 Подробная аналитика', 'admin_analytics')],
+        [create_callback_button('📥 Экспорт данных', 'admin_export')],
+        [create_callback_button('🔙 Главное меню', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_analytics_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру выбора метрик для анализа"""
+    buttons = [
+        [create_callback_button('👥 Посещаемость по факультетам', 'analytics_attendance')],
+        [create_callback_button('📚 Успеваемость', 'analytics_performance')],
+        [create_callback_button('📋 Заявки и обращения', 'analytics_requests')],
+        [create_callback_button('💰 Финансовые показатели', 'analytics_financial')],
+        [create_callback_button('🔙 Назад', 'admin_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_attendance_analytics_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для аналитики посещаемости"""
+    buttons = [
+        [create_callback_button('📊 График', 'analytics_attendance_chart')],
+        [create_callback_button('📈 Сравнение с прошлым месяцем', 'analytics_attendance_comparison')],
+        [create_callback_button('🔙 Главное меню', 'menu_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
