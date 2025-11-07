@@ -1,0 +1,108 @@
+"""Обработка команд бота"""
+from typing import Dict, Any
+from handlers.base import BaseHandler
+from utils.keyboard import create_main_menu_keyboard, create_role_selection_keyboard
+from utils.states import get_user_role, set_user_state
+
+
+class CommandsHandler(BaseHandler):
+    """Обработчик команд"""
+    
+    def can_handle(self, update: Dict[str, Any]) -> bool:
+        if update.get('update_type') != 'message_created':
+            return False
+        
+        message = update.get('message', {})
+        body = message.get('body', {})
+        text = body.get('text', '').strip()
+        
+        return text.startswith('/')
+    
+    def handle(self, update: Dict[str, Any], api) -> None:
+        message = update.get('message', {})
+        recipient = message.get('recipient', {})
+        chat_id = recipient.get('chat_id')
+        body = message.get('body', {})
+        text = body.get('text', '').strip()
+        sender = message.get('sender', {})
+        user_id = sender.get('user_id')
+        
+        command = text.split()[0] if text else ''
+        
+        if command == '/start':
+            self._handle_start(chat_id, user_id, api)
+        elif command == '/help':
+            self._handle_help(chat_id, api)
+        elif command == '/menu':
+            self._handle_menu(chat_id, api)
+        elif command == '/role':
+            self._handle_role(chat_id, api)
+        else:
+            api.send_message(
+                chat_id=chat_id,
+                text=f"Неизвестная команда: {command}\nИспользуйте /help для списка команд."
+            )
+    
+    def _handle_start(self, chat_id: int, user_id: int, api) -> None:
+        """Обработка команды /start"""
+        role = get_user_role(user_id)
+        
+        welcome_text = (
+            "👋 Добро пожаловать в бот университета!\n\n"
+            "Я помогу вам с:\n"
+            "• 📚 Поступлением\n"
+            "• 🎓 Обучением\n"
+            "• 🚀 Проектной деятельностью\n"
+            "• 💼 Карьерой\n"
+            "• 📋 Работой деканата\n"
+            "• 🏠 Общежитием\n"
+            "• 📖 Библиотекой\n\n"
+        )
+        
+        if not role:
+            welcome_text += "Для начала выберите вашу роль:"
+            keyboard = create_role_selection_keyboard()
+        else:
+            welcome_text += f"Ваша роль: {self._get_role_name(role)}\n\nВыберите раздел:"
+            keyboard = create_main_menu_keyboard()
+        
+        attachments = [keyboard]
+        api.send_message(chat_id=chat_id, text=welcome_text, attachments=attachments)
+        set_user_state(user_id, 'idle')
+    
+    def _handle_help(self, chat_id: int, api) -> None:
+        """Обработка команды /help"""
+        help_text = (
+            "📖 Доступные команды:\n\n"
+            "/start - Начать работу с ботом\n"
+            "/menu - Открыть главное меню\n"
+            "/role - Выбрать/изменить роль\n"
+            "/help - Показать эту справку\n\n"
+            "Используйте кнопки меню для навигации по разделам."
+        )
+        api.send_message(chat_id=chat_id, text=help_text)
+    
+    def _handle_menu(self, chat_id: int, api) -> None:
+        """Обработка команды /menu"""
+        keyboard = create_main_menu_keyboard()
+        text = "🏠 Главное меню:\n\nВыберите интересующий раздел:"
+        attachments = [keyboard]
+        api.send_message(chat_id=chat_id, text=text, attachments=attachments)
+    
+    def _handle_role(self, chat_id: int, api) -> None:
+        """Обработка команды /role"""
+        keyboard = create_role_selection_keyboard()
+        text = "👤 Выберите вашу роль:"
+        attachments = [keyboard]
+        api.send_message(chat_id=chat_id, text=text, attachments=attachments)
+    
+    def _get_role_name(self, role: str) -> str:
+        """Возвращает читаемое имя роли"""
+        role_names = {
+            'applicant': '🎓 Абитуриент',
+            'student': '👨‍🎓 Студент',
+            'staff': '👔 Сотрудник',
+            'admin': '👑 Администрация'
+        }
+        return role_names.get(role, role)
+
