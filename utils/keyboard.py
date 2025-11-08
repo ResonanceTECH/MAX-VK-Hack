@@ -154,9 +154,20 @@ def create_student_main_keyboard() -> Dict[str, Any]:
 
 
 def create_schedule_keyboard() -> Dict[str, Any]:
-    """Создает клавиатуру для расписания"""
+    """Создает клавиатуру для расписания на сегодня"""
     buttons = [
-        [create_callback_button('📆 На неделю', 'schedule_week')],
+        [create_callback_button('📆 Расписание на неделю', 'schedule_week')],
+        [create_callback_button('🔔 Изменения', 'schedule_changes')],
+        [create_callback_button('⚙️ Настройка напоминаний', 'schedule_notifications')],
+        [create_callback_button('🔙 Назад', 'student_main')]
+    ]
+    return create_inline_keyboard(buttons)
+
+
+def create_schedule_week_keyboard() -> Dict[str, Any]:
+    """Создает клавиатуру для расписания на неделю"""
+    buttons = [
+        [create_callback_button('📅 На сегодня', 'student_schedule')],
         [create_callback_button('🔔 Изменения', 'schedule_changes')],
         [create_callback_button('⚙️ Настройка напоминаний', 'schedule_notifications')],
         [create_callback_button('🔙 Назад', 'student_main')]

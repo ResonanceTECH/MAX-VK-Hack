@@ -5,6 +5,7 @@ from handlers.base import BaseHandler
 from utils.keyboard import (
     create_student_main_keyboard,
     create_schedule_keyboard,
+    create_schedule_week_keyboard,
     create_requests_main_keyboard,
     create_certificate_types_keyboard,
     create_request_created_keyboard,
@@ -153,7 +154,7 @@ class StudentHandler(BaseHandler):
                     text += f"  {lesson['time']} - {lesson['subject']} (ауд. {lesson['room']})\n"
                 text += "\n"
         
-        keyboard = create_schedule_keyboard()
+        keyboard = create_schedule_week_keyboard()
         attachments = [keyboard]
         api.send_message(chat_id=chat_id, text=text, attachments=attachments, format_type='markdown')
     
