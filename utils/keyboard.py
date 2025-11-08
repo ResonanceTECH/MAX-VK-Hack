@@ -74,7 +74,7 @@ def create_role_selection_keyboard() -> Dict[str, Any]:
 
 def create_back_to_menu_button() -> List[Dict[str, Any]]:
     """Создает кнопку возврата в меню"""
-    return [[create_callback_button('🔙 Главное меню', 'menu_main')]]
+    return [[create_callback_button('🏠 Главное меню', 'menu_main')]]
 
 
 def create_admission_main_keyboard() -> Dict[str, Any]:
@@ -84,7 +84,7 @@ def create_admission_main_keyboard() -> Dict[str, Any]:
         [create_callback_button('📝 Подать документы', 'admission_apply')],
         [create_callback_button('📄 Мои заявления', 'admission_my_applications')],
         [create_callback_button('📅 Ближайшие мероприятия', 'admission_events')],
-        [create_callback_button('🔙 Вернуться', 'menu_main')]
+        [create_callback_button('🔙 Назад', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -148,7 +148,7 @@ def create_student_main_keyboard() -> Dict[str, Any]:
         [create_callback_button('🚀 Проекты', 'student_projects')],
         [create_callback_button('📖 Библиотека', 'student_library')],
         [create_callback_button('🎉 Мероприятия', 'student_events')],
-        [create_callback_button('🔙 Вернуться', 'menu_main')]
+        [create_callback_button('🔙 Назад', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -191,7 +191,7 @@ def create_request_created_keyboard() -> Dict[str, Any]:
     buttons = [
         [create_callback_button('📋 Мои заявки', 'request_my_requests')],
         [create_callback_button('➕ Новая заявка', 'request_certificate')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('🏠 Главное меню', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -200,7 +200,7 @@ def create_my_requests_keyboard() -> Dict[str, Any]:
     """Создает клавиатуру для просмотра заявок"""
     buttons = [
         [create_callback_button('🔄 Обновить', 'request_my_requests')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('🏠 Главное меню', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -214,7 +214,7 @@ def create_staff_main_keyboard() -> Dict[str, Any]:
         [create_callback_button('🏖️ Отпуск', 'staff_vacation')],
         [create_callback_button('📋 Служебные запросы', 'staff_requests')],
         [create_callback_button('📅 Расписание', 'staff_schedule')],
-        [create_callback_button('🔙 Вернуться', 'menu_main')]
+        [create_callback_button('🔙 Назад', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -244,7 +244,7 @@ def create_trip_created_keyboard() -> Dict[str, Any]:
     """Создает клавиатуру после создания заявки на командировку"""
     buttons = [
         [create_callback_button('📋 Мои заявки', 'trip_my_trips')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('🏠 Главное меню', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -267,7 +267,7 @@ def create_admin_main_keyboard() -> Dict[str, Any]:
         [create_callback_button('📈 Аналитика', 'admin_analytics')],
         [create_callback_button('👁️ Мониторинг', 'admin_monitoring')],
         [create_callback_button('📰 Новости', 'admin_news')],
-        [create_callback_button('🔙 Вернуться', 'menu_main')]
+        [create_callback_button('🔙 Назад', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -277,7 +277,7 @@ def create_dashboard_keyboard() -> Dict[str, Any]:
     buttons = [
         [create_callback_button('📈 Подробная аналитика', 'admin_analytics')],
         [create_callback_button('📥 Экспорт данных', 'admin_export')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('🏠 Главное меню', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
@@ -299,7 +299,7 @@ def create_attendance_analytics_keyboard() -> Dict[str, Any]:
     buttons = [
         [create_callback_button('📊 График', 'analytics_attendance_chart')],
         [create_callback_button('📈 Сравнение с прошлым месяцем', 'analytics_attendance_comparison')],
-        [create_callback_button('🔙 Главное меню', 'menu_main')]
+        [create_callback_button('🏠 Главное меню', 'menu_main')]
     ]
     return create_inline_keyboard(buttons)
 
