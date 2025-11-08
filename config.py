@@ -1,15 +1,29 @@
 """Конфигурация бота"""
 import os
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения из .env файла
+load_dotenv()
 
 # Токен бота
 TOKEN = os.getenv('MAX_BOT_TOKEN')
 
 # Настройки API
-API_BASE_URL = 'https://platform-api.max.ru'
+API_BASE_URL = os.getenv('API_BASE_URL', 'https://platform-api.max.ru')
 
 # Настройки polling
-POLLING_TIMEOUT = 30
-POLLING_LIMIT = 100
+POLLING_TIMEOUT = int(os.getenv('POLLING_TIMEOUT', '30'))
+POLLING_LIMIT = int(os.getenv('POLLING_LIMIT', '100'))
+
+# Настройки PostgreSQL
+POSTGRES_HOST = os.getenv('POSTGRES_HOSTT', 'localhost')
+POSTGRES_PORT = int(os.getenv('POSTGRES_PORT'))
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+POSTGRES_DB = os.getenv('POSTGRES_DB')
+
+# Строка подключения к БД
+DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
 # Роли пользователей
 ROLES = {

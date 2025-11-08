@@ -3,6 +3,10 @@ import requests
 import os
 from typing import Optional, Dict, Any
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 TOKEN = os.getenv('MAX_BOT_TOKEN')
 API_BASE_URL = 'https://platform-api.max.ru'
 
@@ -91,6 +95,13 @@ class MaxAPI:
         
         if format_type:
             data['format'] = format_type
+        
+        # Отладочный вывод структуры клавиатуры
+        if attachments:
+            for att in attachments:
+                if att.get('type') == 'inline_keyboard':
+                    import json
+                    print(f"DEBUG: Отправка клавиатуры: {json.dumps(att, ensure_ascii=False, indent=2)}")
         
         try:
             response = requests.post(
