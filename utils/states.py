@@ -43,3 +43,23 @@ def update_state_data(user_id: int, **kwargs):
                 _user_states[user_id]['data'] = {}
             _user_states[user_id]['data'].update(kwargs)
 
+# Хранилище выбранных ролей пользователей
+_user_roles: Dict[int, str] = {}
+_role_lock = threading.Lock()
+
+def set_user_role(user_id: int, role: str):
+    """Сохранить выбранную роль пользователя"""
+    with _role_lock:
+        _user_roles[user_id] = role
+
+def get_user_role(user_id: int) -> Optional[str]:
+    """Получить выбранную роль пользователя"""
+    with _role_lock:
+        return _user_roles.get(user_id)
+
+def clear_user_role(user_id: int):
+    """Очистить выбранную роль пользователя"""
+    with _role_lock:
+        if user_id in _user_roles:
+            del _user_roles[user_id]
+

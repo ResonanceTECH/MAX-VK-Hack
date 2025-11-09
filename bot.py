@@ -5,6 +5,7 @@ from api.max_api import MaxAPI
 from db.connection import init_db_pool, close_db_pool
 from handlers.message import MessageHandler
 from handlers.callback import CallbackHandler
+from handlers.bot_started import BotStartedHandler
 from config import POLLING_TIMEOUT, POLLING_LIMIT
 
 # Настройка логирования
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 # Регистрация обработчиков
 handlers = [
+    BotStartedHandler(),
     MessageHandler(),
     CallbackHandler()
 ]

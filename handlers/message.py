@@ -2,7 +2,7 @@
 from handlers.base import BaseHandler
 from db.models import User, Message
 from utils.keyboard import create_main_menu_keyboard, create_back_keyboard, create_cancel_keyboard
-from utils.states import get_state, clear_state, is_in_state, get_state_data, set_state
+from utils.states import get_state, clear_state, is_in_state, get_state_data, set_state, get_user_role
 from typing import Dict, Any
 import logging
 
@@ -33,7 +33,9 @@ class MessageHandler(BaseHandler):
             return
         
         # Получаем данные пользователя
-        user = User.get_by_max_id(max_user_id)
+        # Получаем сохраненную роль или используем приоритетную
+        saved_role = get_user_role(max_user_id)
+        user = User.get_by_max_id(max_user_id, saved_role) if saved_role else User.get_by_max_id(max_user_id)
         if not user:
             return
         
@@ -54,13 +56,13 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_преподавателю")
                 self.handle_send_to_teacher(user, max_user_id, text, state_data, api, message_id)
                 return
-            elif state == 'waiting_message_to_student':
-                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту")
-                self.handle_send_to_student(user, max_user_id, text, state_data, api, message_id)
-                return
             elif state == 'waiting_broadcast_message':
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_группе")
                 self.handle_broadcast_message(user, max_user_id, text, state_data, api, message_id)
+                return
+            elif state == 'waiting_message_to_student':
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту")
+                self.handle_send_to_student(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_group_message':
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_от_группы")

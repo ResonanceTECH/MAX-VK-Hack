@@ -1,6 +1,7 @@
 """Обертка над Max Bot API"""
 import requests
 import os
+import logging
 from typing import Optional, Dict, Any
 
 from dotenv import load_dotenv
@@ -75,11 +76,11 @@ class MaxAPI:
         text: str = '',
         attachments: Optional[list] = None,
         format_type: Optional[str] = None
-    ) -> bool:
-        """Отправляет сообщение в чат или пользователю"""
+    ) -> Optional[Dict[str, Any]]:
+        """Отправляет сообщение в чат или пользователю. Возвращает данные сообщения или None"""
         if not chat_id and not user_id:
             print("Ошибка: нужно указать chat_id или user_id")
-            return False
+            return None
         
         params = self._get_params()
         if chat_id:
@@ -96,13 +97,6 @@ class MaxAPI:
         if format_type:
             data['format'] = format_type
         
-        # Отладочный вывод структуры клавиатуры
-        if attachments:
-            for att in attachments:
-                if att.get('type') == 'inline_keyboard':
-                    import json
-                    print(f"DEBUG: Отправка клавиатуры: {json.dumps(att, ensure_ascii=False, indent=2)}")
-        
         try:
             response = requests.post(
                 f'{self.base_url}/messages',
@@ -111,7 +105,7 @@ class MaxAPI:
                 timeout=10
             )
             response.raise_for_status()
-            return True
+            return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Ошибка при отправке сообщения: {e}")
             if hasattr(e, 'response') and e.response is not None:
@@ -120,7 +114,7 @@ class MaxAPI:
                     print(f"  Детали ошибки: {error_data}")
                 except:
                     pass
-            return False
+            return None
     
     def send_action(self, chat_id: int, action: str) -> bool:
         """Отправляет действие бота (typing_on, sending_photo, etc.)"""
@@ -135,5 +129,39 @@ class MaxAPI:
             return True
         except requests.exceptions.RequestException as e:
             print(f"Ошибка при отправке действия: {e}")
+            return False
+    
+    def answer_callback(self, callback_id: str, notification: Optional[str] = None, 
+                     message: Optional[Dict] = None) -> bool:
+        """Ответить на callback (убрать индикатор загрузки)"""
+        try:
+            data = {}
+            if notification:
+                data['notification'] = notification
+            if message:
+                data['message'] = message
+            
+            # Если data пустой, отправляем пустой объект
+            if not data:
+                data = {}
+            
+            response = requests.post(
+                f'{self.base_url}/answers',
+                params=self._get_params(callback_id=callback_id),
+                json=data,
+                timeout=10
+            )
+            response.raise_for_status()
+            return True
+        except requests.exceptions.HTTPError as e:
+            # Игнорируем ошибку 400 - callback уже обработан или недействителен
+            if e.response.status_code == 400:
+                return False
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Ошибка при ответе на callback (HTTP {e.response.status_code}): {e}")
+            return False
+        except requests.exceptions.RequestException as e:
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Ошибка при ответе на callback: {e}")
             return False
 

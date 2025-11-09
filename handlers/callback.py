@@ -7,7 +7,7 @@ from utils.keyboard import (
     create_back_keyboard, create_cancel_keyboard,
     create_role_selection_keyboard
 )
-from utils.states import set_state, clear_state
+from utils.states import set_state, clear_state, set_user_role, get_user_role
 from typing import Dict, Any
 import logging
 
@@ -33,7 +33,9 @@ class CallbackHandler(BaseHandler):
                 api.answer_callback(callback_id)
             return
         
-        user_data = User.get_by_max_id(max_user_id)
+        # Получаем сохраненную роль или используем приоритетную
+        saved_role = get_user_role(max_user_id)
+        user_data = User.get_by_max_id(max_user_id, saved_role) if saved_role else User.get_by_max_id(max_user_id)
         if not user_data:
             if callback_id:
                 api.answer_callback(callback_id)
@@ -46,6 +48,8 @@ class CallbackHandler(BaseHandler):
         # Определяем действие для логирования
         action_map = {
             'main_menu': 'главное_меню',
+            'start_after_greeting': 'начало_после_приветствия',
+            'select_role': 'выбор_роли',
             'menu_group': 'просмотр_групп',
             'menu_teachers': 'просмотр_преподавателей',
             'menu_my_groups': 'просмотр_моих_групп',
@@ -57,7 +61,9 @@ class CallbackHandler(BaseHandler):
         }
         
         action = action_map.get(payload, payload)
-        if payload.startswith('group_') and not payload.startswith('group_message'):
+        if payload.startswith('select_role_'):
+            action = 'переключение_роли'
+        elif payload.startswith('group_') and not payload.startswith('group_message'):
             action = 'просмотр_участников_группы'
         elif payload.startswith('broadcast_group_'):
             action = 'начало_рассылки_группе'
@@ -75,6 +81,8 @@ class CallbackHandler(BaseHandler):
         # Обработка payload
         if payload == 'main_menu':
             self.show_main_menu(user_data, max_user_id, api)
+        elif payload == 'start_after_greeting':
+            self.handle_start_after_greeting(user_data, max_user_id, api)
         elif payload == 'select_role':
             self.show_role_selection(max_user_id, api)
         elif payload.startswith('select_role_'):
@@ -120,6 +128,46 @@ class CallbackHandler(BaseHandler):
             clear_state(max_user_id)
             self.show_main_menu(user_data, max_user_id, api)
     
+    def handle_start_after_greeting(self, user: Dict, max_user_id: int, api):
+        """Обработать нажатие кнопки 'Начать' после приветствия"""
+        # Получаем все роли пользователя
+        all_roles = User.get_all_roles(max_user_id)
+        
+        if not all_roles:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ У вас нет назначенных ролей. Обратитесь к администрации."
+            )
+            return
+        
+        # Если одна роль - показываем главное меню с этой ролью
+        if len(all_roles) == 1:
+            role_data = all_roles[0]
+            role = role_data.get('role')
+            # Сохраняем роль
+            set_user_role(max_user_id, role)
+            
+            greeting = {
+                'student': f"👋 Привет, {role_data['fio']}!\n\nВыберите действие:",
+                'teacher': f"👋 Здравствуйте, {role_data['fio']}!\n\nВыберите действие:",
+                'admin': f"👋 Администратор {role_data['fio']}\n\nВыберите действие:"
+            }
+            
+            keyboard = create_main_menu_keyboard(role, has_multiple_roles=False)
+            api.send_message(
+                user_id=max_user_id,
+                text=greeting.get(role, "Выберите действие:"),
+                attachments=[keyboard]
+            )
+        else:
+            # Если несколько ролей - показываем выбор роли
+            keyboard = create_role_selection_keyboard(all_roles)
+            api.send_message(
+                user_id=max_user_id,
+                text="Выберите роль:",
+                attachments=[keyboard]
+            )
+    
     def show_main_menu(self, user: Dict, max_user_id: int, api):
         """Показать главное меню"""
         # Проверяем, есть ли у пользователя несколько ролей
@@ -161,6 +209,9 @@ class CallbackHandler(BaseHandler):
                 attachments=[create_back_keyboard()]
             )
             return
+        
+        # Сохраняем выбранную роль
+        set_user_role(max_user_id, role)
         
         # Показываем главное меню с новой ролью
         all_roles = User.get_all_roles(max_user_id)
@@ -215,6 +266,27 @@ class CallbackHandler(BaseHandler):
             )
             return
         
+        # Если преподаватель - показываем список студентов с кнопками для выбора
+        if user['role'] == 'teacher':
+            # get_group_members уже возвращает только студентов
+            if not members:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ В группе нет студентов",
+                    attachments=[create_back_keyboard("menu_my_groups")]
+                )
+                return
+            
+            keyboard = create_students_keyboard(members, group_id)
+            text = f"👥 Студенты группы {group['name'] if group else ''}:\n\nВыберите студента для отправки сообщения:"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+            return
+        
+        # Для студентов - показываем список участников
         text = f"👥 Участники группы {group['name'] if group else ''}:\n\n"
         for member in members:
             headman = "⭐ Староста: " if member.get('is_headman') else ""
