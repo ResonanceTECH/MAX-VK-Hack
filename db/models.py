@@ -137,8 +137,91 @@ class Message:
                     max_message_id: str, group_id: Optional[int] = None):
         """Сохранить сообщение в БД"""
         query = """
-            INSERT INTO messages (from_user_id, to_user_id, group_id, text, max_message_id)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO messages (from_user_id, to_user_id, group_id, text, max_message_id, status)
+            VALUES (%s, %s, %s, %s, %s, 'unread')
         """
         return execute_query(query, (from_user_id, to_user_id, group_id, text, max_message_id))
+    
+    @staticmethod
+    def get_teacher_messages(teacher_id: int, status: Optional[str] = None, 
+                            group_id: Optional[int] = None) -> List[Dict]:
+        """Получить сообщения для преподавателя от студентов"""
+        conditions = ["to_user_id = %s"]
+        params = [teacher_id]
+        
+        if status:
+            conditions.append("status = %s")
+            params.append(status)
+        
+        if group_id:
+            conditions.append("group_id = %s")
+            params.append(group_id)
+        
+        where_clause = " AND ".join(conditions)
+        
+        query = f"""
+            SELECT 
+                m.id,
+                m.from_user_id,
+                u1.fio as from_user_fio,
+                m.to_user_id,
+                u2.fio as to_user_fio,
+                m.group_id,
+                g.name as group_name,
+                m.text,
+                m.status,
+                m.created_at
+            FROM messages m
+            JOIN users u1 ON m.from_user_id = u1.id
+            JOIN users u2 ON m.to_user_id = u2.id
+            LEFT JOIN groups g ON m.group_id = g.id
+            WHERE {where_clause}
+            ORDER BY m.created_at DESC
+        """
+        return execute_query(query, tuple(params), fetch_all=True) or []
+    
+    @staticmethod
+    def get_by_id(message_id: int) -> Optional[Dict]:
+        """Получить сообщение по ID"""
+        query = """
+            SELECT id, from_user_id, to_user_id, group_id, text, status, created_at
+            FROM messages WHERE id = %s
+        """
+        return execute_query(query, (message_id,), fetch_one=True)
+    
+    @staticmethod
+    def update_status(message_id: int, status: str):
+        """Обновить статус сообщения"""
+        query = """
+            UPDATE messages SET status = %s WHERE id = %s
+        """
+        return execute_query(query, (status, message_id))
+    
+    @staticmethod
+    def get_teacher_stats(teacher_id: int) -> Dict:
+        """Получить статистику сообщений для преподавателя"""
+        query = """
+            SELECT 
+                status,
+                COUNT(*) as count
+            FROM messages
+            WHERE to_user_id = %s
+            GROUP BY status
+        """
+        results = execute_query(query, (teacher_id,), fetch_all=True) or []
+        
+        stats = {
+            'unread': 0,
+            'awaiting': 0,
+            'replied': 0,
+            'total': 0
+        }
+        
+        for row in results:
+            status = row.get('status', 'unread')
+            count = row.get('count', 0)
+            stats[status] = count
+            stats['total'] += count
+        
+        return stats
 

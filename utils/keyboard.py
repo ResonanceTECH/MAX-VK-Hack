@@ -1,5 +1,6 @@
 """Генерация клавиатур для бота"""
 from typing import List, Dict, Optional
+import os
 
 def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Dict:
     """Создать главное меню в зависимости от роли"""
@@ -22,6 +23,8 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
             [{"type": "callback", "text": "👥 Мои группы", "payload": "menu_my_groups"}],
             [{"type": "callback", "text": "💬 Написать студенту", "payload": "write_student"}],
             [{"type": "callback", "text": "📢 Рассылка группе", "payload": "broadcast_group"}],
+            # Временно отключено для локального тестирования miniapp
+            # [{"type": "open_app", "text": "📱 Открыть приложение", "contact_id": 79883420, "payload": "role-teacher"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
     elif role == 'admin':
