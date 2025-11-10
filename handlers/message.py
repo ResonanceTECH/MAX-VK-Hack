@@ -68,6 +68,10 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_от_группы")
                 self.handle_group_message(user, max_user_id, text, state_data, api, message_id)
                 return
+            elif state == 'waiting_message_to_student_student':
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту_студенту")
+                self.handle_send_to_student_student(user, max_user_id, text, state_data, api, message_id)
+                return
         
         # Обработка команд
         if text.startswith('/'):
@@ -114,16 +118,18 @@ class MessageHandler(BaseHandler):
     
     def show_help(self, role: str, chat_id: int, max_user_id: int, api):
         """Показать справку"""
+        from utils.keyboard import create_help_menu_keyboard, create_main_menu_keyboard
+        
+        if role == 'student':
+            keyboard = create_help_menu_keyboard()
+            api.send_message(
+                user_id=max_user_id,
+                text="❓ Помощь\n\nВыберите раздел:",
+                attachments=[keyboard]
+            )
+            return
+        
         help_text = {
-            'student': (
-                "📖 Справка для студентов:\n\n"
-                "• Моя группа - просмотр участников группы с контактами\n"
-                "• Преподаватели - список ваших преподавателей\n"
-                "• Написать преподавателю - отправить сообщение\n\n"
-                "Команды:\n"
-                "/start - главное меню\n"
-                "/help - эта справка"
-            ),
             'teacher': (
                 "📖 Справка для преподавателей:\n\n"
                 "• Мои группы - просмотр ваших групп и студентов\n"
@@ -386,6 +392,53 @@ class MessageHandler(BaseHandler):
                 user_id=max_user_id,
                 text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
                 attachments=[create_back_keyboard()]
+            )
+        
+        clear_state(max_user_id)
+    
+    def handle_send_to_student_student(self, user: Dict, max_user_id: int, text: str,
+                                      state_data: Dict, api, message_id: str):
+        """Обработать отправку сообщения студентом студенту"""
+        from db.models import User as UserModel
+        
+        if text.lower() in ['отмена', 'cancel', '/cancel']:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_отправки_студенту_студенту")
+            clear_state(max_user_id)
+            self.show_main_menu(user, None, max_user_id, api)
+            return
+        
+        student_id = state_data.get('student_id')
+        student = UserModel.get_by_id(student_id)
+        
+        if student:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отправлено_сообщение_студенту_{student.get('fio', 'Unknown')}")
+        
+        if not student:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Студент не найден",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            clear_state(max_user_id)
+            return
+        
+        # Отправляем сообщение студенту
+        result = api.send_message(
+            user_id=student['max_user_id'],
+            text=f"💬 Сообщение от {user['fio']}:\n\n{text}"
+        )
+        
+        if result:
+            api.send_message(
+                user_id=max_user_id,
+                text=f"✅ Сообщение отправлено {student['fio']}",
+                attachments=[create_main_menu_keyboard(user['role'])]
+            )
+        else:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
+                attachments=[create_back_keyboard("menu_group")]
             )
         
         clear_state(max_user_id)

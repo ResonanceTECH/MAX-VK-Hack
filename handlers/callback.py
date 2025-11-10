@@ -5,7 +5,9 @@ from utils.keyboard import (
     create_main_menu_keyboard, create_groups_keyboard, 
     create_students_keyboard, create_teachers_keyboard,
     create_back_keyboard, create_cancel_keyboard,
-    create_role_selection_keyboard
+    create_role_selection_keyboard, create_group_menu_keyboard,
+    create_teachers_menu_keyboard, create_schedule_menu_keyboard,
+    create_news_menu_keyboard, create_help_menu_keyboard
 )
 from utils.states import set_state, clear_state, set_user_role, get_user_role
 from typing import Dict, Any
@@ -89,14 +91,59 @@ class CallbackHandler(BaseHandler):
             role = payload.split('_')[2]
             self.switch_role(max_user_id, role, api)
         elif payload == 'menu_group':
-            self.show_user_groups(user_data, max_user_id, api)
+            self.show_group_menu(user_data, max_user_id, api)
         elif payload == 'menu_teachers':
+            self.show_teachers_menu(user_data, max_user_id, api)
+        elif payload == 'menu_schedule':
+            self.show_schedule_menu(user_data, max_user_id, api)
+        elif payload == 'menu_news':
+            self.show_news_menu(user_data, max_user_id, api)
+        elif payload == 'group_students_list':
+            self.show_user_groups(user_data, max_user_id, api)
+        elif payload == 'group_write_student':
+            self.show_group_for_write_student(user_data, max_user_id, api)
+        elif payload.startswith('write_student_'):
+            # Написать сокурснику
+            parts = payload.split('_')
+            student_id = int(parts[2])
+            group_id = int(parts[4]) if len(parts) > 4 else None
+            self.start_student_to_student_chat(student_id, group_id, user_data, max_user_id, api)
+        elif payload == 'teachers_list':
             self.show_teachers(user_data, max_user_id, api)
+        elif payload == 'write_teacher_group':
+            self.show_group_for_group_message(user_data, max_user_id, api)
+        elif payload.startswith('schedule_today'):
+            self.show_schedule_today(user_data, max_user_id, api)
+        elif payload.startswith('schedule_week'):
+            self.show_schedule_week(user_data, max_user_id, api)
+        elif payload.startswith('schedule_download'):
+            self.download_schedule(user_data, max_user_id, api)
+        elif payload.startswith('news_university'):
+            self.show_news_university(user_data, max_user_id, api)
+        elif payload.startswith('news_group'):
+            self.show_news_group(user_data, max_user_id, api)
+        elif payload.startswith('news_admin'):
+            self.show_news_admin(user_data, max_user_id, api)
+        elif payload.startswith('help_faq'):
+            self.show_help_faq(user_data, max_user_id, api)
+        elif payload.startswith('help_support'):
+            self.show_help_support(user_data, max_user_id, api)
+        elif payload.startswith('help_common'):
+            self.show_help_common(user_data, max_user_id, api)
         elif payload == 'menu_my_groups':
             self.show_teacher_groups(user_data, max_user_id, api)
         elif payload.startswith('group_') and not payload.startswith('group_message'):
             group_id = int(payload.split('_')[1])
-            self.show_group_members(group_id, user_data, max_user_id, api)
+            # Проверяем, откуда пришел запрос
+            if user_data['role'] == 'student':
+                # Если студент - показываем список студентов группы
+                self.show_group_students_list(group_id, user_data, max_user_id, api)
+            else:
+                # Если преподаватель - показываем список студентов для выбора
+                self.show_group_members(group_id, user_data, max_user_id, api)
+        elif payload.startswith('group_write_student_'):
+            group_id = int(payload.split('_')[3])
+            self.show_students_for_write(group_id, user_data, max_user_id, api)
         elif payload.startswith('broadcast_group_'):
             group_id = int(payload.split('_')[2])
             self.start_broadcast(group_id, user_data, max_user_id, api)
@@ -230,8 +277,8 @@ class CallbackHandler(BaseHandler):
             attachments=[keyboard]
         )
     
-    def show_user_groups(self, user: Dict, max_user_id: int, api):
-        """Показать группы студента"""
+    def show_group_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню группы студента"""
         groups = Group.get_user_groups(user['id'])
         if not groups:
             api.send_message(
@@ -241,16 +288,160 @@ class CallbackHandler(BaseHandler):
             )
             return
         
-        text = "👥 Ваши группы:\n\n"
-        for group in groups:
-            headman = "⭐ Вы староста в " if group.get('is_headman') else ""
-            text += f"{headman}📚 {group['name']}\n"
+        # Если одна группа - показываем меню сразу
+        if len(groups) == 1:
+            group = groups[0]
+            is_headman = group.get('is_headman', False)
+            keyboard = create_group_menu_keyboard(is_headman)
+            text = f"👥 Группа: {group['name']}\n\nВыберите действие:"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        else:
+            # Если несколько групп - показываем выбор
+            text = "👥 Ваши группы:\n\n"
+            for group in groups:
+                headman = "⭐ Вы староста в " if group.get('is_headman') else ""
+                text += f"{headman}📚 {group['name']}\n"
+            
+            keyboard = create_groups_keyboard(groups, prefix="group")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+    
+    def show_user_groups(self, user: Dict, max_user_id: int, api):
+        """Показать группы студента (для выбора группы)"""
+        groups = Group.get_user_groups(user['id'])
+        if not groups:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Вы не состоите ни в одной группе",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            return
         
-        keyboard = create_groups_keyboard(groups, prefix="group")
+        # Если одна группа - показываем список студентов сразу
+        if len(groups) == 1:
+            group = groups[0]
+            self.show_group_students_list(group['id'], user, max_user_id, api)
+        else:
+            text = "👥 Выберите группу:\n\n"
+            for group in groups:
+                headman = "⭐ Вы староста в " if group.get('is_headman') else ""
+                text += f"{headman}📚 {group['name']}\n"
+            
+            keyboard = create_groups_keyboard(groups, prefix="group")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+    
+    def show_group_students_list(self, group_id: int, user: Dict, max_user_id: int, api):
+        """Показать список студентов группы"""
+        members = Group.get_group_members(group_id)
+        group = Group.get_by_id(group_id)
+        
+        if not members:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ В группе нет участников",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            return
+        
+        text = f"👥 Участники группы {group['name'] if group else ''}:\n\n"
+        for member in members:
+            headman = "⭐ Староста: " if member.get('is_headman') else ""
+            text += f"{headman}{member['fio']}\n"
+            if member.get('max_user_id'):
+                text += f"   👤 [Профиль](max://user/{member['max_user_id']})\n"
+            text += "\n"
+        
+        keyboard = {
+            "type": "inline_keyboard",
+            "payload": {
+                "buttons": [[{"type": "callback", "text": "◀️ Назад", "payload": "menu_group"}]]
+            }
+        }
+        
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard],
+            format_type="markdown"
+        )
+    
+    def show_group_for_write_student(self, user: Dict, max_user_id: int, api):
+        """Показать выбор группы для написания сокурснику"""
+        groups = Group.get_user_groups(user['id'])
+        if not groups:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Вы не состоите ни в одной группе",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            return
+        
+        if len(groups) == 1:
+            group = groups[0]
+            self.show_students_for_write(group['id'], user, max_user_id, api)
+        else:
+            text = "👥 Выберите группу:\n\n"
+            for group in groups:
+                text += f"📚 {group['name']}\n"
+            
+            keyboard = create_groups_keyboard(groups, prefix="group_write_student")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+    
+    def show_students_for_write(self, group_id: int, user: Dict, max_user_id: int, api):
+        """Показать список студентов для написания"""
+        members = Group.get_group_members(group_id)
+        group = Group.get_by_id(group_id)
+        
+        # Исключаем самого пользователя из списка
+        members = [m for m in members if m['id'] != user['id']]
+        
+        if not members:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ В группе нет других студентов",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            return
+        
+        keyboard = create_students_keyboard(members, group_id, for_student=True)
+        text = f"💬 Выберите сокурсника для отправки сообщения:\n\nГруппа: {group['name'] if group else ''}"
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
+        )
+    
+    def start_student_to_student_chat(self, student_id: int, group_id: int, user: Dict, max_user_id: int, api):
+        """Начать диалог студента со студентом"""
+        student = User.get_by_id(student_id)
+        if not student:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Студент не найден",
+                attachments=[create_back_keyboard("menu_group")]
+            )
+            return
+        
+        set_state(max_user_id, 'waiting_message_to_student_student', {'student_id': student_id})
+        api.send_message(
+            user_id=max_user_id,
+            text=f"💬 Напишите сообщение для {student['fio']}:\n\n(Отправьте текст сообщения или напишите 'отмена' для отмены)",
+            attachments=[create_cancel_keyboard()]
         )
     
     def show_group_members(self, group_id: int, user: Dict, max_user_id: int, api):
@@ -321,6 +512,18 @@ class CallbackHandler(BaseHandler):
             format_type="markdown"
         )
     
+    def show_teachers_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню преподавателей для студента"""
+        groups = Group.get_user_groups(user['id'])
+        is_headman = any(g.get('is_headman', False) for g in groups)
+        
+        keyboard = create_teachers_menu_keyboard(is_headman)
+        api.send_message(
+            user_id=max_user_id,
+            text="👨‍🏫 Преподаватели\n\nВыберите действие:",
+            attachments=[keyboard]
+        )
+    
     def show_teachers(self, user: Dict, max_user_id: int, api):
         """Показать список преподавателей студента"""
         teachers = Teacher.get_student_teachers(user['id'])
@@ -328,20 +531,95 @@ class CallbackHandler(BaseHandler):
             api.send_message(
                 user_id=max_user_id,
                 text="❌ У вас нет назначенных преподавателей",
-                attachments=[create_back_keyboard()]
+                attachments=[create_back_keyboard("menu_teachers")]
             )
             return
         
         text = "👨‍🏫 Ваши преподаватели:\n\n"
         for teacher in teachers:
             text += f"• {teacher['fio']}\n"
+            if teacher.get('phone'):
+                text += f"  📞 {teacher['phone']}\n"
+            if teacher.get('email'):
+                text += f"  📧 {teacher['email']}\n"
+            if teacher.get('max_user_id'):
+                text += f"  👤 [Профиль](max://user/{teacher['max_user_id']})\n"
+            text += "\n"
         
-        keyboard = create_teachers_keyboard(teachers)
+        keyboard = create_teachers_keyboard(teachers, for_student=True)
         api.send_message(
             user_id=max_user_id,
             text=text,
-            attachments=[keyboard]
+            attachments=[keyboard],
+            format_type="markdown"
         )
+    
+    def show_group_for_group_message(self, user: Dict, max_user_id: int, api):
+        """Показать выбор группы для отправки сообщения от группы"""
+        groups = Group.get_user_groups(user['id'])
+        headman_groups = [g for g in groups if g.get('is_headman', False)]
+        
+        if not headman_groups:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Вы не являетесь старостой ни в одной группе",
+                attachments=[create_back_keyboard("menu_teachers")]
+            )
+            return
+        
+        if len(headman_groups) == 1:
+            group = headman_groups[0]
+            teachers = Teacher.get_student_teachers(user['id'])
+            if not teachers:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ У вас нет назначенных преподавателей",
+                    attachments=[create_back_keyboard("menu_teachers")]
+                )
+                return
+            
+            text = "👨‍🏫 Выберите преподавателя для отправки сообщения от группы:\n\n"
+            buttons = []
+            for teacher in teachers:
+                buttons.append([{
+                    "type": "callback",
+                    "text": f"👨‍🏫 {teacher['fio']}",
+                    "payload": f"group_message_{group['id']}_{teacher['id']}"
+                }])
+            buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "menu_teachers"}])
+            
+            keyboard = {
+                "type": "inline_keyboard",
+                "payload": {"buttons": buttons}
+            }
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        else:
+            text = "👥 Выберите группу:\n\n"
+            for group in headman_groups:
+                text += f"📚 {group['name']}\n"
+            
+            buttons = []
+            for group in headman_groups:
+                buttons.append([{
+                    "type": "callback",
+                    "text": f"📚 {group['name']}",
+                    "payload": f"group_message_select_{group['id']}"
+                }])
+            buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "menu_teachers"}])
+            
+            keyboard = {
+                "type": "inline_keyboard",
+                "payload": {"buttons": buttons}
+            }
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
     
     def show_teacher_groups(self, user: Dict, max_user_id: int, api, broadcast=False):
         """Показать группы преподавателя"""
@@ -475,38 +753,218 @@ class CallbackHandler(BaseHandler):
             attachments=[create_cancel_keyboard()]
         )
     
-    def show_help(self, role: str, max_user_id: int, api):
-        """Показать справку"""
-        help_text = {
-            'student': (
-                "📖 Справка для студентов:\n\n"
-                "• Моя группа - просмотр участников группы с контактами\n"
-                "• Преподаватели - список ваших преподавателей\n"
-                "• Написать преподавателю - отправить сообщение\n\n"
-                "Команды:\n"
-                "/start - главное меню\n"
-                "/help - эта справка"
-            ),
-            'teacher': (
-                "📖 Справка для преподавателей:\n\n"
-                "• Мои группы - просмотр ваших групп и студентов\n"
-                "• Написать студенту - отправить личное сообщение\n"
-                "• Рассылка группе - отправить сообщение всем студентам группы\n\n"
-                "Команды:\n"
-                "/start - главное меню\n"
-                "/help - эта справка"
-            ),
-            'admin': (
-                "📖 Справка для администратора:\n\n"
-                "• Написать пользователю - отправить сообщение любому пользователю\n\n"
-                "Команды:\n"
-                "/start - главное меню\n"
-                "/help - эта справка"
-            )
+    def show_schedule_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню расписания"""
+        keyboard = create_schedule_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="📅 Расписание\n\nВыберите действие:",
+            attachments=[keyboard]
+        )
+    
+    def show_schedule_today(self, user: Dict, max_user_id: int, api):
+        """Показать расписание на сегодня"""
+        from datetime import datetime
+        today = datetime.now().strftime("%d.%m.%Y")
+        weekday = datetime.now().strftime("%A")
+        weekday_ru = {
+            'Monday': 'Понедельник',
+            'Tuesday': 'Вторник',
+            'Wednesday': 'Среда',
+            'Thursday': 'Четверг',
+            'Friday': 'Пятница',
+            'Saturday': 'Суббота',
+            'Sunday': 'Воскресенье'
         }
         
-        text = help_text.get(role, "Справка")
-        keyboard = create_main_menu_keyboard(role)
+        # TODO: Получить расписание из БД
+        text = f"📅 Расписание на сегодня ({weekday_ru.get(weekday, weekday)}, {today}):\n\n"
+        text += "⚠️ Расписание пока не настроено.\n"
+        text += "Обратитесь к администратору для настройки расписания."
+        
+        keyboard = create_back_keyboard("menu_schedule")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_schedule_week(self, user: Dict, max_user_id: int, api):
+        """Показать расписание на неделю"""
+        # TODO: Получить расписание из БД
+        text = "📆 Расписание на неделю:\n\n"
+        text += "⚠️ Расписание пока не настроено.\n"
+        text += "Обратитесь к администратору для настройки расписания."
+        
+        keyboard = create_back_keyboard("menu_schedule")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def download_schedule(self, user: Dict, max_user_id: int, api):
+        """Скачать расписание"""
+        # TODO: Генерация файла расписания
+        text = "⬇️ Скачать расписание\n\n"
+        text += "⚠️ Функция скачивания расписания пока не реализована.\n"
+        text += "Обратитесь к администратору."
+        
+        keyboard = create_back_keyboard("menu_schedule")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_news_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню новостей"""
+        keyboard = create_news_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="📢 Новости\n\nВыберите раздел:",
+            attachments=[keyboard]
+        )
+    
+    def show_news_university(self, user: Dict, max_user_id: int, api):
+        """Показать новости вуза"""
+        # TODO: Получить новости из БД
+        text = "🏛️ Новости вуза:\n\n"
+        text += "⚠️ Новости пока не добавлены.\n"
+        text += "Следите за обновлениями!"
+        
+        keyboard = create_back_keyboard("menu_news")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_news_group(self, user: Dict, max_user_id: int, api):
+        """Показать объявления группы"""
+        groups = Group.get_user_groups(user['id'])
+        if not groups:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Вы не состоите ни в одной группе",
+                attachments=[create_back_keyboard("menu_news")]
+            )
+            return
+        
+        # TODO: Получить объявления группы из БД
+        group_names = ", ".join([g['name'] for g in groups])
+        text = f"👥 Объявления группы ({group_names}):\n\n"
+        text += "⚠️ Объявления пока не добавлены.\n"
+        text += "Следите за обновлениями!"
+        
+        keyboard = create_back_keyboard("menu_news")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_news_admin(self, user: Dict, max_user_id: int, api):
+        """Показать уведомления администрации"""
+        # TODO: Получить уведомления из БД
+        text = "⚠️ Уведомления администрации:\n\n"
+        text += "⚠️ Уведомления пока не добавлены.\n"
+        text += "Следите за обновлениями!"
+        
+        keyboard = create_back_keyboard("menu_news")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_help(self, role: str, max_user_id: int, api):
+        """Показать справку"""
+        if role == 'student':
+            keyboard = create_help_menu_keyboard()
+            api.send_message(
+                user_id=max_user_id,
+                text="❓ Помощь\n\nВыберите раздел:",
+                attachments=[keyboard]
+            )
+        else:
+            help_text = {
+                'teacher': (
+                    "📖 Справка для преподавателей:\n\n"
+                    "• Мои группы - просмотр ваших групп и студентов\n"
+                    "• Написать студенту - отправить личное сообщение\n"
+                    "• Рассылка группе - отправить сообщение всем студентам группы\n\n"
+                    "Команды:\n"
+                    "/start - главное меню\n"
+                    "/help - эта справка"
+                ),
+                'admin': (
+                    "📖 Справка для администратора:\n\n"
+                    "• Написать пользователю - отправить сообщение любому пользователю\n\n"
+                    "Команды:\n"
+                    "/start - главное меню\n"
+                    "/help - эта справка"
+                )
+            }
+            
+            text = help_text.get(role, "Справка")
+            keyboard = create_main_menu_keyboard(role)
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+    
+    def show_help_faq(self, user: Dict, max_user_id: int, api):
+        """Показать FAQ"""
+        text = "❓ Часто задаваемые вопросы (FAQ):\n\n"
+        text += "1. Как написать преподавателю?\n"
+        text += "   → Выберите 'Преподаватели' → 'Написать преподавателю'\n\n"
+        text += "2. Как посмотреть список группы?\n"
+        text += "   → Выберите 'Моя группа' → 'Список студентов'\n\n"
+        text += "3. Как написать сокурснику?\n"
+        text += "   → Выберите 'Моя группа' → 'Написать сокурснику'\n\n"
+        text += "4. Как посмотреть расписание?\n"
+        text += "   → Выберите 'Расписание' → 'На сегодня' или 'На неделю'\n\n"
+        text += "5. Как получить помощь?\n"
+        text += "   → Выберите 'Помощь' → 'Связь с поддержкой'"
+        
+        keyboard = create_back_keyboard("help")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_help_support(self, user: Dict, max_user_id: int, api):
+        """Показать контакты поддержки"""
+        text = "💬 Связь с поддержкой:\n\n"
+        text += "Если у вас возникли вопросы или проблемы:\n\n"
+        text += "📧 Email: support@university.ru\n"
+        text += "📞 Телефон: +7 (XXX) XXX-XX-XX\n"
+        text += "🕐 Время работы: Пн-Пт, 9:00-18:00\n\n"
+        text += "Или обратитесь к администратору через бота."
+        
+        keyboard = create_back_keyboard("help")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_help_common(self, user: Dict, max_user_id: int, api):
+        """Показать частые вопросы"""
+        text = "📋 Частые вопросы:\n\n"
+        text += "Q: Как изменить роль?\n"
+        text += "A: Используйте кнопку 'Выбрать роль' в главном меню\n\n"
+        text += "Q: Как отправить сообщение от группы?\n"
+        text += "A: Эта функция доступна только старостам группы\n\n"
+        text += "Q: Где посмотреть контакты преподавателей?\n"
+        text += "A: 'Преподаватели' → 'Список преподавателей'\n\n"
+        text += "Q: Как скачать расписание?\n"
+        text += "A: 'Расписание' → 'Скачать расписание'"
+        
+        keyboard = create_back_keyboard("help")
         api.send_message(
             user_id=max_user_id,
             text=text,

@@ -15,7 +15,8 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
         buttons.extend([
             [{"type": "callback", "text": "👥 Моя группа", "payload": "menu_group"}],
             [{"type": "callback", "text": "👨‍🏫 Преподаватели", "payload": "menu_teachers"}],
-            [{"type": "callback", "text": "💬 Написать преподавателю", "payload": "write_teacher"}],
+            [{"type": "callback", "text": "📅 Расписание", "payload": "menu_schedule"}],
+            [{"type": "callback", "text": "📢 Новости", "payload": "menu_news"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
     elif role == 'teacher':
@@ -86,18 +87,31 @@ def create_groups_keyboard(groups: List[Dict], prefix: str = "group") -> Dict:
         }
     }
 
-def create_students_keyboard(students: List[Dict], group_id: int) -> Dict:
-    """Создать клавиатуру со списком студентов группы"""
+def create_students_keyboard(students: List[Dict], group_id: int, for_student: bool = False) -> Dict:
+    """Создать клавиатуру со списком студентов группы
+    
+    Args:
+        students: Список студентов
+        group_id: ID группы
+        for_student: Если True, создает клавиатуру для студента (написать сокурснику)
+    """
     buttons = []
     for student in students:
         headman_mark = "⭐ " if student.get('is_headman') else ""
+        if for_student:
+            # Для студента - кнопка написать сокурснику
+            payload = f"write_student_{student['id']}_group_{group_id}"
+        else:
+            # Для преподавателя - обычная кнопка выбора
+            payload = f"student_{student['id']}_group_{group_id}"
         buttons.append([{
             "type": "callback",
             "text": f"{headman_mark}{student['fio']}",
-            "payload": f"student_{student['id']}_group_{group_id}"
+            "payload": payload
         }])
     
-    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "menu_my_groups"}])
+    back_payload = "menu_group" if for_student else "menu_my_groups"
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": back_payload}])
     
     return {
         "type": "inline_keyboard",
@@ -106,15 +120,29 @@ def create_students_keyboard(students: List[Dict], group_id: int) -> Dict:
         }
     }
 
-def create_teachers_keyboard(teachers: List[Dict]) -> Dict:
-    """Создать клавиатуру со списком преподавателей"""
+def create_teachers_keyboard(teachers: List[Dict], for_student: bool = False, group_id: Optional[int] = None) -> Dict:
+    """Создать клавиатуру со списком преподавателей
+    
+    Args:
+        teachers: Список преподавателей
+        for_student: Если True, создает клавиатуру для студента
+        group_id: ID группы (для отправки сообщения от группы)
+    """
     buttons = []
     for teacher in teachers:
-        buttons.append([{
-            "type": "callback",
-            "text": f"👨‍🏫 {teacher['fio']}",
-            "payload": f"teacher_{teacher['id']}"
-        }])
+        if for_student and group_id:
+            # Для студента - кнопка написать преподавателю (от группы или лично)
+            buttons.append([{
+                "type": "callback",
+                "text": f"👨‍🏫 {teacher['fio']}",
+                "payload": f"teacher_{teacher['id']}"
+            }])
+        else:
+            buttons.append([{
+                "type": "callback",
+                "text": f"👨‍🏫 {teacher['fio']}",
+                "payload": f"teacher_{teacher['id']}"
+            }])
     
     buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
     
@@ -140,6 +168,86 @@ def create_cancel_keyboard() -> Dict:
         "type": "inline_keyboard",
         "payload": {
             "buttons": [[{"type": "callback", "text": "❌ Отмена", "payload": "cancel"}]]
+        }
+    }
+
+def create_group_menu_keyboard(is_headman: bool = False) -> Dict:
+    """Создать меню для группы студента"""
+    buttons = [
+        [{"type": "callback", "text": "👥 Список студентов", "payload": "group_students_list"}],
+        [{"type": "callback", "text": "💬 Написать сокурснику", "payload": "group_write_student"}],
+    ]
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_teachers_menu_keyboard(is_headman: bool = False) -> Dict:
+    """Создать меню преподавателей для студента"""
+    buttons = [
+        [{"type": "callback", "text": "👨‍🏫 Список преподавателей", "payload": "teachers_list"}],
+        [{"type": "callback", "text": "💬 Написать преподавателю", "payload": "write_teacher"}],
+    ]
+    if is_headman:
+        buttons.append([{"type": "callback", "text": "💬 Написать от группы", "payload": "write_teacher_group"}])
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_schedule_menu_keyboard() -> Dict:
+    """Создать меню расписания"""
+    buttons = [
+        [{"type": "callback", "text": "📅 На сегодня", "payload": "schedule_today"}],
+        [{"type": "callback", "text": "📆 На неделю", "payload": "schedule_week"}],
+        [{"type": "callback", "text": "⬇️ Скачать расписание", "payload": "schedule_download"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_news_menu_keyboard() -> Dict:
+    """Создать меню новостей"""
+    buttons = [
+        [{"type": "callback", "text": "🏛️ Новости вуза", "payload": "news_university"}],
+        [{"type": "callback", "text": "👥 Объявления группы", "payload": "news_group"}],
+        [{"type": "callback", "text": "⚠️ Уведомления администрации", "payload": "news_admin"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_help_menu_keyboard() -> Dict:
+    """Создать меню помощи"""
+    buttons = [
+        [{"type": "callback", "text": "❓ FAQ", "payload": "help_faq"}],
+        [{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}],
+        [{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
         }
     }
 
