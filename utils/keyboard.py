@@ -22,10 +22,9 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
     elif role == 'teacher':
         buttons.extend([
             [{"type": "callback", "text": "👥 Мои группы", "payload": "menu_my_groups"}],
-            [{"type": "callback", "text": "💬 Написать студенту", "payload": "write_student"}],
-            [{"type": "callback", "text": "📢 Рассылка группе", "payload": "broadcast_group"}],
-            # Временно отключено для локального тестирования miniapp
-            # [{"type": "open_app", "text": "📱 Открыть приложение", "contact_id": 79883420, "payload": "role-teacher"}],
+            [{"type": "callback", "text": "⭐ Старосты", "payload": "menu_headmen"}],
+            [{"type": "callback", "text": "👨‍🏫 Преподаватели", "payload": "menu_teachers_teacher"}],
+            [{"type": "callback", "text": "📢 Новости", "payload": "menu_news_teacher"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
     elif role == 'admin':
@@ -235,12 +234,102 @@ def create_news_menu_keyboard() -> Dict:
         }
     }
 
-def create_help_menu_keyboard() -> Dict:
+def create_help_menu_keyboard(role: str = 'student') -> Dict:
     """Создать меню помощи"""
     buttons = [
         [{"type": "callback", "text": "❓ FAQ", "payload": "help_faq"}],
         [{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}],
-        [{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}],
+    ]
+    
+    if role == 'student':
+        buttons.append([{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}])
+    elif role == 'teacher':
+        buttons.append([{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_group_menu_teacher_keyboard() -> Dict:
+    """Создать меню группы для преподавателя"""
+    buttons = [
+        [{"type": "callback", "text": "👥 Список студентов", "payload": "group_students_list_teacher"}],
+        [{"type": "callback", "text": "💬 Написать студенту", "payload": "write_student"}],
+        [{"type": "callback", "text": "📢 Рассылка группе", "payload": "broadcast_group"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "menu_my_groups"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_headmen_menu_keyboard() -> Dict:
+    """Создать меню старост для преподавателя"""
+    buttons = [
+        [{"type": "callback", "text": "⭐ Список старост", "payload": "headmen_list"}],
+        [{"type": "callback", "text": "📢 Рассылка старостам", "payload": "broadcast_headmen"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_headmen_keyboard(headmen: List[Dict]) -> Dict:
+    """Создать клавиатуру со списком старост"""
+    buttons = []
+    for headman in headmen:
+        group_name = headman.get('group_name', '')
+        buttons.append([{
+            "type": "callback",
+            "text": f"⭐ {headman['fio']} ({group_name})",
+            "payload": f"headman_{headman['id']}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "menu_headmen"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_teachers_teacher_keyboard(teachers: List[Dict]) -> Dict:
+    """Создать клавиатуру со списком преподавателей для преподавателя"""
+    buttons = []
+    for teacher in teachers:
+        buttons.append([{
+            "type": "callback",
+            "text": f"👨‍🏫 {teacher['fio']}",
+            "payload": f"teacher_teacher_{teacher['id']}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_news_teacher_menu_keyboard() -> Dict:
+    """Создать меню новостей для преподавателя"""
+    buttons = [
+        [{"type": "callback", "text": "🏛️ Новости кафедры", "payload": "news_department"}],
+        [{"type": "callback", "text": "🏢 Новости института", "payload": "news_institute"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
     

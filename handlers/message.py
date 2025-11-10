@@ -72,6 +72,10 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту_студенту")
                 self.handle_send_to_student_student(user, max_user_id, text, state_data, api, message_id)
                 return
+            elif state == 'waiting_broadcast_headmen':
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_старостам")
+                self.handle_broadcast_headmen(user, max_user_id, text, state_data, api, message_id)
+                return
         
         # Обработка команд
         if text.startswith('/'):
@@ -121,7 +125,15 @@ class MessageHandler(BaseHandler):
         from utils.keyboard import create_help_menu_keyboard, create_main_menu_keyboard
         
         if role == 'student':
-            keyboard = create_help_menu_keyboard()
+            keyboard = create_help_menu_keyboard('student')
+            api.send_message(
+                user_id=max_user_id,
+                text="❓ Помощь\n\nВыберите раздел:",
+                attachments=[keyboard]
+            )
+            return
+        elif role == 'teacher':
+            keyboard = create_help_menu_keyboard('teacher')
             api.send_message(
                 user_id=max_user_id,
                 text="❓ Помощь\n\nВыберите раздел:",
@@ -440,6 +452,47 @@ class MessageHandler(BaseHandler):
                 text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
                 attachments=[create_back_keyboard("menu_group")]
             )
+        
+        clear_state(max_user_id)
+    
+    def handle_broadcast_headmen(self, user: Dict, max_user_id: int, text: str,
+                                 state_data: Dict, api, message_id: str):
+        """Обработать рассылку старостам"""
+        from db.models import Teacher
+        
+        if text.lower() in ['отмена', 'cancel', '/cancel']:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_рассылки_старостам")
+            clear_state(max_user_id)
+            self.show_main_menu(user, None, max_user_id, api)
+            return
+        
+        # Получаем всех старост групп преподавателя
+        headmen = Teacher.get_teacher_headmen(user['id'])
+        
+        if not headmen:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ У вас нет старост в группах",
+                attachments=[create_back_keyboard("menu_headmen")]
+            )
+            clear_state(max_user_id)
+            return
+        
+        # Отправляем сообщение всем старостам
+        success_count = 0
+        for headman in headmen:
+            result = api.send_message(
+                user_id=headman['max_user_id'],
+                text=f"📢 Сообщение от преподавателя {user['fio']} (старостам):\n\n{text}"
+            )
+            if result:
+                success_count += 1
+        
+        api.send_message(
+            user_id=max_user_id,
+            text=f"✅ Сообщение отправлено {success_count} из {len(headmen)} старостам",
+            attachments=[create_main_menu_keyboard(user['role'])]
+        )
         
         clear_state(max_user_id)
 

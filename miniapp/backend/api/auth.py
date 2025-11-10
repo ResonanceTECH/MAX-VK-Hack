@@ -97,15 +97,14 @@ def get_current_user(
     Получить текущего пользователя из initData
     """
     # Временный обход авторизации для локального тестирования
-    # Используем пользователя с max_user_id=96855100 напрямую из БД
     import os
     skip_auth = os.getenv('SKIP_AUTH', 'false').lower() == 'true'
     
     if skip_auth:
         # Получаем пользователя напрямую из БД без проверки initData
-        user = User.get_by_max_id(96855100)
+        user = User.get_by_max_id(88287731)
         if not user:
-            raise HTTPException(status_code=403, detail="Пользователь с max_user_id=96855100 не найден в БД")
+            raise HTTPException(status_code=403, detail="Пользователь не найден в БД")
         return user
     
     # Обычная авторизация через initData

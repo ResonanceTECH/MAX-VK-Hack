@@ -130,6 +130,31 @@ class Teacher:
     def get_teacher_by_id(teacher_id: int) -> Optional[Dict]:
         """Получить преподавателя по ID"""
         return User.get_by_id(teacher_id)
+    
+    @staticmethod
+    def get_teacher_headmen(teacher_id: int) -> List[Dict]:
+        """Получить старост групп преподавателя"""
+        query = """
+            SELECT DISTINCT u.id, u.max_user_id, u.fio, u.phone, u.email, g.id as group_id, g.name as group_name
+            FROM users u
+            JOIN group_members gm ON u.id = gm.user_id
+            JOIN groups g ON gm.group_id = g.id
+            JOIN teacher_groups tg ON g.id = tg.group_id
+            WHERE tg.teacher_id = %s AND gm.is_headman = TRUE AND u.role = 'student'
+            ORDER BY g.name, u.fio
+        """
+        return execute_query(query, (teacher_id,), fetch_all=True) or []
+    
+    @staticmethod
+    def get_all_teachers() -> List[Dict]:
+        """Получить всех преподавателей"""
+        query = """
+            SELECT DISTINCT id, max_user_id, fio, phone, email
+            FROM users
+            WHERE role = 'teacher'
+            ORDER BY fio
+        """
+        return execute_query(query, (), fetch_all=True) or []
 
 class Message:
     @staticmethod
