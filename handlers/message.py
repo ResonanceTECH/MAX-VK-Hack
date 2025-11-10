@@ -76,6 +76,10 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_старостам")
                 self.handle_broadcast_headmen(user, max_user_id, text, state_data, api, message_id)
                 return
+            elif state.startswith('admin_'):
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=админ_{state}")
+                self.handle_admin_state(user, max_user_id, text, state, state_data, api, message_id)
+                return
         
         # Обработка команд
         if text.startswith('/'):
@@ -495,4 +499,152 @@ class MessageHandler(BaseHandler):
         )
         
         clear_state(max_user_id)
+    
+    def handle_admin_state(self, user: Dict, max_user_id: int, text: str, state: str,
+                          state_data: Dict, api, message_id: str):
+        """Обработать состояния администратора"""
+        from db.models import User as UserModel, Group
+        
+        if text.lower() in ['отмена', 'cancel', '/cancel']:
+            clear_state(max_user_id)
+            self.show_main_menu(user, None, max_user_id, api)
+            return
+        
+        if state == 'admin_student_add':
+            # Формат: max_user_id, ФИО, телефон, email
+            parts = [p.strip() for p in text.split(',')]
+            if len(parts) < 2:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Неверный формат. Используйте: max_user_id, ФИО, телефон, email",
+                    attachments=[create_cancel_keyboard()]
+                )
+                return
+            
+            try:
+                max_user_id_student = int(parts[0])
+                fio = parts[1]
+                phone = parts[2] if len(parts) > 2 else None
+                email = parts[3] if len(parts) > 3 else None
+                
+                user_id = UserModel.create_user(max_user_id_student, fio, 'student', phone, email)
+                if user_id:
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Студент {fio} добавлен (ID: {user_id})",
+                        attachments=[create_main_menu_keyboard(user['role'])]
+                    )
+                else:
+                    api.send_message(
+                        user_id=max_user_id,
+                        text="❌ Ошибка при добавлении студента",
+                        attachments=[create_cancel_keyboard()]
+                    )
+            except ValueError:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Неверный формат max_user_id. Должно быть число.",
+                    attachments=[create_cancel_keyboard()]
+                )
+            clear_state(max_user_id)
+        
+        elif state == 'admin_student_edit':
+            # Формат: ФИО, телефон, email
+            student_id = state_data.get('student_id')
+            if not student_id:
+                clear_state(max_user_id)
+                return
+            
+            parts = [p.strip() for p in text.split(',')]
+            fio = parts[0] if len(parts) > 0 else None
+            phone = parts[1] if len(parts) > 1 else None
+            email = parts[2] if len(parts) > 2 else None
+            
+            if UserModel.update_user(student_id, fio, phone, email):
+                api.send_message(
+                    user_id=max_user_id,
+                    text="✅ Данные студента обновлены",
+                    attachments=[create_main_menu_keyboard(user['role'])]
+                )
+            else:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Ошибка при обновлении данных",
+                    attachments=[create_cancel_keyboard()]
+                )
+            clear_state(max_user_id)
+        
+        elif state == 'admin_teacher_add':
+            # Формат: max_user_id, ФИО, телефон, email
+            parts = [p.strip() for p in text.split(',')]
+            if len(parts) < 2:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Неверный формат. Используйте: max_user_id, ФИО, телефон, email",
+                    attachments=[create_cancel_keyboard()]
+                )
+                return
+            
+            try:
+                max_user_id_teacher = int(parts[0])
+                fio = parts[1]
+                phone = parts[2] if len(parts) > 2 else None
+                email = parts[3] if len(parts) > 3 else None
+                
+                user_id = UserModel.create_user(max_user_id_teacher, fio, 'teacher', phone, email)
+                if user_id:
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Преподаватель {fio} добавлен (ID: {user_id})",
+                        attachments=[create_main_menu_keyboard(user['role'])]
+                    )
+                else:
+                    api.send_message(
+                        user_id=max_user_id,
+                        text="❌ Ошибка при добавлении преподавателя",
+                        attachments=[create_cancel_keyboard()]
+                    )
+            except ValueError:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Неверный формат max_user_id. Должно быть число.",
+                    attachments=[create_cancel_keyboard()]
+                )
+            clear_state(max_user_id)
+        
+        elif state == 'admin_teacher_edit':
+            # Формат: ФИО, телефон, email
+            teacher_id = state_data.get('teacher_id')
+            if not teacher_id:
+                clear_state(max_user_id)
+                return
+            
+            parts = [p.strip() for p in text.split(',')]
+            fio = parts[0] if len(parts) > 0 else None
+            phone = parts[1] if len(parts) > 1 else None
+            email = parts[2] if len(parts) > 2 else None
+            
+            if UserModel.update_user(teacher_id, fio, phone, email):
+                api.send_message(
+                    user_id=max_user_id,
+                    text="✅ Данные преподавателя обновлены",
+                    attachments=[create_main_menu_keyboard(user['role'])]
+                )
+            else:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Ошибка при обновлении данных",
+                    attachments=[create_cancel_keyboard()]
+                )
+            clear_state(max_user_id)
+        
+        elif state == 'admin_broadcast_mass':
+            # Обработка массовой рассылки
+            # TODO: Реализовать выбор получателей и отправку
+            api.send_message(
+                user_id=max_user_id,
+                text="⚠️ Массовая рассылка пока не реализована полностью.\nОтправка сообщений будет добавлена позже.",
+                attachments=[create_main_menu_keyboard(user['role'])]
+            )
+            clear_state(max_user_id)
 

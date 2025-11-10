@@ -55,6 +55,17 @@ class User:
     def is_verified(max_user_id: int) -> bool:
         """Проверить, верифицирован ли пользователь"""
         return User.get_by_max_id(max_user_id) is not None
+    
+    @staticmethod
+    def get_all_students() -> List[Dict]:
+        """Получить всех студентов"""
+        query = """
+            SELECT id, max_user_id, fio, phone, email
+            FROM users
+            WHERE role = 'student'
+            ORDER BY fio
+        """
+        return execute_query(query, (), fetch_all=True) or []
 
 class Group:
     @staticmethod
@@ -99,6 +110,16 @@ class Group:
             FROM groups WHERE id = %s
         """
         return execute_query(query, (group_id,), fetch_one=True)
+    
+    @staticmethod
+    def get_all_groups() -> List[Dict]:
+        """Получить все группы"""
+        query = """
+            SELECT id, name, semester, year
+            FROM groups
+            ORDER BY year DESC, semester DESC, name
+        """
+        return execute_query(query, (), fetch_all=True) or []
 
 class Teacher:
     @staticmethod
@@ -155,6 +176,87 @@ class Teacher:
             ORDER BY fio
         """
         return execute_query(query, (), fetch_all=True) or []
+    
+    @staticmethod
+    def create_user(max_user_id: int, fio: str, role: str, phone: Optional[str] = None, email: Optional[str] = None) -> Optional[int]:
+        """Создать пользователя"""
+        query = """
+            INSERT INTO users (max_user_id, fio, role, phone, email)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """
+        result = execute_query(query, (max_user_id, fio, role, phone, email), fetch_one=True)
+        return result.get('id') if result else None
+    
+    @staticmethod
+    def update_user(user_id: int, fio: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None) -> bool:
+        """Обновить данные пользователя"""
+        updates = []
+        params = []
+        
+        if fio is not None:
+            updates.append("fio = %s")
+            params.append(fio)
+        if phone is not None:
+            updates.append("phone = %s")
+            params.append(phone)
+        if email is not None:
+            updates.append("email = %s")
+            params.append(email)
+        
+        if not updates:
+            return False
+        
+        params.append(user_id)
+        query = f"""
+            UPDATE users
+            SET {', '.join(updates)}
+            WHERE id = %s
+        """
+        execute_query(query, tuple(params))
+        return True
+    
+    @staticmethod
+    def delete_user(user_id: int) -> bool:
+        """Удалить пользователя"""
+        query = """
+            DELETE FROM users WHERE id = %s
+        """
+        execute_query(query, (user_id,))
+        return True
+    
+    @staticmethod
+    def assign_user_to_group(user_id: int, group_id: int, is_headman: bool = False) -> bool:
+        """Присвоить пользователя группе"""
+        query = """
+            INSERT INTO group_members (user_id, group_id, is_headman)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id, group_id) 
+            DO UPDATE SET is_headman = %s
+        """
+        execute_query(query, (user_id, group_id, is_headman, is_headman))
+        return True
+    
+    @staticmethod
+    def remove_user_from_group(user_id: int, group_id: int) -> bool:
+        """Удалить пользователя из группы"""
+        query = """
+            DELETE FROM group_members
+            WHERE user_id = %s AND group_id = %s
+        """
+        execute_query(query, (user_id, group_id))
+        return True
+    
+    @staticmethod
+    def assign_teacher_to_group(teacher_id: int, group_id: int, semester: Optional[int] = None, year: Optional[int] = None) -> bool:
+        """Привязать преподавателя к группе"""
+        query = """
+            INSERT INTO teacher_groups (teacher_id, group_id, semester, year)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (teacher_id, group_id, semester, year) DO NOTHING
+        """
+        execute_query(query, (teacher_id, group_id, semester, year))
+        return True
 
 class Message:
     @staticmethod

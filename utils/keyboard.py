@@ -29,7 +29,11 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
         ])
     elif role == 'admin':
         buttons.extend([
-            [{"type": "callback", "text": "💬 Написать пользователю", "payload": "admin_write"}],
+            [{"type": "callback", "text": "👨‍🎓 Управление студентами", "payload": "admin_students"}],
+            [{"type": "callback", "text": "👨‍🏫 Управление преподавателями", "payload": "admin_teachers"}],
+            [{"type": "callback", "text": "👥 Группы", "payload": "admin_groups"}],
+            [{"type": "callback", "text": "📢 Рассылки", "payload": "admin_broadcasts"}],
+            [{"type": "callback", "text": "📊 Отчеты", "payload": "admin_reports"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
     
@@ -332,6 +336,161 @@ def create_news_teacher_menu_keyboard() -> Dict:
         [{"type": "callback", "text": "🏢 Новости института", "payload": "news_institute"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_students_menu_keyboard() -> Dict:
+    """Создать меню управления студентами для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "➕ Добавить студента", "payload": "admin_student_add"}],
+        [{"type": "callback", "text": "✏️ Редактировать студента", "payload": "admin_student_edit"}],
+        [{"type": "callback", "text": "🗑️ Удалить студента", "payload": "admin_student_delete"}],
+        [{"type": "callback", "text": "👥 Присвоить группу", "payload": "admin_student_assign_group"}],
+        [{"type": "callback", "text": "📋 Просмотр контактов", "payload": "admin_student_contacts"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_teachers_menu_keyboard() -> Dict:
+    """Создать меню управления преподавателями для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "➕ Добавить преподавателя", "payload": "admin_teacher_add"}],
+        [{"type": "callback", "text": "✏️ Редактировать преподавателя", "payload": "admin_teacher_edit"}],
+        [{"type": "callback", "text": "👥 Назначить группы", "payload": "admin_teacher_assign_groups"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_groups_menu_keyboard() -> Dict:
+    """Создать меню управления группами для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "👥 Просмотр состава", "payload": "admin_group_view"}],
+        [{"type": "callback", "text": "➕ Добавить студента в группу", "payload": "admin_group_add_student"}],
+        [{"type": "callback", "text": "➖ Удалить студента из группы", "payload": "admin_group_remove_student"}],
+        [{"type": "callback", "text": "👨‍🏫 Привязать преподавателя", "payload": "admin_group_assign_teacher"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_broadcasts_menu_keyboard() -> Dict:
+    """Создать меню рассылок для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "📢 Массовая рассылка", "payload": "admin_broadcast_mass"}],
+        [{"type": "callback", "text": "📝 Шаблоны сообщений", "payload": "admin_broadcast_templates"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_reports_menu_keyboard() -> Dict:
+    """Создать меню отчетов для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "📊 Статистика активности", "payload": "admin_report_activity"}],
+        [{"type": "callback", "text": "💬 Отчеты по сообщениям", "payload": "admin_report_messages"}],
+        [{"type": "callback", "text": "👥 Отчеты по пользователям", "payload": "admin_report_users"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_help_menu_keyboard() -> Dict:
+    """Создать меню помощи для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "📖 Инструкции", "payload": "admin_help_instructions"}],
+        [{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}],
+        [{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_students_list_keyboard(students: List[Dict], prefix: str = "admin_student") -> Dict:
+    """Создать клавиатуру со списком студентов"""
+    buttons = []
+    for student in students[:20]:  # Ограничиваем 20 записями
+        buttons.append([{
+            "type": "callback",
+            "text": f"👨‍🎓 {student['fio']}",
+            "payload": f"{prefix}_{student['id']}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_students"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_teachers_list_keyboard(teachers: List[Dict], prefix: str = "admin_teacher") -> Dict:
+    """Создать клавиатуру со списком преподавателей"""
+    buttons = []
+    for teacher in teachers[:20]:  # Ограничиваем 20 записями
+        buttons.append([{
+            "type": "callback",
+            "text": f"👨‍🏫 {teacher['fio']}",
+            "payload": f"{prefix}_{teacher['id']}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_teachers"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_groups_list_keyboard(groups: List[Dict], prefix: str = "admin_group") -> Dict:
+    """Создать клавиатуру со списком групп"""
+    buttons = []
+    for group in groups[:20]:  # Ограничиваем 20 записями
+        buttons.append([{
+            "type": "callback",
+            "text": f"👥 {group['name']}",
+            "payload": f"{prefix}_{group['id']}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_groups"}])
     
     return {
         "type": "inline_keyboard",

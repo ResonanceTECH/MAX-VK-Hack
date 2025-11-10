@@ -1,6 +1,7 @@
 """Обработчик нажатий на кнопки"""
 from handlers.base import BaseHandler
 from db.models import User, Group, Teacher
+from db.connection import execute_query
 from utils.keyboard import (
     create_main_menu_keyboard, create_groups_keyboard, 
     create_students_keyboard, create_teachers_keyboard,
@@ -10,9 +11,14 @@ from utils.keyboard import (
     create_news_menu_keyboard, create_help_menu_keyboard,
     create_group_menu_teacher_keyboard, create_headmen_menu_keyboard,
     create_headmen_keyboard, create_teachers_teacher_keyboard,
-    create_news_teacher_menu_keyboard
+    create_news_teacher_menu_keyboard,
+    create_admin_students_menu_keyboard, create_admin_teachers_menu_keyboard,
+    create_admin_groups_menu_keyboard, create_admin_broadcasts_menu_keyboard,
+    create_admin_reports_menu_keyboard, create_admin_help_menu_keyboard,
+    create_students_list_keyboard, create_teachers_list_keyboard,
+    create_groups_list_keyboard
 )
-from utils.states import set_state, clear_state, set_user_role, get_user_role
+from utils.states import set_state, clear_state, set_user_role, get_user_role, get_state
 from typing import Dict, Any
 import logging
 
@@ -239,6 +245,28 @@ class CallbackHandler(BaseHandler):
             parts = payload.split('_')
             student_id = int(parts[2])
             self.start_student_chat(student_id, None, user_data, max_user_id, api)
+        elif payload == 'admin_students':
+            self.show_admin_students_menu(user_data, max_user_id, api)
+        elif payload == 'admin_teachers':
+            self.show_admin_teachers_menu(user_data, max_user_id, api)
+        elif payload == 'admin_groups':
+            self.show_admin_groups_menu(user_data, max_user_id, api)
+        elif payload == 'admin_broadcasts':
+            self.show_admin_broadcasts_menu(user_data, max_user_id, api)
+        elif payload == 'admin_reports':
+            self.show_admin_reports_menu(user_data, max_user_id, api)
+        elif payload.startswith('admin_student_'):
+            self.handle_admin_student_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('admin_teacher_'):
+            self.handle_admin_teacher_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('admin_group_'):
+            self.handle_admin_group_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('admin_broadcast_'):
+            self.handle_admin_broadcast_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('admin_report_'):
+            self.handle_admin_report_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('admin_help_'):
+            self.handle_admin_help_action(payload, user_data, max_user_id, api)
         elif payload == 'help':
             self.show_help(user_data['role'], max_user_id, api)
         elif payload == 'cancel':
@@ -995,6 +1023,13 @@ class CallbackHandler(BaseHandler):
                 text="❓ Помощь\n\nВыберите раздел:",
                 attachments=[keyboard]
             )
+        elif role == 'admin':
+            keyboard = create_admin_help_menu_keyboard()
+            api.send_message(
+                user_id=max_user_id,
+                text="❓ Помощь\n\nВыберите раздел:",
+                attachments=[keyboard]
+            )
         else:
             help_text = {
                 'teacher': (
@@ -1287,4 +1322,596 @@ class CallbackHandler(BaseHandler):
             text=text,
             attachments=[keyboard]
         )
+    
+    # ========== АДМИНИСТРАТОРСКИЕ ОБРАБОТЧИКИ ==========
+    
+    def show_admin_students_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню управления студентами"""
+        text = "👨‍🎓 Управление студентами\n\n"
+        text += "📱 Данный функционал доступен в мини-приложении.\n"
+        text += "Мини-приложение находится в разработке."
+        
+        keyboard = create_back_keyboard("main_menu")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_admin_teachers_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню управления преподавателями"""
+        text = "👨‍🏫 Управление преподавателями\n\n"
+        text += "📱 Данный функционал доступен в мини-приложении.\n"
+        text += "Мини-приложение находится в разработке."
+        
+        keyboard = create_back_keyboard("main_menu")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+    
+    def show_admin_groups_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню управления группами"""
+        keyboard = create_admin_groups_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="👥 Управление группами\n\nВыберите действие:",
+            attachments=[keyboard]
+        )
+    
+    def show_admin_broadcasts_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню рассылок"""
+        keyboard = create_admin_broadcasts_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="📢 Рассылки\n\nВыберите действие:",
+            attachments=[keyboard]
+        )
+    
+    def show_admin_reports_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню отчетов"""
+        keyboard = create_admin_reports_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="📊 Отчеты\n\nВыберите раздел:",
+            attachments=[keyboard]
+        )
+    
+    def handle_admin_student_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия со студентами"""
+        text = "👨‍🎓 Управление студентами\n\n"
+        text += "📱 Данный функционал доступен в мини-приложении.\n"
+        text += "Мини-приложение находится в разработке."
+        
+        keyboard = create_back_keyboard("main_menu")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+        return
+        
+        # Закомментированный код - функционал перенесен в миниапп
+        action = payload.replace('admin_student_', '')
+        
+        if action == 'add':
+            set_state(max_user_id, 'admin_student_add', {})
+            api.send_message(
+                user_id=max_user_id,
+                text="➕ Добавление студента\n\nОтправьте данные в формате:\nmax_user_id, ФИО, телефон, email\n\nПример: 123456789, Иванов Иван Иванович, +79001234567, ivan@example.com",
+                attachments=[create_cancel_keyboard()]
+            )
+        elif action == 'edit':
+            students = User.get_all_students()
+            if not students:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет студентов в системе",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+                return
+            keyboard = create_students_list_keyboard(students, prefix="admin_student_edit_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="✏️ Выберите студента для редактирования:",
+                attachments=[keyboard]
+            )
+        elif action == 'delete':
+            students = User.get_all_students()
+            if not students:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет студентов в системе",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+                return
+            keyboard = create_students_list_keyboard(students, prefix="admin_student_delete_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="🗑️ Выберите студента для удаления:",
+                attachments=[keyboard]
+            )
+        elif action == 'assign_group':
+            students = User.get_all_students()
+            if not students:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет студентов в системе",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+                return
+            keyboard = create_students_list_keyboard(students, prefix="admin_student_assign_group_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="👥 Выберите студента для присвоения группы:",
+                attachments=[keyboard]
+            )
+        elif action == 'contacts':
+            students = User.get_all_students()
+            if not students:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет студентов в системе",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+                return
+            keyboard = create_students_list_keyboard(students, prefix="admin_student_contacts_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="📋 Выберите студента для просмотра контактов:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('edit_select_'):
+            student_id = int(action.replace('edit_select_', ''))
+            set_state(max_user_id, 'admin_student_edit', {'student_id': student_id})
+            student = User.get_by_id(student_id)
+            if student:
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"✏️ Редактирование студента: {student['fio']}\n\nОтправьте новые данные в формате:\nФИО, телефон, email\n\nТекущие данные:\nФИО: {student.get('fio', 'не указано')}\nТелефон: {student.get('phone', 'не указано')}\nEmail: {student.get('email', 'не указано')}",
+                    attachments=[create_cancel_keyboard()]
+                )
+        elif action.startswith('delete_select_'):
+            student_id = int(action.replace('delete_select_', ''))
+            student = User.get_by_id(student_id)
+            if student:
+                User.delete_user(student_id)
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"✅ Студент {student['fio']} удален",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+        elif action.startswith('assign_group_select_'):
+            student_id = int(action.replace('assign_group_select_', ''))
+            groups = Group.get_all_groups()
+            if not groups:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет групп в системе",
+                    attachments=[create_back_keyboard("admin_students")]
+                )
+                return
+            set_state(max_user_id, 'admin_student_assign_group', {'student_id': student_id})
+            keyboard = create_groups_list_keyboard(groups, prefix="admin_student_assign_group_to")
+            api.send_message(
+                user_id=max_user_id,
+                text="👥 Выберите группу:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('contacts_select_'):
+            student_id = int(action.replace('contacts_select_', ''))
+            student = User.get_by_id(student_id)
+            if student:
+                text = f"📋 Контакты студента: {student['fio']}\n\n"
+                text += f"👤 Max ID: {student.get('max_user_id', 'не указано')}\n"
+                if student.get('max_user_id'):
+                    text += f"   [Профиль](max://user/{student['max_user_id']})\n"
+                text += f"📞 Телефон: {student.get('phone', 'не указано')}\n"
+                text += f"📧 Email: {student.get('email', 'не указано')}\n"
+                api.send_message(
+                    user_id=max_user_id,
+                    text=text,
+                    attachments=[create_back_keyboard("admin_students")],
+                    format_type="markdown"
+                )
+        elif action.startswith('assign_group_to_'):
+            group_id = int(action.replace('assign_group_to_', ''))
+            state_data = get_state(max_user_id)
+            if state_data and state_data.get('state') == 'admin_student_assign_group':
+                student_id = state_data.get('data', {}).get('student_id')
+                if student_id:
+                    User.assign_user_to_group(student_id, group_id)
+                    student = User.get_by_id(student_id)
+                    group = Group.get_by_id(group_id)
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Студент {student['fio'] if student else ''} добавлен в группу {group['name'] if group else ''}",
+                        attachments=[create_back_keyboard("admin_students")]
+                    )
+                    clear_state(max_user_id)
+    
+    def handle_admin_teacher_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия с преподавателями"""
+        text = "👨‍🏫 Управление преподавателями\n\n"
+        text += "📱 Данный функционал доступен в мини-приложении.\n"
+        text += "Мини-приложение находится в разработке."
+        
+        keyboard = create_back_keyboard("main_menu")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
+        return
+        
+        # Закомментированный код - функционал перенесен в миниапп
+        action = payload.replace('admin_teacher_', '')
+        
+        if action == 'add':
+            set_state(max_user_id, 'admin_teacher_add', {})
+            api.send_message(
+                user_id=max_user_id,
+                text="➕ Добавление преподавателя\n\nОтправьте данные в формате:\nmax_user_id, ФИО, телефон, email\n\nПример: 123456789, Петров Петр Петрович, +79001234567, petrov@example.com",
+                attachments=[create_cancel_keyboard()]
+            )
+        elif action == 'edit':
+            teachers = Teacher.get_all_teachers()
+            if not teachers:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет преподавателей в системе",
+                    attachments=[create_back_keyboard("admin_teachers")]
+                )
+                return
+            keyboard = create_teachers_list_keyboard(teachers, prefix="admin_teacher_edit_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="✏️ Выберите преподавателя для редактирования:",
+                attachments=[keyboard]
+            )
+        elif action == 'assign_groups':
+            teachers = Teacher.get_all_teachers()
+            if not teachers:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет преподавателей в системе",
+                    attachments=[create_back_keyboard("admin_teachers")]
+                )
+                return
+            keyboard = create_teachers_list_keyboard(teachers, prefix="admin_teacher_assign_groups_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="👥 Выберите преподавателя для назначения групп:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('edit_select_'):
+            teacher_id = int(action.replace('edit_select_', ''))
+            set_state(max_user_id, 'admin_teacher_edit', {'teacher_id': teacher_id})
+            teacher = User.get_by_id(teacher_id)
+            if teacher:
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"✏️ Редактирование преподавателя: {teacher['fio']}\n\nОтправьте новые данные в формате:\nФИО, телефон, email\n\nТекущие данные:\nФИО: {teacher.get('fio', 'не указано')}\nТелефон: {teacher.get('phone', 'не указано')}\nEmail: {teacher.get('email', 'не указано')}",
+                    attachments=[create_cancel_keyboard()]
+                )
+        elif action.startswith('assign_groups_select_'):
+            teacher_id = int(action.replace('assign_groups_select_', ''))
+            groups = Group.get_all_groups()
+            if not groups:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет групп в системе",
+                    attachments=[create_back_keyboard("admin_teachers")]
+                )
+                return
+            set_state(max_user_id, 'admin_teacher_assign_groups', {'teacher_id': teacher_id})
+            keyboard = create_groups_list_keyboard(groups, prefix="admin_teacher_assign_group_to")
+            api.send_message(
+                user_id=max_user_id,
+                text="👥 Выберите группу для назначения:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('assign_group_to_'):
+            group_id = int(action.replace('assign_group_to_', ''))
+            state_data = get_state(max_user_id)
+            if state_data and state_data.get('state') == 'admin_teacher_assign_groups':
+                teacher_id = state_data.get('data', {}).get('teacher_id')
+                if teacher_id:
+                    User.assign_teacher_to_group(teacher_id, group_id)
+                    teacher = User.get_by_id(teacher_id)
+                    group = Group.get_by_id(group_id)
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Преподаватель {teacher['fio'] if teacher else ''} назначен на группу {group['name'] if group else ''}",
+                        attachments=[create_back_keyboard("admin_teachers")]
+                    )
+                    clear_state(max_user_id)
+    
+    def handle_admin_group_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия с группами"""
+        action = payload.replace('admin_group_', '')
+        
+        if action == 'view':
+            # Просмотр состава группы - функционал в миниаппе
+            text = "👥 Просмотр состава группы\n\n"
+            text += "📱 Данный функционал доступен в мини-приложении.\n"
+            text += "Мини-приложение находится в разработке."
+            
+            keyboard = create_back_keyboard("admin_groups")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+            return
+        elif action.startswith('view_select_'):
+            # Просмотр состава группы - функционал в миниаппе
+            text = "👥 Просмотр состава группы\n\n"
+            text += "📱 Данный функционал доступен в мини-приложении.\n"
+            text += "Мини-приложение находится в разработке."
+            
+            keyboard = create_back_keyboard("admin_groups")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+            return
+        elif action == 'add_student':
+            groups = Group.get_all_groups()
+            if not groups:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет групп в системе",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            keyboard = create_groups_list_keyboard(groups, prefix="admin_group_add_student_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="➕ Выберите группу для добавления студента:",
+                attachments=[keyboard]
+            )
+        elif action == 'remove_student':
+            groups = Group.get_all_groups()
+            if not groups:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет групп в системе",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            keyboard = create_groups_list_keyboard(groups, prefix="admin_group_remove_student_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="➖ Выберите группу для удаления студента:",
+                attachments=[keyboard]
+            )
+        elif action == 'assign_teacher':
+            groups = Group.get_all_groups()
+            if not groups:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет групп в системе",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            keyboard = create_groups_list_keyboard(groups, prefix="admin_group_assign_teacher_select")
+            api.send_message(
+                user_id=max_user_id,
+                text="👨‍🏫 Выберите группу для привязки преподавателя:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('view_select_'):
+            group_id = int(action.replace('view_select_', ''))
+            members = Group.get_group_members(group_id)
+            group = Group.get_by_id(group_id)
+            text = f"👥 Состав группы {group['name'] if group else ''}:\n\n"
+            if not members:
+                text += "❌ В группе нет студентов"
+            else:
+                for member in members:
+                    headman = "⭐ Староста: " if member.get('is_headman') else ""
+                    text += f"{headman}{member['fio']}\n"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("admin_groups")]
+            )
+        elif action.startswith('add_student_select_'):
+            group_id = int(action.replace('add_student_select_', ''))
+            students = User.get_all_students()
+            if not students:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет студентов в системе",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            set_state(max_user_id, 'admin_group_add_student', {'group_id': group_id})
+            keyboard = create_students_list_keyboard(students, prefix="admin_group_add_student_to")
+            api.send_message(
+                user_id=max_user_id,
+                text="➕ Выберите студента для добавления:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('add_student_to_'):
+            student_id = int(action.replace('add_student_to_', ''))
+            state_data = get_state(max_user_id)
+            if state_data and state_data.get('state') == 'admin_group_add_student':
+                group_id = state_data.get('data', {}).get('group_id')
+                if group_id:
+                    User.assign_user_to_group(student_id, group_id)
+                    student = User.get_by_id(student_id)
+                    group = Group.get_by_id(group_id)
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Студент {student['fio'] if student else ''} добавлен в группу {group['name'] if group else ''}",
+                        attachments=[create_back_keyboard("admin_groups")]
+                    )
+                    clear_state(max_user_id)
+        elif action.startswith('remove_student_select_'):
+            group_id = int(action.replace('remove_student_select_', ''))
+            members = Group.get_group_members(group_id)
+            if not members:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ В группе нет студентов",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            set_state(max_user_id, 'admin_group_remove_student', {'group_id': group_id})
+            buttons = []
+            for member in members:
+                buttons.append([{
+                    "type": "callback",
+                    "text": f"{'⭐ ' if member.get('is_headman') else ''}{member['fio']}",
+                    "payload": f"admin_group_remove_student_from_{member['id']}"
+                }])
+            buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_groups"}])
+            keyboard = {
+                "type": "inline_keyboard",
+                "payload": {"buttons": buttons}
+            }
+            api.send_message(
+                user_id=max_user_id,
+                text="➖ Выберите студента для удаления из группы:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('remove_student_from_'):
+            student_id = int(action.replace('remove_student_from_', ''))
+            state_data = get_state(max_user_id)
+            if state_data and state_data.get('state') == 'admin_group_remove_student':
+                group_id = state_data.get('data', {}).get('group_id')
+                if group_id:
+                    User.remove_user_from_group(student_id, group_id)
+                    student = User.get_by_id(student_id)
+                    group = Group.get_by_id(group_id)
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Студент {student['fio'] if student else ''} удален из группы {group['name'] if group else ''}",
+                        attachments=[create_back_keyboard("admin_groups")]
+                    )
+                    clear_state(max_user_id)
+        elif action.startswith('assign_teacher_select_'):
+            group_id = int(action.replace('assign_teacher_select_', ''))
+            teachers = Teacher.get_all_teachers()
+            if not teachers:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет преподавателей в системе",
+                    attachments=[create_back_keyboard("admin_groups")]
+                )
+                return
+            set_state(max_user_id, 'admin_group_assign_teacher', {'group_id': group_id})
+            keyboard = create_teachers_list_keyboard(teachers, prefix="admin_group_assign_teacher_to")
+            api.send_message(
+                user_id=max_user_id,
+                text="👨‍🏫 Выберите преподавателя:",
+                attachments=[keyboard]
+            )
+        elif action.startswith('assign_teacher_to_'):
+            teacher_id = int(action.replace('assign_teacher_to_', ''))
+            state_data = get_state(max_user_id)
+            if state_data and state_data.get('state') == 'admin_group_assign_teacher':
+                group_id = state_data.get('data', {}).get('group_id')
+                if group_id:
+                    User.assign_teacher_to_group(teacher_id, group_id)
+                    teacher = User.get_by_id(teacher_id)
+                    group = Group.get_by_id(group_id)
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"✅ Преподаватель {teacher['fio'] if teacher else ''} привязан к группе {group['name'] if group else ''}",
+                        attachments=[create_back_keyboard("admin_groups")]
+                    )
+                    clear_state(max_user_id)
+    
+    def handle_admin_broadcast_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия с рассылками"""
+        action = payload.replace('admin_broadcast_', '')
+        
+        if action == 'mass':
+            set_state(max_user_id, 'admin_broadcast_mass', {})
+            api.send_message(
+                user_id=max_user_id,
+                text="📢 Массовая рассылка\n\nВыберите получателей:\n1. Все студенты\n2. Все преподаватели\n3. Все пользователи\n4. Конкретная группа\n\nОтправьте номер варианта:",
+                attachments=[create_cancel_keyboard()]
+            )
+        elif action == 'templates':
+            text = "📝 Шаблоны сообщений\n\n"
+            text += "⚠️ Функция шаблонов пока не реализована.\n"
+            text += "В будущем здесь можно будет:\n"
+            text += "• Создавать шаблоны сообщений\n"
+            text += "• Использовать шаблоны для рассылок\n"
+            text += "• Управлять шаблонами"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("admin_broadcasts")]
+            )
+    
+    def handle_admin_report_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия с отчетами"""
+        action = payload.replace('admin_report_', '')
+        
+        if action == 'activity':
+            text = "📊 Статистика активности\n\n"
+            text += "⚠️ Функция статистики пока не реализована.\n"
+            text += "В будущем здесь будет:\n"
+            text += "• Активность пользователей\n"
+            text += "• Количество сообщений\n"
+            text += "• Популярные функции"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("admin_reports")]
+            )
+        elif action == 'messages':
+            total = execute_query("SELECT COUNT(*) as count FROM messages", (), fetch_one=True)
+            total_count = total.get('count', 0) if total else 0
+            text = "💬 Отчеты по сообщениям\n\n"
+            text += f"📊 Всего сообщений в системе: {total_count}\n"
+            text += "⚠️ Детальная статистика пока не реализована."
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("admin_reports")]
+            )
+        elif action == 'users':
+            students = User.get_all_students()
+            teachers = Teacher.get_all_teachers()
+            text = "👥 Отчеты по пользователям\n\n"
+            text += f"👨‍🎓 Студентов: {len(students)}\n"
+            text += f"👨‍🏫 Преподавателей: {len(teachers)}\n"
+            text += f"📊 Всего пользователей: {len(students) + len(teachers)}"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("admin_reports")]
+            )
+    
+    def handle_admin_help_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия помощи для администратора"""
+        action = payload.replace('admin_help_', '')
+        
+        if action == 'instructions':
+            text = "📖 Инструкции по работе с ботом\n\n"
+            text += "👨‍🎓 Управление студентами:\n"
+            text += "• Добавление: отправьте данные в формате max_user_id, ФИО, телефон, email\n"
+            text += "• Редактирование: выберите студента и отправьте новые данные\n"
+            text += "• Удаление: выберите студента для удаления\n\n"
+            text += "👨‍🏫 Управление преподавателями:\n"
+            text += "• Аналогично управлению студентами\n\n"
+            text += "👥 Управление группами:\n"
+            text += "• Просмотр состава группы\n"
+            text += "• Добавление/удаление студентов\n"
+            text += "• Привязка преподавателей\n\n"
+            text += "📢 Рассылки:\n"
+            text += "• Массовые уведомления всем пользователям или группам"
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[create_back_keyboard("help")]
+            )
 
