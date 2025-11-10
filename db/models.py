@@ -13,15 +13,16 @@ class User:
             """
             return execute_query(query, (max_user_id, role), fetch_one=True)
         else:
-            # Если роль не указана, возвращаем первую найденную запись (приоритет: admin > teacher > student)
+            # Если роль не указана, возвращаем первую найденную запись (приоритет: admin > support > teacher > student)
             query = """
                 SELECT id, max_user_id, fio, role, phone, email
                 FROM users WHERE max_user_id = %s
                 ORDER BY CASE role 
                     WHEN 'admin' THEN 1 
-                    WHEN 'teacher' THEN 2 
-                    WHEN 'student' THEN 3 
-                    ELSE 4 
+                    WHEN 'support' THEN 2 
+                    WHEN 'teacher' THEN 3 
+                    WHEN 'student' THEN 4 
+                    ELSE 5 
                 END
                 LIMIT 1
             """
@@ -35,9 +36,10 @@ class User:
             FROM users WHERE max_user_id = %s
             ORDER BY CASE role 
                 WHEN 'admin' THEN 1 
-                WHEN 'teacher' THEN 2 
-                WHEN 'student' THEN 3 
-                ELSE 4 
+                WHEN 'support' THEN 2 
+                WHEN 'teacher' THEN 3 
+                WHEN 'student' THEN 4 
+                ELSE 5 
             END
         """
         return execute_query(query, (max_user_id,), fetch_all=True) or []
@@ -351,4 +353,208 @@ class Message:
             stats['total'] += count
         
         return stats
+
+
+class SupportTicket:
+    @staticmethod
+    def create_ticket(user_id: int, subject: str, message: str) -> Optional[int]:
+        """Создать обращение в поддержку"""
+        query = """
+            INSERT INTO support_tickets (user_id, subject, message, status)
+            VALUES (%s, %s, %s, 'new')
+            RETURNING id
+        """
+        result = execute_query(query, (user_id, subject, message), fetch_one=True)
+        return result.get('id') if result else None
+    
+    @staticmethod
+    def get_tickets(status: Optional[str] = None, admin_id: Optional[int] = None, limit: int = 50) -> List[Dict]:
+        """Получить обращения в поддержку"""
+        query = """
+            SELECT st.id, st.user_id, st.subject, st.message, st.status, 
+                   st.admin_id, st.response_time, st.resolved_at, st.created_at,
+                   u.fio, u.max_user_id, u.role
+            FROM support_tickets st
+            JOIN users u ON st.user_id = u.id
+            WHERE 1=1
+        """
+        params = []
+        
+        if status:
+            query += " AND st.status = %s"
+            params.append(status)
+        
+        if admin_id:
+            query += " AND st.admin_id = %s"
+            params.append(admin_id)
+        
+        query += " ORDER BY st.created_at DESC LIMIT %s"
+        params.append(limit)
+        
+        return execute_query(query, tuple(params), fetch_all=True) or []
+    
+    @staticmethod
+    def get_ticket_by_id(ticket_id: int) -> Optional[Dict]:
+        """Получить обращение по ID"""
+        query = """
+            SELECT st.id, st.user_id, st.subject, st.message, st.status,
+                   st.admin_id, st.response_time, st.resolved_at, st.created_at,
+                   u.fio, u.max_user_id, u.role,
+                   admin_user.fio as admin_fio
+            FROM support_tickets st
+            JOIN users u ON st.user_id = u.id
+            LEFT JOIN users admin_user ON st.admin_id = admin_user.id
+            WHERE st.id = %s
+        """
+        return execute_query(query, (ticket_id,), fetch_one=True)
+    
+    @staticmethod
+    def update_status(ticket_id: int, status: str, admin_id: Optional[int] = None) -> bool:
+        """Обновить статус обращения"""
+        params = [status]
+        
+        if admin_id:
+            query = """
+                UPDATE support_tickets
+                SET status = %s, admin_id = %s, updated_at = CURRENT_TIMESTAMP
+            """
+            params.append(admin_id)
+        else:
+            query = """
+                UPDATE support_tickets
+                SET status = %s, admin_id = NULL, updated_at = CURRENT_TIMESTAMP
+            """
+        
+        if status == 'resolved':
+            query = query.replace("updated_at = CURRENT_TIMESTAMP", 
+                                 "updated_at = CURRENT_TIMESTAMP, resolved_at = CURRENT_TIMESTAMP")
+        
+        query += " WHERE id = %s"
+        params.append(ticket_id)
+        
+        execute_query(query, tuple(params))
+        return True
+    
+    @staticmethod
+    def set_response_time(ticket_id: int, response_time: int) -> bool:
+        """Установить время реакции (в минутах)"""
+        query = """
+            UPDATE support_tickets
+            SET response_time = %s
+            WHERE id = %s AND response_time IS NULL
+        """
+        execute_query(query, (response_time, ticket_id))
+        return True
+    
+    @staticmethod
+    def get_stats() -> Dict:
+        """Получить статистику по обращениям"""
+        query = """
+            SELECT 
+                COUNT(*) as total,
+                COUNT(*) FILTER (WHERE status = 'new') as new,
+                COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress,
+                COUNT(*) FILTER (WHERE status = 'resolved') as resolved,
+                AVG(response_time) as avg_response_time,
+                COUNT(*) FILTER (WHERE resolved_at IS NOT NULL) as total_resolved
+            FROM support_tickets
+        """
+        result = execute_query(query, (), fetch_one=True) or {}
+        return {
+            'total': result.get('total', 0) or 0,
+            'new': result.get('new', 0) or 0,
+            'in_progress': result.get('in_progress', 0) or 0,
+            'resolved': result.get('resolved', 0) or 0,
+            'avg_response_time': float(result.get('avg_response_time', 0) or 0),
+            'total_resolved': result.get('total_resolved', 0) or 0
+        }
+
+
+class FAQ:
+    @staticmethod
+    def get_faq(category: Optional[str] = None, limit: int = 50) -> List[Dict]:
+        """Получить FAQ"""
+        query = """
+            SELECT id, question, answer, category, created_at
+            FROM faq
+            WHERE 1=1
+        """
+        params = []
+        
+        if category:
+            query += " AND category = %s"
+            params.append(category)
+        
+        query += " ORDER BY created_at DESC LIMIT %s"
+        params.append(limit)
+        
+        return execute_query(query, tuple(params), fetch_all=True) or []
+    
+    @staticmethod
+    def get_faq_by_id(faq_id: int) -> Optional[Dict]:
+        """Получить FAQ по ID"""
+        query = """
+            SELECT id, question, answer, category, created_at
+            FROM faq
+            WHERE id = %s
+        """
+        return execute_query(query, (faq_id,), fetch_one=True)
+    
+    @staticmethod
+    def create_faq(question: str, answer: str, category: str = 'general', created_by: Optional[int] = None) -> Optional[int]:
+        """Создать FAQ"""
+        query = """
+            INSERT INTO faq (question, answer, category, created_by)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """
+        result = execute_query(query, (question, answer, category, created_by), fetch_one=True)
+        return result.get('id') if result else None
+    
+    @staticmethod
+    def update_faq(faq_id: int, question: str, answer: str, category: str = 'general') -> bool:
+        """Обновить FAQ"""
+        query = """
+            UPDATE faq
+            SET question = %s, answer = %s, category = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        """
+        execute_query(query, (question, answer, category, faq_id))
+        return True
+    
+    @staticmethod
+    def delete_faq(faq_id: int) -> bool:
+        """Удалить FAQ"""
+        query = "DELETE FROM faq WHERE id = %s"
+        execute_query(query, (faq_id,))
+        return True
+
+
+class AdminMessage:
+    @staticmethod
+    def create_message(admin_id: int, title: str, message: str, target_role: Optional[str] = None, target_group_id: Optional[int] = None) -> Optional[int]:
+        """Создать сообщение администрации"""
+        query = """
+            INSERT INTO admin_messages (admin_id, title, message, target_role, target_group_id)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """
+        result = execute_query(query, (admin_id, title, message, target_role, target_group_id), fetch_one=True)
+        return result.get('id') if result else None
+    
+    @staticmethod
+    def get_messages(limit: int = 50) -> List[Dict]:
+        """Получить сообщения администрации"""
+        query = """
+            SELECT am.id, am.title, am.message, am.target_role, am.target_group_id,
+                   am.sent_at, am.created_at,
+                   u.fio as admin_fio,
+                   g.name as group_name
+            FROM admin_messages am
+            LEFT JOIN users u ON am.admin_id = u.id
+            LEFT JOIN groups g ON am.target_group_id = g.id
+            ORDER BY am.created_at DESC
+            LIMIT %s
+        """
+        return execute_query(query, (limit,), fetch_all=True) or []
 

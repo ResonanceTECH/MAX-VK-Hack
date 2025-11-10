@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     max_user_id BIGINT NOT NULL,  -- ID пользователя в Max
     fio VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,  -- 'student', 'teacher', 'admin'
+    role VARCHAR(50) NOT NULL,  -- 'student', 'teacher', 'admin', 'support'
     phone VARCHAR(20),
     email VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

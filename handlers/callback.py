@@ -1,6 +1,6 @@
 """Обработчик нажатий на кнопки"""
 from handlers.base import BaseHandler
-from db.models import User, Group, Teacher
+from db.models import User, Group, Teacher, SupportTicket, FAQ, AdminMessage
 from db.connection import execute_query
 from utils.keyboard import (
     create_main_menu_keyboard, create_groups_keyboard, 
@@ -16,7 +16,10 @@ from utils.keyboard import (
     create_admin_groups_menu_keyboard, create_admin_broadcasts_menu_keyboard,
     create_admin_reports_menu_keyboard, create_admin_help_menu_keyboard,
     create_students_list_keyboard, create_teachers_list_keyboard,
-    create_groups_list_keyboard
+    create_groups_list_keyboard,
+    create_admin_support_menu_keyboard, create_support_tickets_status_keyboard,
+    create_support_tickets_list_keyboard, create_support_ticket_actions_keyboard,
+    create_faq_list_keyboard
 )
 from utils.states import set_state, clear_state, set_user_role, get_user_role, get_state
 from typing import Dict, Any
@@ -267,6 +270,12 @@ class CallbackHandler(BaseHandler):
             self.handle_admin_report_action(payload, user_data, max_user_id, api)
         elif payload.startswith('admin_help_'):
             self.handle_admin_help_action(payload, user_data, max_user_id, api)
+        elif payload == 'admin_support':
+            self.show_admin_support_menu(user_data, max_user_id, api)
+        elif payload.startswith('admin_support_'):
+            self.handle_admin_support_action(payload, user_data, max_user_id, api)
+        elif payload.startswith('support_'):
+            self.handle_support_action(payload, user_data, max_user_id, api)
         elif payload == 'help':
             self.show_help(user_data['role'], max_user_id, api)
         elif payload == 'cancel':
@@ -295,7 +304,8 @@ class CallbackHandler(BaseHandler):
             greeting = {
                 'student': f"👋 Привет, {role_data['fio']}!\n\nВыберите действие:",
                 'teacher': f"👋 Здравствуйте, {role_data['fio']}!\n\nВыберите действие:",
-                'admin': f"👋 Администратор {role_data['fio']}\n\nВыберите действие:"
+                'admin': f"👋 Администратор {role_data['fio']}\n\nВыберите действие:",
+                'support': f"👋 Поддержка {role_data['fio']}\n\nВыберите действие:"
             }
             
             keyboard = create_main_menu_keyboard(role, has_multiple_roles=False)
@@ -365,7 +375,8 @@ class CallbackHandler(BaseHandler):
         greeting = {
             'student': f"👋 Привет, {user['fio']}!\n\nВыберите действие:",
             'teacher': f"👋 Здравствуйте, {user['fio']}!\n\nВыберите действие:",
-            'admin': f"👋 Администратор {user['fio']}\n\nВыберите действие:"
+            'admin': f"👋 Администратор {user['fio']}\n\nВыберите действие:",
+            'support': f"👋 Поддержка {user['fio']}\n\nВыберите действие:"
         }
         
         keyboard = create_main_menu_keyboard(role, has_multiple_roles)
@@ -1024,6 +1035,13 @@ class CallbackHandler(BaseHandler):
                 attachments=[keyboard]
             )
         elif role == 'admin':
+            keyboard = create_admin_help_menu_keyboard()
+            api.send_message(
+                user_id=max_user_id,
+                text="❓ Помощь\n\nВыберите раздел:",
+                attachments=[keyboard]
+            )
+        elif role == 'support':
             keyboard = create_admin_help_menu_keyboard()
             api.send_message(
                 user_id=max_user_id,
@@ -1913,5 +1931,484 @@ class CallbackHandler(BaseHandler):
                 user_id=max_user_id,
                 text=text,
                 attachments=[create_back_keyboard("help")]
+            )
+    
+    # ========== ОБРАБОТЧИКИ ПОДДЕРЖКИ ==========
+    
+    def show_admin_support_menu(self, user: Dict, max_user_id: int, api):
+        """Показать меню поддержки для администратора"""
+        keyboard = create_admin_support_menu_keyboard()
+        api.send_message(
+            user_id=max_user_id,
+            text="💬 Поддержка\n\nВыберите раздел:",
+            attachments=[keyboard]
+        )
+    
+    def handle_admin_support_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия поддержки"""
+        action = payload.replace('admin_support_', '')
+        
+        if action == 'tickets':
+            # Показать фильтр по статусам
+            keyboard = create_support_tickets_status_keyboard(role='admin')
+            api.send_message(
+                user_id=max_user_id,
+                text="📋 Запросы в поддержку\n\nВыберите статус:",
+                attachments=[keyboard]
+            )
+        elif action in ['tickets_new', 'tickets_in_progress', 'tickets_resolved', 'tickets_all']:
+            # Показать список обращений по статусу
+            status_map = {
+                'tickets_new': 'new',
+                'tickets_in_progress': 'in_progress',
+                'tickets_resolved': 'resolved',
+                'tickets_all': None
+            }
+            status = status_map.get(action)
+            tickets = SupportTicket.get_tickets(status=status)
+            
+            if not tickets:
+                status_text = {
+                    'new': 'новых',
+                    'in_progress': 'в работе',
+                    'resolved': 'решенных',
+                    None: ''
+                }.get(status, '')
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"❌ Нет {status_text} обращений",
+                    attachments=[create_support_tickets_status_keyboard(role='support')]
+                )
+                return
+            
+            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket", back_payload="support_tickets")
+            status_text = {
+                'new': '🆕 Новые',
+                'in_progress': '🔄 В работе',
+                'resolved': '✅ Решено',
+                None: '📋 Все'
+            }.get(status, '📋')
+            api.send_message(
+                user_id=max_user_id,
+                text=f"{status_text} обращения ({len(tickets)}):",
+                attachments=[keyboard]
+            )
+        elif action.startswith('ticket_'):
+            # Обработка конкретного обращения
+            ticket_id = int(action.split('_')[-1])
+            ticket = SupportTicket.get_ticket_by_id(ticket_id)
+            
+            if not ticket:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Обращение не найдено",
+                    attachments=[create_support_tickets_status_keyboard(role='support')]
+                )
+                return
+            
+            # Показать детали обращения
+            status_emoji = {
+                'new': '🆕',
+                'in_progress': '🔄',
+                'resolved': '✅'
+            }.get(ticket.get('status', 'new'), '📋')
+            
+            status_text = {
+                'new': 'Новое',
+                'in_progress': 'В работе',
+                'resolved': 'Решено'
+            }.get(ticket.get('status', 'new'), 'Неизвестно')
+            
+            text = f"{status_emoji} Обращение #{ticket['id']}\n\n"
+            text += f"👤 Пользователь: {ticket.get('fio', 'Неизвестно')}\n"
+            text += f"📋 Статус: {status_text}\n"
+            if ticket.get('admin_fio'):
+                text += f"👨‍💼 Администратор: {ticket.get('admin_fio')}\n"
+            text += f"📅 Создано: {ticket.get('created_at', 'Неизвестно')}\n\n"
+            text += f"📝 Тема: {ticket.get('subject', 'Без темы')}\n\n"
+            text += f"💬 Сообщение:\n{ticket.get('message', '')}\n"
+            
+            if ticket.get('response_time'):
+                text += f"\n⏱ Время реакции: {ticket['response_time']} мин."
+            
+            keyboard = create_support_ticket_actions_keyboard(ticket_id, ticket.get('status', 'new'), role='support')
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        elif action.startswith('ticket_take_'):
+            # Взять обращение в работу
+            ticket_id = int(action.split('_')[-1])
+            admin_user = User.get_by_max_id(max_user_id, role='admin')
+            if admin_user:
+                SupportTicket.update_status(ticket_id, 'in_progress', admin_user['id'])
+                # Вычислить время реакции
+                ticket = SupportTicket.get_ticket_by_id(ticket_id)
+                if ticket:
+                    from datetime import datetime
+                    created_at = ticket.get('created_at')
+                    if created_at:
+                        try:
+                            if isinstance(created_at, str):
+                                # Пробуем парсить ISO формат
+                                try:
+                                    created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                                except:
+                                    # Если не получилось, пробуем без timezone
+                                    created_at = datetime.fromisoformat(created_at.split('+')[0].split('Z')[0])
+                            now = datetime.now()
+                            if isinstance(created_at, datetime):
+                                # Убираем timezone для сравнения
+                                if created_at.tzinfo:
+                                    from datetime import timezone
+                                    created_at = created_at.replace(tzinfo=None)
+                                diff = now - created_at
+                                response_time = int(diff.total_seconds() / 60)
+                                if response_time >= 0:
+                                    SupportTicket.set_response_time(ticket_id, response_time)
+                        except Exception as e:
+                            logger.error(f"Ошибка при вычислении времени реакции: {e}")
+                
+                api.send_message(
+                    user_id=max_user_id,
+                    text="✅ Обращение взято в работу",
+                    attachments=[create_back_keyboard(f"admin_support_ticket_{ticket_id}")]
+                )
+        elif action.startswith('ticket_resolve_'):
+            # Решить обращение
+            ticket_id = int(action.split('_')[-1])
+            SupportTicket.update_status(ticket_id, 'resolved')
+            api.send_message(
+                user_id=max_user_id,
+                text="✅ Обращение помечено как решенное",
+                attachments=[create_back_keyboard(f"admin_support_ticket_{ticket_id}")]
+            )
+        elif action.startswith('ticket_contact_'):
+            # Связаться с пользователем
+            ticket_id = int(action.split('_')[-1])
+            ticket = SupportTicket.get_ticket_by_id(ticket_id)
+            if ticket:
+                user_id = ticket.get('user_id')
+                user = User.get_by_id(user_id)
+                if user:
+                    set_state(max_user_id, 'admin_support_contact', {'ticket_id': ticket_id, 'user_id': user_id})
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"💬 Написать пользователю {user.get('fio', '')}\n\nОтправьте сообщение:",
+                        attachments=[create_cancel_keyboard()]
+                    )
+        elif action == 'messages':
+            # Показать сообщения администрации
+            messages = AdminMessage.get_messages()
+            if not messages:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет сообщений администрации",
+                    attachments=[create_back_keyboard("admin_support")]
+                )
+                return
+            
+            text = "📢 Сообщения администрации:\n\n"
+            for msg in messages[:10]:  # Показываем последние 10
+                text += f"📋 {msg.get('title', 'Без заголовка')}\n"
+                text += f"   {msg.get('message', '')[:100]}...\n"
+                if msg.get('target_role'):
+                    text += f"   👥 Для: {msg.get('target_role')}\n"
+                text += f"   📅 {msg.get('created_at', '')}\n\n"
+            
+            keyboard = create_back_keyboard("admin_support")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        elif action == 'faq':
+            # Показать список FAQ
+            faq_list = FAQ.get_faq()
+            if not faq_list:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет FAQ",
+                    attachments=[create_back_keyboard("admin_support")]
+                )
+                return
+            
+            keyboard = create_faq_list_keyboard(faq_list)
+            api.send_message(
+                user_id=max_user_id,
+                text=f"❓ Часто задаваемые вопросы ({len(faq_list)}):",
+                attachments=[keyboard]
+            )
+        elif action.startswith('faq_view_'):
+            # Показать конкретный FAQ
+            faq_id = int(action.split('_')[-1])
+            faq = FAQ.get_faq_by_id(faq_id)
+            if faq:
+                text = f"❓ {faq.get('question', '')}\n\n"
+                text += f"💬 {faq.get('answer', '')}\n"
+                keyboard = create_back_keyboard("admin_support_faq")
+                api.send_message(
+                    user_id=max_user_id,
+                    text=text,
+                    attachments=[keyboard]
+                )
+        elif action == 'faq_add':
+            # Добавить новый FAQ
+            set_state(max_user_id, 'admin_support_faq_add', {})
+            api.send_message(
+                user_id=max_user_id,
+                text="➕ Добавление FAQ\n\nОтправьте данные в формате:\nВопрос\nОтвет\n\nПример:\nКак написать преподавателю?\nВыберите 'Преподаватели' → 'Написать преподавателю'",
+                attachments=[create_cancel_keyboard()]
+            )
+        elif action == 'stats':
+            # Показать статистику
+            stats = SupportTicket.get_stats()
+            text = "📊 Статистика поддержки:\n\n"
+            text += f"📋 Всего обращений: {stats.get('total', 0)}\n"
+            text += f"🆕 Новых: {stats.get('new', 0)}\n"
+            text += f"🔄 В работе: {stats.get('in_progress', 0)}\n"
+            text += f"✅ Решено: {stats.get('resolved', 0)}\n"
+            text += f"✅ Всего решено: {stats.get('total_resolved', 0)}\n"
+            avg_time = stats.get('avg_response_time', 0)
+            if avg_time > 0:
+                text += f"⏱ Среднее время реакции: {avg_time:.1f} мин."
+            else:
+                text += f"⏱ Среднее время реакции: не рассчитано"
+            
+            keyboard = create_back_keyboard("admin_support")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+    
+    # ========== ОБРАБОТЧИКИ ДЛЯ РОЛИ ПОДДЕРЖКИ ==========
+    
+    def handle_support_action(self, payload: str, user: Dict, max_user_id: int, api):
+        """Обработать действия поддержки (для роли support)"""
+        action = payload.replace('support_', '')
+        
+        if action == 'tickets':
+            # Показать фильтр по статусам
+            keyboard = create_support_tickets_status_keyboard(role='support')
+            api.send_message(
+                user_id=max_user_id,
+                text="📋 Запросы в поддержку\n\nВыберите статус:",
+                attachments=[keyboard]
+            )
+        elif action in ['tickets_new', 'tickets_in_progress', 'tickets_resolved', 'tickets_all']:
+            # Показать список обращений по статусу
+            status_map = {
+                'tickets_new': 'new',
+                'tickets_in_progress': 'in_progress',
+                'tickets_resolved': 'resolved',
+                'tickets_all': None
+            }
+            status = status_map.get(action)
+            tickets = SupportTicket.get_tickets(status=status)
+            
+            if not tickets:
+                status_text = {
+                    'new': 'новых',
+                    'in_progress': 'в работе',
+                    'resolved': 'решенных',
+                    None: ''
+                }.get(status, '')
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"❌ Нет {status_text} обращений",
+                    attachments=[create_support_tickets_status_keyboard(role='support')]
+                )
+                return
+            
+            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket", back_payload="support_tickets")
+            status_text = {
+                'new': '🆕 Новые',
+                'in_progress': '🔄 В работе',
+                'resolved': '✅ Решено',
+                None: '📋 Все'
+            }.get(status, '📋')
+            api.send_message(
+                user_id=max_user_id,
+                text=f"{status_text} обращения ({len(tickets)}):",
+                attachments=[keyboard]
+            )
+        elif action.startswith('ticket_'):
+            # Обработка конкретного обращения
+            ticket_id = int(action.split('_')[-1])
+            ticket = SupportTicket.get_ticket_by_id(ticket_id)
+            
+            if not ticket:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Обращение не найдено",
+                    attachments=[create_support_tickets_status_keyboard(role='support')]
+                )
+                return
+            
+            # Показать детали обращения
+            status_emoji = {
+                'new': '🆕',
+                'in_progress': '🔄',
+                'resolved': '✅'
+            }.get(ticket.get('status', 'new'), '📋')
+            
+            status_text = {
+                'new': 'Новое',
+                'in_progress': 'В работе',
+                'resolved': 'Решено'
+            }.get(ticket.get('status', 'new'), 'Неизвестно')
+            
+            text = f"{status_emoji} Обращение #{ticket['id']}\n\n"
+            text += f"👤 Пользователь: {ticket.get('fio', 'Неизвестно')}\n"
+            text += f"📋 Статус: {status_text}\n"
+            if ticket.get('admin_fio'):
+                text += f"👨‍💼 Администратор: {ticket.get('admin_fio')}\n"
+            text += f"📅 Создано: {ticket.get('created_at', 'Неизвестно')}\n\n"
+            text += f"📝 Тема: {ticket.get('subject', 'Без темы')}\n\n"
+            text += f"💬 Сообщение:\n{ticket.get('message', '')}\n"
+            
+            if ticket.get('response_time'):
+                text += f"\n⏱ Время реакции: {ticket['response_time']} мин."
+            
+            keyboard = create_support_ticket_actions_keyboard(ticket_id, ticket.get('status', 'new'), role='support')
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        elif action.startswith('ticket_take_'):
+            # Взять обращение в работу
+            ticket_id = int(action.split('_')[-1])
+            support_user = User.get_by_max_id(max_user_id, role='support')
+            if support_user:
+                SupportTicket.update_status(ticket_id, 'in_progress', support_user['id'])
+                # Вычислить время реакции
+                ticket = SupportTicket.get_ticket_by_id(ticket_id)
+                if ticket:
+                    from datetime import datetime
+                    created_at = ticket.get('created_at')
+                    if created_at:
+                        try:
+                            if isinstance(created_at, str):
+                                try:
+                                    created_at = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                                except:
+                                    created_at = datetime.fromisoformat(created_at.split('+')[0].split('Z')[0])
+                            now = datetime.now()
+                            if isinstance(created_at, datetime):
+                                if created_at.tzinfo:
+                                    created_at = created_at.replace(tzinfo=None)
+                                diff = now - created_at
+                                response_time = int(diff.total_seconds() / 60)
+                                if response_time >= 0:
+                                    SupportTicket.set_response_time(ticket_id, response_time)
+                        except Exception as e:
+                            logger.error(f"Ошибка при вычислении времени реакции: {e}")
+                
+                api.send_message(
+                    user_id=max_user_id,
+                    text="✅ Обращение взято в работу",
+                    attachments=[create_back_keyboard(f"support_ticket_{ticket_id}")]
+                )
+        elif action.startswith('ticket_resolve_'):
+            # Решить обращение
+            ticket_id = int(action.split('_')[-1])
+            SupportTicket.update_status(ticket_id, 'resolved')
+            api.send_message(
+                user_id=max_user_id,
+                text="✅ Обращение помечено как решенное",
+                attachments=[create_back_keyboard(f"support_ticket_{ticket_id}")]
+            )
+        elif action.startswith('ticket_contact_'):
+            # Связаться с пользователем
+            ticket_id = int(action.split('_')[-1])
+            ticket = SupportTicket.get_ticket_by_id(ticket_id)
+            if ticket:
+                user_id = ticket.get('user_id')
+                target_user = User.get_by_id(user_id)
+                if target_user:
+                    set_state(max_user_id, 'support_contact', {'ticket_id': ticket_id, 'user_id': user_id})
+                    api.send_message(
+                        user_id=max_user_id,
+                        text=f"💬 Написать пользователю {target_user.get('fio', '')}\n\nОтправьте сообщение:",
+                        attachments=[create_cancel_keyboard()]
+                    )
+        elif action == 'messages':
+            # Показать сообщения администрации
+            messages = AdminMessage.get_messages()
+            if not messages:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет сообщений администрации",
+                    attachments=[create_back_keyboard("main_menu")]
+                )
+                return
+            
+            text = "📢 Сообщения администрации:\n\n"
+            for msg in messages[:10]:
+                text += f"📋 {msg.get('title', 'Без заголовка')}\n"
+                text += f"   {msg.get('message', '')[:100]}...\n"
+                if msg.get('target_role'):
+                    text += f"   👥 Для: {msg.get('target_role')}\n"
+                text += f"   📅 {msg.get('created_at', '')}\n\n"
+            
+            keyboard = create_back_keyboard("main_menu")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+        elif action == 'faq':
+            # Показать список FAQ
+            faq_list = FAQ.get_faq()
+            if not faq_list:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Нет FAQ",
+                    attachments=[create_back_keyboard("main_menu")]
+                )
+                return
+            
+            keyboard = create_faq_list_keyboard(faq_list)
+            api.send_message(
+                user_id=max_user_id,
+                text=f"❓ Часто задаваемые вопросы ({len(faq_list)}):",
+                attachments=[keyboard]
+            )
+        elif action.startswith('faq_view_'):
+            # Показать конкретный FAQ
+            faq_id = int(action.split('_')[-1])
+            faq = FAQ.get_faq_by_id(faq_id)
+            if faq:
+                text = f"❓ {faq.get('question', '')}\n\n"
+                text += f"💬 {faq.get('answer', '')}\n"
+                keyboard = create_back_keyboard("support_faq")
+                api.send_message(
+                    user_id=max_user_id,
+                    text=text,
+                    attachments=[keyboard]
+                )
+        elif action == 'stats':
+            # Показать статистику
+            stats = SupportTicket.get_stats()
+            text = "📊 Статистика поддержки:\n\n"
+            text += f"📋 Всего обращений: {stats.get('total', 0)}\n"
+            text += f"🆕 Новых: {stats.get('new', 0)}\n"
+            text += f"🔄 В работе: {stats.get('in_progress', 0)}\n"
+            text += f"✅ Решено: {stats.get('resolved', 0)}\n"
+            text += f"✅ Всего решено: {stats.get('total_resolved', 0)}\n"
+            avg_time = stats.get('avg_response_time', 0)
+            if avg_time > 0:
+                text += f"⏱ Среднее время реакции: {avg_time:.1f} мин."
+            else:
+                text += f"⏱ Среднее время реакции: не рассчитано"
+            
+            keyboard = create_back_keyboard("main_menu")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
             )
 

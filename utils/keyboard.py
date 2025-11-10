@@ -33,7 +33,16 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
             [{"type": "callback", "text": "👨‍🏫 Управление преподавателями", "payload": "admin_teachers"}],
             [{"type": "callback", "text": "👥 Группы", "payload": "admin_groups"}],
             [{"type": "callback", "text": "📢 Рассылки", "payload": "admin_broadcasts"}],
+            [{"type": "callback", "text": "💬 Поддержка", "payload": "admin_support"}],
             [{"type": "callback", "text": "📊 Отчеты", "payload": "admin_reports"}],
+            [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
+        ])
+    elif role == 'support':
+        buttons.extend([
+            [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "support_tickets"}],
+            [{"type": "callback", "text": "📢 Сообщения", "payload": "support_messages"}],
+            [{"type": "callback", "text": "❓ FAQ", "payload": "support_faq"}],
+            [{"type": "callback", "text": "📊 Статистика", "payload": "support_stats"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
     
@@ -434,6 +443,115 @@ def create_admin_help_menu_keyboard() -> Dict:
         [{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_admin_support_menu_keyboard() -> Dict:
+    """Создать меню поддержки для администратора"""
+    buttons = [
+        [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "admin_support_tickets"}],
+        [{"type": "callback", "text": "📢 Сообщения", "payload": "admin_support_messages"}],
+        [{"type": "callback", "text": "❓ FAQ", "payload": "admin_support_faq"}],
+        [{"type": "callback", "text": "📊 Статистика", "payload": "admin_support_stats"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_support_tickets_status_keyboard(role: str = 'admin') -> Dict:
+    """Создать клавиатуру для фильтрации обращений по статусу"""
+    prefix = 'admin_support' if role == 'admin' else 'support'
+    back_payload = 'admin_support' if role == 'admin' else 'main_menu'
+    
+    buttons = [
+        [{"type": "callback", "text": "🆕 Новые", "payload": f"{prefix}_tickets_new"}],
+        [{"type": "callback", "text": "🔄 В работе", "payload": f"{prefix}_tickets_in_progress"}],
+        [{"type": "callback", "text": "✅ Решено", "payload": f"{prefix}_tickets_resolved"}],
+        [{"type": "callback", "text": "📋 Все обращения", "payload": f"{prefix}_tickets_all"}],
+        [{"type": "callback", "text": "◀️ Назад", "payload": back_payload}]
+    ]
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_support_tickets_list_keyboard(tickets: List[Dict], prefix: str = "admin_support_ticket", back_payload: str = "admin_support_tickets") -> Dict:
+    """Создать клавиатуру со списком обращений"""
+    buttons = []
+    for ticket in tickets[:20]:  # Ограничиваем 20 записями
+        ticket_id = ticket.get('id')
+        subject = ticket.get('subject', 'Без темы')[:30]  # Обрезаем длинные темы
+        status_emoji = {
+            'new': '🆕',
+            'in_progress': '🔄',
+            'resolved': '✅'
+        }.get(ticket.get('status', 'new'), '📋')
+        
+        buttons.append([{
+            "type": "callback",
+            "text": f"{status_emoji} {subject}",
+            "payload": f"{prefix}_{ticket_id}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support_tickets"}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_support_ticket_actions_keyboard(ticket_id: int, status: str, role: str = 'admin') -> Dict:
+    """Создать клавиатуру действий для обращения"""
+    prefix = 'admin_support' if role == 'admin' else 'support'
+    back_payload = f"{prefix}_tickets"
+    
+    buttons = []
+    
+    if status == 'new':
+        buttons.append([{"type": "callback", "text": "🔄 Взять в работу", "payload": f"{prefix}_ticket_take_{ticket_id}"}])
+    elif status == 'in_progress':
+        buttons.append([{"type": "callback", "text": "✅ Решить", "payload": f"{prefix}_ticket_resolve_{ticket_id}"}])
+    
+    buttons.append([{"type": "callback", "text": "💬 Написать пользователю", "payload": f"{prefix}_ticket_contact_{ticket_id}"}])
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": back_payload}])
+    
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": buttons
+        }
+    }
+
+def create_faq_list_keyboard(faq_list: List[Dict], prefix: str = "admin_support_faq") -> Dict:
+    """Создать клавиатуру со списком FAQ"""
+    buttons = []
+    for faq in faq_list[:20]:  # Ограничиваем 20 записями
+        faq_id = faq.get('id')
+        question = faq.get('question', 'Без вопроса')[:40]  # Обрезаем длинные вопросы
+        
+        buttons.append([{
+            "type": "callback",
+            "text": f"❓ {question}",
+            "payload": f"{prefix}_view_{faq_id}"
+        }])
+    
+    buttons.append([{"type": "callback", "text": "➕ Добавить FAQ", "payload": "admin_support_faq_add"}])
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support"}])
     
     return {
         "type": "inline_keyboard",
