@@ -24,6 +24,7 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
             [{"type": "callback", "text": "👥 Мои группы", "payload": "menu_my_groups"}],
             [{"type": "callback", "text": "⭐ Старосты", "payload": "menu_headmen"}],
             [{"type": "callback", "text": "👨‍🏫 Преподаватели", "payload": "menu_teachers_teacher"}],
+            [{"type": "callback", "text": "📅 Расписание", "payload": "menu_schedule"}],
             [{"type": "callback", "text": "📢 Новости", "payload": "menu_news_teacher"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])

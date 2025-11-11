@@ -2,6 +2,9 @@
 import requests
 import os
 import logging
+import io
+import json
+import base64
 from typing import Optional, Dict, Any
 
 from dotenv import load_dotenv
@@ -164,4 +167,89 @@ class MaxAPI:
             logger = logging.getLogger(__name__)
             logger.warning(f"Ошибка при ответе на callback: {e}")
             return False
+    
+    def send_photo(
+        self,
+        chat_id: Optional[int] = None,
+        user_id: Optional[int] = None,
+        photo: Optional[io.BytesIO] = None,
+        caption: Optional[str] = None,
+        attachments: Optional[list] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Отправляет фото пользователю или в чат"""
+        if not chat_id and not user_id:
+            print("Ошибка: нужно указать chat_id или user_id")
+            return None
+        
+        params = self._get_params()
+        if chat_id:
+            params['chat_id'] = chat_id
+        if user_id:
+            params['user_id'] = user_id
+        
+        try:
+            # Max API требует JSON формат, поэтому используем base64 для изображения
+            if photo:
+                photo.seek(0)  # Убеждаемся, что указатель в начале
+                
+                # Читаем байты изображения
+                photo_bytes = photo.read()
+                
+                # Кодируем в base64
+                photo_base64 = base64.b64encode(photo_bytes).decode('utf-8')
+                
+                # Формируем JSON payload в том же формате, что и send_message
+                # Max API может не поддерживать прямую отправку изображений через attachments
+                # Попробуем использовать формат, аналогичный send_message
+                data = {
+                    'text': caption or '',
+                    'attachments': attachments or [],
+                    'link': None
+                }
+                
+                # Добавляем фото в attachments в формате base64
+                # Формат может быть: {'type': 'photo', 'payload': {'data': base64}}
+                photo_attachment = {
+                    'type': 'photo',
+                    'payload': {
+                        'data': photo_base64,
+                        'filename': 'schedule.png'
+                    }
+                }
+                data['attachments'].append(photo_attachment)
+                
+                # Отправляем как JSON (как в send_message)
+                response = requests.post(
+                    f'{self.base_url}/messages',
+                    params=params,
+                    json=data,
+                    timeout=30
+                )
+            else:
+                # Если нет фото, отправляем обычное сообщение
+                data = {
+                    'text': caption or '',
+                }
+                if attachments:
+                    data['attachments'] = attachments
+                
+                response = requests.post(
+                    f'{self.base_url}/messages',
+                    params=params,
+                    json=data,
+                    timeout=30
+                )
+            
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Ошибка при отправке фото: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    print(f"  Детали ошибки: {error_data}")
+                except:
+                    print(f"  Статус код: {e.response.status_code}")
+                    print(f"  Текст ответа: {e.response.text[:500]}")
+            return None
 
