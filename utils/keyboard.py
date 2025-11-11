@@ -255,9 +255,6 @@ def create_help_menu_keyboard(role: str = 'student') -> Dict:
     if role != 'support':
         buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
     
-    if role == 'student':
-        buttons.append([{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}])
-    
     buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
     
     return {
@@ -510,7 +507,7 @@ def create_support_tickets_list_keyboard(tickets: List[Dict], prefix: str = "adm
             "payload": f"{prefix}_{ticket_id}"
         }])
     
-    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support_tickets"}])
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": back_payload}])
     
     return {
         "type": "inline_keyboard",
