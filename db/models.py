@@ -10,6 +10,7 @@ def format_fio(first_name: str, last_name: str, middle_name: Optional[str] = Non
         parts.append(middle_name)
     return ' '.join(parts)
 
+
 class User:
     @staticmethod
     def get_by_max_id(max_user_id: int, role: Optional[str] = None) -> Optional[Dict]:
@@ -37,7 +38,7 @@ class User:
                 LIMIT 1
             """
             return execute_query(query, (max_user_id,), fetch_one=True)
-    
+
     @staticmethod
     def get_all_roles(max_user_id: int) -> List[Dict]:
         """Получить все роли пользователя"""
@@ -54,7 +55,7 @@ class User:
             END
         """
         return execute_query(query, (max_user_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def get_by_id(user_id: int) -> Optional[Dict]:
         """Получить пользователя по ID"""
@@ -64,12 +65,12 @@ class User:
             FROM users WHERE id = %s
         """
         return execute_query(query, (user_id,), fetch_one=True)
-    
+
     @staticmethod
     def is_verified(max_user_id: int) -> bool:
         """Проверить, верифицирован ли пользователь"""
         return User.get_by_max_id(max_user_id) is not None
-    
+
     @staticmethod
     def get_all_students() -> List[Dict]:
         """Получить всех студентов"""
@@ -81,6 +82,7 @@ class User:
             ORDER BY last_name, first_name, middle_name
         """
         return execute_query(query, (), fetch_all=True) or []
+
 
 class Group:
     @staticmethod
@@ -94,7 +96,7 @@ class Group:
             ORDER BY g.year DESC, g.semester DESC
         """
         return execute_query(query, (user_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def get_group_members(group_id: int) -> List[Dict]:
         """Получить участников группы"""
@@ -107,7 +109,7 @@ class Group:
             ORDER BY u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (group_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def is_headman(user_id: int, group_id: int) -> bool:
         """Проверить, является ли пользователь старостой"""
@@ -117,7 +119,7 @@ class Group:
         """
         result = execute_query(query, (user_id, group_id), fetch_one=True)
         return result.get('is_headman', False) if result else False
-    
+
     @staticmethod
     def get_by_id(group_id: int) -> Optional[Dict]:
         """Получить группу по ID"""
@@ -126,7 +128,7 @@ class Group:
             FROM groups WHERE id = %s
         """
         return execute_query(query, (group_id,), fetch_one=True)
-    
+
     @staticmethod
     def get_all_groups() -> List[Dict]:
         """Получить все группы"""
@@ -136,7 +138,7 @@ class Group:
             ORDER BY year DESC, semester DESC, name
         """
         return execute_query(query, (), fetch_all=True) or []
-    
+
     @staticmethod
     def create_group(name: str, semester: Optional[int] = None, year: Optional[int] = None) -> Optional[int]:
         """Создать новую группу"""
@@ -147,13 +149,14 @@ class Group:
         """
         result = execute_query(query, (name, semester, year), fetch_one=True)
         return result.get('id') if result else None
-    
+
     @staticmethod
-    def update_group(group_id: int, name: Optional[str] = None, semester: Optional[int] = None, year: Optional[int] = None) -> bool:
+    def update_group(group_id: int, name: Optional[str] = None, semester: Optional[int] = None,
+                     year: Optional[int] = None) -> bool:
         """Обновить группу"""
         updates = []
         params = []
-        
+
         if name is not None:
             updates.append("name = %s")
             params.append(name)
@@ -163,15 +166,15 @@ class Group:
         if year is not None:
             updates.append("year = %s")
             params.append(year)
-        
+
         if not updates:
             return False
-        
+
         params.append(group_id)
         query = f"UPDATE groups SET {', '.join(updates)} WHERE id = %s"
         execute_query(query, tuple(params))
         return True
-    
+
     @staticmethod
     def delete_group(group_id: int) -> bool:
         """Удалить группу"""
@@ -179,6 +182,7 @@ class Group:
         query = "DELETE FROM groups WHERE id = %s"
         execute_query(query, (group_id,))
         return True
+
 
 class Teacher:
     @staticmethod
@@ -192,7 +196,7 @@ class Teacher:
             ORDER BY g.year DESC, g.semester DESC, g.name
         """
         return execute_query(query, (teacher_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def get_student_teachers(student_id: int) -> List[Dict]:
         """Получить преподавателей студента (через группы)"""
@@ -206,12 +210,12 @@ class Teacher:
             ORDER BY u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (student_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def get_teacher_by_id(teacher_id: int) -> Optional[Dict]:
         """Получить преподавателя по ID"""
         return User.get_by_id(teacher_id)
-    
+
     @staticmethod
     def get_teacher_headmen(teacher_id: int) -> List[Dict]:
         """Получить старост групп преподавателя"""
@@ -226,7 +230,7 @@ class Teacher:
             ORDER BY g.name, u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (teacher_id,), fetch_all=True) or []
-    
+
     @staticmethod
     def get_all_teachers() -> List[Dict]:
         """Получить всех преподавателей"""
@@ -238,9 +242,10 @@ class Teacher:
             ORDER BY last_name, first_name, middle_name
         """
         return execute_query(query, (), fetch_all=True) or []
-    
+
     @staticmethod
-    def create_user(max_user_id: int, fio: str, role: str, phone: Optional[str] = None, email: Optional[str] = None) -> Optional[int]:
+    def create_user(max_user_id: int, fio: str, role: str, phone: Optional[str] = None, email: Optional[str] = None) -> \
+    Optional[int]:
         """Создать пользователя. fio должен быть в формате "Фамилия Имя Отчество" или "Фамилия Имя" """
         # Парсим ФИО на части
         parts = fio.strip().split()
@@ -253,21 +258,23 @@ class Teacher:
             last_name = fio
             first_name = ""
             middle_name = None
-        
+
         query = """
             INSERT INTO users (max_user_id, first_name, last_name, middle_name, role, phone, email)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
-        result = execute_query(query, (max_user_id, first_name, last_name, middle_name, role, phone, email), fetch_one=True)
+        result = execute_query(query, (max_user_id, first_name, last_name, middle_name, role, phone, email),
+                               fetch_one=True)
         return result.get('id') if result else None
-    
+
     @staticmethod
-    def update_user(user_id: int, fio: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None) -> bool:
+    def update_user(user_id: int, fio: Optional[str] = None, phone: Optional[str] = None,
+                    email: Optional[str] = None) -> bool:
         """Обновить данные пользователя. fio должен быть в формате "Фамилия Имя Отчество" или "Фамилия Имя" """
         updates = []
         params = []
-        
+
         if fio is not None:
             # Парсим ФИО на части
             parts = fio.strip().split()
@@ -280,7 +287,7 @@ class Teacher:
                 last_name = fio
                 first_name = ""
                 middle_name = None
-            
+
             updates.append("first_name = %s, last_name = %s, middle_name = %s")
             params.extend([first_name, last_name, middle_name])
         if phone is not None:
@@ -289,10 +296,10 @@ class Teacher:
         if email is not None:
             updates.append("email = %s")
             params.append(email)
-        
+
         if not updates:
             return False
-        
+
         params.append(user_id)
         query = f"""
             UPDATE users
@@ -301,7 +308,7 @@ class Teacher:
         """
         execute_query(query, tuple(params))
         return True
-    
+
     @staticmethod
     def delete_user(user_id: int) -> bool:
         """Удалить пользователя"""
@@ -310,7 +317,7 @@ class Teacher:
         """
         execute_query(query, (user_id,))
         return True
-    
+
     @staticmethod
     def assign_user_to_group(user_id: int, group_id: int, is_headman: bool = False) -> bool:
         """Присвоить пользователя группе"""
@@ -322,7 +329,7 @@ class Teacher:
         """
         execute_query(query, (user_id, group_id, is_headman, is_headman))
         return True
-    
+
     @staticmethod
     def remove_user_from_group(user_id: int, group_id: int) -> bool:
         """Удалить пользователя из группы"""
@@ -332,9 +339,10 @@ class Teacher:
         """
         execute_query(query, (user_id, group_id))
         return True
-    
+
     @staticmethod
-    def assign_teacher_to_group(teacher_id: int, group_id: int, semester: Optional[int] = None, year: Optional[int] = None) -> bool:
+    def assign_teacher_to_group(teacher_id: int, group_id: int, semester: Optional[int] = None,
+                                year: Optional[int] = None) -> bool:
         """Привязать преподавателя к группе"""
         query = """
             INSERT INTO teacher_groups (teacher_id, group_id, semester, year)
@@ -344,34 +352,35 @@ class Teacher:
         execute_query(query, (teacher_id, group_id, semester, year))
         return True
 
+
 class Message:
     @staticmethod
-    def save_message(from_user_id: int, to_user_id: int, text: str, 
-                    max_message_id: str, group_id: Optional[int] = None):
+    def save_message(from_user_id: int, to_user_id: int, text: str,
+                     max_message_id: str, group_id: Optional[int] = None):
         """Сохранить сообщение в БД"""
         query = """
             INSERT INTO messages (from_user_id, to_user_id, group_id, text, max_message_id, status)
             VALUES (%s, %s, %s, %s, %s, 'unread')
         """
         return execute_query(query, (from_user_id, to_user_id, group_id, text, max_message_id))
-    
+
     @staticmethod
-    def get_user_messages(user_id: int, status: Optional[str] = None, 
-                         group_id: Optional[int] = None) -> List[Dict]:
+    def get_user_messages(user_id: int, status: Optional[str] = None,
+                          group_id: Optional[int] = None) -> List[Dict]:
         """Получить все сообщения для пользователя (от кого угодно)"""
         conditions = ["to_user_id = %s"]
         params = [user_id]
-        
+
         if status:
             conditions.append("status = %s")
             params.append(status)
-        
+
         if group_id:
             conditions.append("group_id = %s")
             params.append(group_id)
-        
+
         where_clause = " AND ".join(conditions)
-        
+
         query = f"""
             SELECT 
                 m.id,
@@ -393,13 +402,13 @@ class Message:
             ORDER BY m.created_at DESC
         """
         return execute_query(query, tuple(params), fetch_all=True) or []
-    
+
     @staticmethod
-    def get_teacher_messages(teacher_id: int, status: Optional[str] = None, 
-                            group_id: Optional[int] = None) -> List[Dict]:
+    def get_teacher_messages(teacher_id: int, status: Optional[str] = None,
+                             group_id: Optional[int] = None) -> List[Dict]:
         """Получить сообщения для преподавателя от студентов (для обратной совместимости)"""
         return Message.get_user_messages(teacher_id, status, group_id)
-    
+
     @staticmethod
     def get_by_id(message_id: int) -> Optional[Dict]:
         """Получить сообщение по ID"""
@@ -408,7 +417,7 @@ class Message:
             FROM messages WHERE id = %s
         """
         return execute_query(query, (message_id,), fetch_one=True)
-    
+
     @staticmethod
     def update_status(message_id: int, status: str):
         """Обновить статус сообщения"""
@@ -416,7 +425,7 @@ class Message:
             UPDATE messages SET status = %s WHERE id = %s
         """
         return execute_query(query, (status, message_id))
-    
+
     @staticmethod
     def get_teacher_stats(user_id: int) -> Dict:
         """Получить статистику сообщений для пользователя"""
@@ -429,20 +438,20 @@ class Message:
             GROUP BY status
         """
         results = execute_query(query, (user_id,), fetch_all=True) or []
-        
+
         stats = {
             'unread': 0,
             'read': 0,
             'total': 0
         }
-        
+
         for row in results:
             status = row.get('status', 'unread')
             count = row.get('count', 0)
             if status in stats:
                 stats[status] = count
             stats['total'] += count
-        
+
         return stats
 
 
@@ -457,7 +466,7 @@ class SupportTicket:
         """
         result = execute_query(query, (user_id, subject, message), fetch_one=True)
         return result.get('id') if result else None
-    
+
     @staticmethod
     def get_tickets(status: Optional[str] = None, admin_id: Optional[int] = None, limit: int = 50) -> List[Dict]:
         """Получить обращения в поддержку"""
@@ -470,20 +479,20 @@ class SupportTicket:
             WHERE 1=1
         """
         params = []
-        
+
         if status:
             query += " AND st.status = %s"
             params.append(status)
-        
+
         if admin_id:
             query += " AND st.admin_id = %s"
             params.append(admin_id)
-        
+
         query += " ORDER BY st.created_at DESC LIMIT %s"
         params.append(limit)
-        
+
         return execute_query(query, tuple(params), fetch_all=True) or []
-    
+
     @staticmethod
     def get_ticket_by_id(ticket_id: int) -> Optional[Dict]:
         """Получить обращение по ID"""
@@ -498,12 +507,12 @@ class SupportTicket:
             WHERE st.id = %s
         """
         return execute_query(query, (ticket_id,), fetch_one=True)
-    
+
     @staticmethod
     def update_status(ticket_id: int, status: str, admin_id: Optional[int] = None) -> bool:
         """Обновить статус обращения"""
         params = [status]
-        
+
         if admin_id:
             query = """
                 UPDATE support_tickets
@@ -515,17 +524,17 @@ class SupportTicket:
                 UPDATE support_tickets
                 SET status = %s, admin_id = NULL, updated_at = CURRENT_TIMESTAMP
             """
-        
+
         if status == 'resolved':
-            query = query.replace("updated_at = CURRENT_TIMESTAMP", 
-                                 "updated_at = CURRENT_TIMESTAMP, resolved_at = CURRENT_TIMESTAMP")
-        
+            query = query.replace("updated_at = CURRENT_TIMESTAMP",
+                                  "updated_at = CURRENT_TIMESTAMP, resolved_at = CURRENT_TIMESTAMP")
+
         query += " WHERE id = %s"
         params.append(ticket_id)
-        
+
         execute_query(query, tuple(params))
         return True
-    
+
     @staticmethod
     def set_response_time(ticket_id: int, response_time: int) -> bool:
         """Установить время реакции (в минутах)"""
@@ -536,7 +545,7 @@ class SupportTicket:
         """
         execute_query(query, (response_time, ticket_id))
         return True
-    
+
     @staticmethod
     def get_stats() -> Dict:
         """Получить статистику по обращениям"""
@@ -571,16 +580,16 @@ class FAQ:
             WHERE 1=1
         """
         params = []
-        
+
         if category:
             query += " AND category = %s"
             params.append(category)
-        
+
         query += " ORDER BY created_at DESC LIMIT %s"
         params.append(limit)
-        
+
         return execute_query(query, tuple(params), fetch_all=True) or []
-    
+
     @staticmethod
     def get_faq_by_id(faq_id: int) -> Optional[Dict]:
         """Получить FAQ по ID"""
@@ -590,9 +599,10 @@ class FAQ:
             WHERE id = %s
         """
         return execute_query(query, (faq_id,), fetch_one=True)
-    
+
     @staticmethod
-    def create_faq(question: str, answer: str, category: str = 'general', created_by: Optional[int] = None) -> Optional[int]:
+    def create_faq(question: str, answer: str, category: str = 'general', created_by: Optional[int] = None) -> Optional[
+        int]:
         """Создать FAQ"""
         query = """
             INSERT INTO faq (question, answer, category, created_by)
@@ -601,7 +611,7 @@ class FAQ:
         """
         result = execute_query(query, (question, answer, category, created_by), fetch_one=True)
         return result.get('id') if result else None
-    
+
     @staticmethod
     def update_faq(faq_id: int, question: str, answer: str, category: str = 'general') -> bool:
         """Обновить FAQ"""
@@ -612,7 +622,7 @@ class FAQ:
         """
         execute_query(query, (question, answer, category, faq_id))
         return True
-    
+
     @staticmethod
     def delete_faq(faq_id: int) -> bool:
         """Удалить FAQ"""
@@ -623,7 +633,8 @@ class FAQ:
 
 class AdminMessage:
     @staticmethod
-    def create_message(admin_id: int, title: str, message: str, target_role: Optional[str] = None, target_group_id: Optional[int] = None) -> Optional[int]:
+    def create_message(admin_id: int, title: str, message: str, target_role: Optional[str] = None,
+                       target_group_id: Optional[int] = None) -> Optional[int]:
         """Создать сообщение администрации"""
         query = """
             INSERT INTO admin_messages (admin_id, title, message, target_role, target_group_id)
@@ -632,7 +643,7 @@ class AdminMessage:
         """
         result = execute_query(query, (admin_id, title, message, target_role, target_group_id), fetch_one=True)
         return result.get('id') if result else None
-    
+
     @staticmethod
     def get_messages(limit: int = 50) -> List[Dict]:
         """Получить сообщения администрации"""
@@ -669,15 +680,15 @@ class News:
             elif user_role == 'teacher':
                 user_groups = Teacher.get_teacher_groups(user_id)
                 user_group_ids = [g['id'] for g in user_groups]
-        
+
         # Формируем условия для WHERE
         conditions = []
         params = []
-        
+
         # Условие для target_role: 'all', NULL или совпадает с ролью пользователя
         conditions.append("(target_role IS NULL OR target_role = 'all' OR target_role = %s)")
         params.append(user_role)
-        
+
         # Если у пользователя есть группы, добавляем условие для target_group_id
         if user_group_ids:
             conditions.append("(target_group_id IS NULL OR target_group_id = ANY(%s))")
@@ -685,9 +696,9 @@ class News:
         else:
             # Если у пользователя нет групп, показываем только новости без target_group_id
             conditions.append("target_group_id IS NULL")
-        
+
         where_clause = " AND ".join(conditions)
-        
+
         query = f"""
             SELECT id, title, description, hashtags, target_role, target_group_id, created_at
             FROM news
@@ -696,6 +707,5 @@ class News:
             LIMIT %s
         """
         params.append(limit)
-        
-        return execute_query(query, tuple(params), fetch_all=True) or []
 
+        return execute_query(query, tuple(params), fetch_all=True) or []
