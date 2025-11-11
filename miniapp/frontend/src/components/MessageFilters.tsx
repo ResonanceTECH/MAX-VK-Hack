@@ -45,8 +45,7 @@ const MessageFilters: React.FC<MessageFiltersProps> = ({
         >
           <option value="">Все</option>
           <option value="unread">Непрочитанные</option>
-          <option value="awaiting">Ожидают ответа</option>
-          <option value="replied">Отвечено</option>
+          <option value="read">Прочитанные</option>
         </select>
       </div>
 

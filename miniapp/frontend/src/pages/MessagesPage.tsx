@@ -3,6 +3,7 @@ import api from '../utils/api'
 import MessageCard from '../components/MessageCard'
 import MessageFilters from '../components/MessageFilters'
 import StatsBar from '../components/StatsBar'
+import { useAuth } from '../hooks/useAuth'
 import './MessagesPage.css'
 
 interface Message {
@@ -20,17 +21,35 @@ interface Message {
 
 interface Stats {
   unread: number
-  awaiting: number
-  replied: number
+  read?: number
+  awaiting?: number
+  replied?: number
   total: number
 }
 
 const MessagesPage: React.FC = () => {
+  const { user } = useAuth()
   const [messages, setMessages] = useState<Message[]>([])
-  const [stats, setStats] = useState<Stats>({ unread: 0, awaiting: 0, replied: 0, total: 0 })
+  const [stats, setStats] = useState<Stats>({ unread: 0, read: 0, total: 0 })
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string | null>(null)
   const [groupFilter, setGroupFilter] = useState<number | null>(null)
+  
+  const getPageTitle = () => {
+    if (!user) return 'Сообщения'
+    switch (user.role) {
+      case 'student':
+        return 'Сообщения'
+      case 'teacher':
+        return 'Сообщения'
+      case 'support':
+        return 'Сообщения в поддержку'
+      case 'admin':
+        return 'Сообщения'
+      default:
+        return 'Сообщения'
+    }
+  }
 
   useEffect(() => {
     loadMessages()
@@ -82,7 +101,7 @@ const MessagesPage: React.FC = () => {
 
   return (
     <div className="messages-page">
-      <h1>Сообщения студентов</h1>
+      <h1>{getPageTitle()}</h1>
       
       <StatsBar stats={stats} />
       

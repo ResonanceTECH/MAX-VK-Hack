@@ -91,10 +91,12 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
         raise HTTPException(status_code=401, detail=f"Ошибка проверки initData: {str(e)}")
 
 def get_current_user(
-    x_init_data: Optional[str] = Header(None, alias="X-Init-Data")
+    x_init_data: Optional[str] = Header(None, alias="X-Init-Data"),
+    x_selected_role: Optional[str] = Header(None, alias="X-Selected-Role")
 ) -> Dict[str, Any]:
     """
     Получить текущего пользователя из initData
+    Если указана роль в заголовке X-Selected-Role, возвращает пользователя с этой ролью
     """
     # Временный обход авторизации для локального тестирования
     import os
@@ -102,7 +104,13 @@ def get_current_user(
     
     if skip_auth:
         # Получаем пользователя напрямую из БД без проверки initData
-        user = User.get_by_max_id(88287731)
+        max_user_id = 96855100
+        if x_selected_role:
+            # Если указана роль, получаем пользователя с этой ролью
+            user = User.get_by_max_id(max_user_id, role=x_selected_role)
+        else:
+            user = User.get_by_max_id(max_user_id)
+        
         if not user:
             raise HTTPException(status_code=403, detail="Пользователь не найден в БД")
         return user
@@ -119,7 +127,11 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Неверный user_id в initData")
     
     # Получаем пользователя из БД
-    user = User.get_by_max_id(max_user_id)
+    if x_selected_role:
+        # Если указана роль, получаем пользователя с этой ролью
+        user = User.get_by_max_id(max_user_id, role=x_selected_role)
+    else:
+        user = User.get_by_max_id(max_user_id)
     
     if not user:
         raise HTTPException(status_code=403, detail="Пользователь не найден в системе")

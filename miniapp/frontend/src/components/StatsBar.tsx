@@ -3,8 +3,9 @@ import './StatsBar.css'
 
 interface Stats {
   unread: number
-  awaiting: number
-  replied: number
+  read?: number
+  awaiting?: number
+  replied?: number
   total: number
 }
 
@@ -16,16 +17,12 @@ const StatsBar: React.FC<StatsBarProps> = ({ stats }) => {
   return (
     <div className="stats-bar">
       <div className="stat-item unread">
-        <div className="stat-value">{stats.unread}</div>
+        <div className="stat-value">{stats.unread || 0}</div>
         <div className="stat-label">Непрочитанные</div>
       </div>
-      <div className="stat-item awaiting">
-        <div className="stat-value">{stats.awaiting}</div>
-        <div className="stat-label">Ожидают ответа</div>
-      </div>
-      <div className="stat-item replied">
-        <div className="stat-value">{stats.replied}</div>
-        <div className="stat-label">Отвечено</div>
+      <div className="stat-item read">
+        <div className="stat-value">{stats.read || 0}</div>
+        <div className="stat-label">Прочитанные</div>
       </div>
       <div className="stat-item total">
         <div className="stat-value">{stats.total}</div>

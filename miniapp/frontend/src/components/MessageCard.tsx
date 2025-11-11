@@ -24,9 +24,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onStatusChange }) =>
     switch (status) {
       case 'unread':
         return '#d32f2f' // красный
-      case 'awaiting':
-        return '#ed6c02' // желтый/оранжевый
-      case 'replied':
+      case 'read':
         return '#2e7d32' // зеленый
       default:
         return '#666'
@@ -37,10 +35,8 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onStatusChange }) =>
     switch (status) {
       case 'unread':
         return 'Непрочитанное'
-      case 'awaiting':
-        return 'Ожидает ответа'
-      case 'replied':
-        return 'Отвечено'
+      case 'read':
+        return 'Прочитанное'
       default:
         return status
     }
@@ -84,18 +80,11 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onStatusChange }) =>
             Непрочитанное
           </button>
           <button
-            className={`status-btn ${message.status === 'awaiting' ? 'active' : ''}`}
-            onClick={() => onStatusChange(message.id, 'awaiting')}
-            style={{ backgroundColor: message.status === 'awaiting' ? '#ed6c02' : '#f5f5f5', color: message.status === 'awaiting' ? 'white' : '#333' }}
+            className={`status-btn ${message.status === 'read' ? 'active' : ''}`}
+            onClick={() => onStatusChange(message.id, 'read')}
+            style={{ backgroundColor: message.status === 'read' ? '#2e7d32' : '#f5f5f5', color: message.status === 'read' ? 'white' : '#333' }}
           >
-            Ожидает ответа
-          </button>
-          <button
-            className={`status-btn ${message.status === 'replied' ? 'active' : ''}`}
-            onClick={() => onStatusChange(message.id, 'replied')}
-            style={{ backgroundColor: message.status === 'replied' ? '#2e7d32' : '#f5f5f5', color: message.status === 'replied' ? 'white' : '#333' }}
-          >
-            Отвечено
+            Прочитанное
           </button>
         </div>
       </div>

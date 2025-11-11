@@ -91,6 +91,19 @@ CREATE TABLE IF NOT EXISTS admin_messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Новости
+CREATE TABLE IF NOT EXISTS news (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    hashtags VARCHAR(500),  -- Хэштеги через запятую
+    target_role VARCHAR(50),  -- 'student', 'teacher', 'all' или NULL для всех
+    target_group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL,  -- NULL для всех групп
+    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Индексы для оптимизации
 CREATE INDEX IF NOT EXISTS idx_users_max_id ON users(max_user_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_user ON group_members(user_id);
@@ -106,4 +119,6 @@ CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)
 CREATE INDEX IF NOT EXISTS idx_support_tickets_admin ON support_tickets(admin_id);
 CREATE INDEX IF NOT EXISTS idx_faq_category ON faq(category);
 CREATE INDEX IF NOT EXISTS idx_admin_messages_role ON admin_messages(target_role);
+CREATE INDEX IF NOT EXISTS idx_news_role ON news(target_role);
+CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at);
 

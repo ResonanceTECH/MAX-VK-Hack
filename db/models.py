@@ -136,6 +136,49 @@ class Group:
             ORDER BY year DESC, semester DESC, name
         """
         return execute_query(query, (), fetch_all=True) or []
+    
+    @staticmethod
+    def create_group(name: str, semester: Optional[int] = None, year: Optional[int] = None) -> Optional[int]:
+        """Создать новую группу"""
+        query = """
+            INSERT INTO groups (name, semester, year)
+            VALUES (%s, %s, %s)
+            RETURNING id
+        """
+        result = execute_query(query, (name, semester, year), fetch_one=True)
+        return result.get('id') if result else None
+    
+    @staticmethod
+    def update_group(group_id: int, name: Optional[str] = None, semester: Optional[int] = None, year: Optional[int] = None) -> bool:
+        """Обновить группу"""
+        updates = []
+        params = []
+        
+        if name is not None:
+            updates.append("name = %s")
+            params.append(name)
+        if semester is not None:
+            updates.append("semester = %s")
+            params.append(semester)
+        if year is not None:
+            updates.append("year = %s")
+            params.append(year)
+        
+        if not updates:
+            return False
+        
+        params.append(group_id)
+        query = f"UPDATE groups SET {', '.join(updates)} WHERE id = %s"
+        execute_query(query, tuple(params))
+        return True
+    
+    @staticmethod
+    def delete_group(group_id: int) -> bool:
+        """Удалить группу"""
+        # Каскадное удаление через ON DELETE CASCADE в схеме БД
+        query = "DELETE FROM groups WHERE id = %s"
+        execute_query(query, (group_id,))
+        return True
 
 class Teacher:
     @staticmethod
@@ -313,11 +356,11 @@ class Message:
         return execute_query(query, (from_user_id, to_user_id, group_id, text, max_message_id))
     
     @staticmethod
-    def get_teacher_messages(teacher_id: int, status: Optional[str] = None, 
-                            group_id: Optional[int] = None) -> List[Dict]:
-        """Получить сообщения для преподавателя от студентов"""
+    def get_user_messages(user_id: int, status: Optional[str] = None, 
+                         group_id: Optional[int] = None) -> List[Dict]:
+        """Получить все сообщения для пользователя (от кого угодно)"""
         conditions = ["to_user_id = %s"]
-        params = [teacher_id]
+        params = [user_id]
         
         if status:
             conditions.append("status = %s")
@@ -334,6 +377,7 @@ class Message:
                 m.id,
                 m.from_user_id,
                 TRIM(CONCAT_WS(' ', u1.last_name, u1.first_name, u1.middle_name)) as from_user_fio,
+                u1.role as from_user_role,
                 m.to_user_id,
                 TRIM(CONCAT_WS(' ', u2.last_name, u2.first_name, u2.middle_name)) as to_user_fio,
                 m.group_id,
@@ -349,6 +393,12 @@ class Message:
             ORDER BY m.created_at DESC
         """
         return execute_query(query, tuple(params), fetch_all=True) or []
+    
+    @staticmethod
+    def get_teacher_messages(teacher_id: int, status: Optional[str] = None, 
+                            group_id: Optional[int] = None) -> List[Dict]:
+        """Получить сообщения для преподавателя от студентов (для обратной совместимости)"""
+        return Message.get_user_messages(teacher_id, status, group_id)
     
     @staticmethod
     def get_by_id(message_id: int) -> Optional[Dict]:
@@ -368,8 +418,8 @@ class Message:
         return execute_query(query, (status, message_id))
     
     @staticmethod
-    def get_teacher_stats(teacher_id: int) -> Dict:
-        """Получить статистику сообщений для преподавателя"""
+    def get_teacher_stats(user_id: int) -> Dict:
+        """Получить статистику сообщений для пользователя"""
         query = """
             SELECT 
                 status,
@@ -378,19 +428,19 @@ class Message:
             WHERE to_user_id = %s
             GROUP BY status
         """
-        results = execute_query(query, (teacher_id,), fetch_all=True) or []
+        results = execute_query(query, (user_id,), fetch_all=True) or []
         
         stats = {
             'unread': 0,
-            'awaiting': 0,
-            'replied': 0,
+            'read': 0,
             'total': 0
         }
         
         for row in results:
             status = row.get('status', 'unread')
             count = row.get('count', 0)
-            stats[status] = count
+            if status in stats:
+                stats[status] = count
             stats['total'] += count
         
         return stats
