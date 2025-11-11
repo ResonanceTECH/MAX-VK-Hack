@@ -60,7 +60,8 @@ def create_role_selection_keyboard(roles: List[Dict]) -> Dict:
     role_names = {
         'student': '👨‍🎓 Студент',
         'teacher': '👨‍🏫 Преподаватель',
-        'admin': '👑 Администратор'
+        'admin': '👑 Администратор',
+        'support': '💬 Поддержка'
     }
     
     for role_data in roles:
@@ -252,8 +253,11 @@ def create_help_menu_keyboard(role: str = 'student') -> Dict:
     """Создать меню помощи"""
     buttons = [
         [{"type": "callback", "text": "❓ FAQ", "payload": "help_faq"}],
-        [{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}],
     ]
+    
+    # Для поддержки не показываем "Связь с поддержкой" и "Настройки уведомлений"
+    if role != 'support':
+        buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
     
     if role == 'student':
         buttons.append([{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}])
@@ -436,14 +440,18 @@ def create_admin_reports_menu_keyboard() -> Dict:
         }
     }
 
-def create_admin_help_menu_keyboard() -> Dict:
-    """Создать меню помощи для администратора"""
+def create_admin_help_menu_keyboard(role: str = 'admin') -> Dict:
+    """Создать меню помощи для администратора и поддержки"""
     buttons = [
         [{"type": "callback", "text": "📖 Инструкции", "payload": "admin_help_instructions"}],
-        [{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}],
-        [{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}],
-        [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
+    
+    # Для поддержки не показываем "Связь с поддержкой" и "Настройки уведомлений"
+    if role != 'support':
+        buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
+        buttons.append([{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}])
+    
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
     
     return {
         "type": "inline_keyboard",

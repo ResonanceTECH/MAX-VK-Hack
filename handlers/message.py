@@ -56,6 +56,10 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_преподавателю")
                 self.handle_send_to_teacher(user, max_user_id, text, state_data, api, message_id)
                 return
+            elif state == 'waiting_message_to_support':
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_в_поддержку")
+                self.handle_send_to_support(user, max_user_id, text, state_data, api, message_id)
+                return
             elif state == 'waiting_broadcast_message':
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_группе")
                 self.handle_broadcast_message(user, max_user_id, text, state_data, api, message_id)
@@ -275,6 +279,81 @@ class MessageHandler(BaseHandler):
             api.send_message(
                 user_id=max_user_id,
                 text=f"✅ Сообщение отправлено студенту {student['fio']}",
+                attachments=[create_main_menu_keyboard(user['role'])]
+            )
+        else:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
+                attachments=[create_back_keyboard()]
+            )
+        
+        clear_state(max_user_id)
+    
+    def handle_send_to_support(self, user: Dict, max_user_id: int, text: str,
+                               state_data: Dict, api, message_id: str):
+        """Обработать отправку сообщения в поддержку"""
+        from db.models import User as UserModel, SupportTicket, Message
+        
+        if text.lower() in ['отмена', 'cancel', '/cancel']:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_отправки_в_поддержку")
+            clear_state(max_user_id)
+            self.show_main_menu(user, None, max_user_id, api)
+            return
+        
+        support_id = state_data.get('support_id')
+        support_user = UserModel.get_by_id(support_id)
+        
+        if support_user:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отправлено_сообщение_в_поддержку_{support_user.get('fio', 'Unknown')}")
+        
+        if not support_user:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Поддержка не найдена",
+                attachments=[create_back_keyboard()]
+            )
+            clear_state(max_user_id)
+            return
+        
+        # Создаем тикет автоматически
+        subject = text[:100] if len(text) > 100 else text  # Тема - первые 100 символов сообщения
+        ticket_id = SupportTicket.create_ticket(user['id'], subject, text)
+        
+        if not ticket_id:
+            logger.error(f"Ошибка при создании тикета для пользователя {user['id']}")
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Ошибка при создании обращения. Попробуйте позже.",
+                attachments=[create_back_keyboard()]
+            )
+            clear_state(max_user_id)
+            return
+        
+        logger.info(f"Создан тикет #{ticket_id} для пользователя {user['id']}")
+        
+        # Отправляем сообщение поддержке
+        result = api.send_message(
+            user_id=support_user['max_user_id'],
+            text=f"💬 Сообщение от {user['fio']} (Тикет #{ticket_id}):\n\n{text}"
+        )
+        
+        if result:
+            # Получаем message_id из ответа API
+            sent_message_id = result.get('message', {}).get('body', {}).get('mid', message_id)
+            # Сохраняем в БД
+            Message.save_message(
+                from_user_id=user['id'],
+                to_user_id=support_id,
+                text=text,
+                max_message_id=sent_message_id
+            )
+            
+            api.send_message(
+                user_id=max_user_id,
+                text=f"✅ Сообщение отправлено в поддержку\n\n"
+                     f"📋 Тикет создан: #{ticket_id}\n"
+                     f"📊 Статус: На рассмотрении",
                 attachments=[create_main_menu_keyboard(user['role'])]
             )
         else:
@@ -647,7 +726,7 @@ class MessageHandler(BaseHandler):
                 attachments=[create_main_menu_keyboard(user['role'])]
             )
             clear_state(max_user_id)
-        elif state in ['admin_support_contact', 'support_contact']:
+        elif state in ['admin_support_contact', 'support_contact', 'waiting_message_from_support']:
             # Отправка сообщения пользователю из обращения (для admin и support)
             user_id = state_data.get('user_id')
             ticket_id = state_data.get('ticket_id')

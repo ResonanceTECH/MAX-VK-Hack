@@ -202,6 +202,9 @@ class CallbackHandler(BaseHandler):
             self.show_help_support(user_data, max_user_id, api)
         elif payload.startswith('help_common'):
             self.show_help_common(user_data, max_user_id, api)
+        elif payload.startswith('write_support_'):
+            support_id = int(payload.split('_')[-1])
+            self.start_support_chat(support_id, user_data, max_user_id, api)
         elif payload == 'menu_my_groups':
             self.show_teacher_groups_menu(user_data, max_user_id, api)
         elif payload == 'menu_headmen':
@@ -1159,7 +1162,7 @@ class CallbackHandler(BaseHandler):
                 attachments=[keyboard]
             )
         elif role == 'support':
-            keyboard = create_admin_help_menu_keyboard()
+            keyboard = create_admin_help_menu_keyboard('support')
             api.send_message(
                 user_id=max_user_id,
                 text="❓ Помощь\n\nВыберите раздел:",
@@ -1215,19 +1218,64 @@ class CallbackHandler(BaseHandler):
         )
     
     def show_help_support(self, user: Dict, max_user_id: int, api):
-        """Показать контакты поддержки"""
-        text = "💬 Связь с поддержкой:\n\n"
-        text += "Если у вас возникли вопросы или проблемы:\n\n"
-        text += "📧 Email: support@university.ru\n"
-        text += "📞 Телефон: +7 (XXX) XXX-XX-XX\n"
-        text += "🕐 Время работы: Пн-Пт, 9:00-18:00\n\n"
-        text += "Или обратитесь к администратору через бота."
+        """Показать связь с поддержкой"""
+        # Получаем пользователя поддержки
+        from db.connection import execute_query
+        support_query = """
+            SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                   TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
+            FROM users
+            WHERE role = 'support'
+            LIMIT 1
+        """
+        support_user = execute_query(support_query, (), fetch_one=True)
         
-        keyboard = create_back_keyboard("help")
+        if not support_user:
+            text = "💬 Связь с поддержкой:\n\n"
+            text += "⚠️ Поддержка временно недоступна. Обратитесь к администратору."
+            keyboard = create_back_keyboard("help")
+            api.send_message(
+                user_id=max_user_id,
+                text=text,
+                attachments=[keyboard]
+            )
+            return
+        
+        text = "💬 Связь с поддержкой:\n\n"
+        text += "Если у вас возникли вопросы или проблемы, вы можете написать в поддержку.\n"
+        text += "Ваше обращение будет зарегистрировано как тикет, и с вами свяжутся в ближайшее время."
+        
+        buttons = [[
+            {"type": "callback", "text": "✉️ Написать в поддержку", "payload": f"write_support_{support_user['id']}"}
+        ]]
+        buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "help"}])
+        keyboard = {
+            "type": "inline_keyboard",
+            "payload": {"buttons": buttons}
+        }
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
+        )
+    
+    def start_support_chat(self, support_id: int, user: Dict, max_user_id: int, api):
+        """Начать диалог с поддержкой"""
+        support_user = User.get_by_id(support_id)
+        
+        if not support_user:
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Поддержка не найдена",
+                attachments=[create_back_keyboard("help")]
+            )
+            return
+        
+        set_state(max_user_id, 'waiting_message_to_support', {'support_id': support_id})
+        api.send_message(
+            user_id=max_user_id,
+            text=f"💬 Напишите сообщение для поддержки:\n\n(Отправьте текст сообщения или напишите 'отмена' для отмены)",
+            attachments=[create_cancel_keyboard()]
         )
     
     def show_help_common(self, user: Dict, max_user_id: int, api):
@@ -2446,36 +2494,76 @@ class CallbackHandler(BaseHandler):
                 user_id = ticket.get('user_id')
                 target_user = User.get_by_id(user_id)
                 if target_user:
-                    set_state(max_user_id, 'support_contact', {'ticket_id': ticket_id, 'user_id': user_id})
+                    set_state(max_user_id, 'waiting_message_from_support', {'ticket_id': ticket_id, 'user_id': user_id})
                     api.send_message(
                         user_id=max_user_id,
                         text=f"💬 Написать пользователю {target_user.get('fio', '')}\n\nОтправьте сообщение:",
                         attachments=[create_cancel_keyboard()]
                     )
         elif action == 'messages':
-            # Показать сообщения администрации
-            messages = AdminMessage.get_messages()
-            if not messages:
+            # Показать список пользователей, которые писали в поддержку
+            from db.connection import execute_query
+            users_query = """
+                SELECT DISTINCT u.id, u.max_user_id, u.first_name, u.last_name, u.middle_name, u.role,
+                       TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio,
+                       COUNT(st.id) as tickets_count,
+                       MAX(st.created_at) as last_ticket_date
+                FROM support_tickets st
+                JOIN users u ON st.user_id = u.id
+                GROUP BY u.id, u.max_user_id, u.first_name, u.last_name, u.middle_name, u.role
+                ORDER BY last_ticket_date DESC
+                LIMIT 50
+            """
+            users = execute_query(users_query, (), fetch_all=True) or []
+            
+            if not users:
                 api.send_message(
                     user_id=max_user_id,
-                    text="❌ Нет сообщений администрации",
+                    text="❌ Нет пользователей, которые писали в поддержку",
                     attachments=[create_back_keyboard("main_menu")]
                 )
                 return
             
-            text = "📢 Сообщения администрации:\n\n"
-            for msg in messages[:10]:
-                text += f"📋 {msg.get('title', 'Без заголовка')}\n"
-                text += f"   {msg.get('message', '')[:100]}...\n"
-                if msg.get('target_role'):
-                    text += f"   👥 Для: {msg.get('target_role')}\n"
-                text += f"   📅 {msg.get('created_at', '')}\n\n"
+            # Создаем клавиатуру со списком пользователей
+            buttons = []
+            for user_data in users:
+                user_id = user_data['id']
+                fio = user_data.get('fio', 'Неизвестно')
+                tickets_count = user_data.get('tickets_count', 0)
+                buttons.append([{
+                    "type": "callback",
+                    "text": f"👤 {fio} ({tickets_count} обращений)",
+                    "payload": f"support_message_user_{user_id}"
+                }])
             
-            keyboard = create_back_keyboard("main_menu")
+            buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
+            keyboard = {
+                "type": "inline_keyboard",
+                "payload": {"buttons": buttons}
+            }
+            
             api.send_message(
                 user_id=max_user_id,
-                text=text,
+                text=f"💬 Пользователи, которые писали в поддержку ({len(users)}):\n\nВыберите пользователя для отправки сообщения:",
                 attachments=[keyboard]
+            )
+        elif action.startswith('message_user_'):
+            # Начать диалог с пользователем
+            user_id = int(action.split('_')[-1])
+            target_user = User.get_by_id(user_id)
+            if not target_user:
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Пользователь не найден",
+                    attachments=[create_back_keyboard("support_messages")]
+                )
+                return
+            
+            set_state(max_user_id, 'waiting_message_from_support', {'user_id': user_id})
+            api.send_message(
+                user_id=max_user_id,
+                text=f"💬 Написать пользователю {target_user.get('fio', '')}\n\nОтправьте сообщение:",
+                attachments=[create_cancel_keyboard()]
             )
         elif action == 'faq':
             # Показать список FAQ
@@ -2528,4 +2616,29 @@ class CallbackHandler(BaseHandler):
                 text=text,
                 attachments=[keyboard]
             )
+    
+    def show_main_menu(self, user: Dict, max_user_id: int, api):
+        """Показать главное меню"""
+        from utils.keyboard import create_main_menu_keyboard
+        from db.models import User as UserModel
+        
+        role = user['role']
+        
+        # Проверяем, есть ли у пользователя несколько ролей
+        all_roles = UserModel.get_all_roles(max_user_id)
+        has_multiple_roles = len(all_roles) > 1
+        
+        greeting = {
+            'student': f"👋 Привет, {user['fio']}!\n\nВыберите действие:",
+            'teacher': f"👋 Здравствуйте, {user['fio']}!\n\nВыберите действие:",
+            'admin': f"👋 Администратор {user['fio']}\n\nВыберите действие:",
+            'support': f"👋 Поддержка {user['fio']}\n\nВыберите действие:"
+        }
+        
+        keyboard = create_main_menu_keyboard(role, has_multiple_roles)
+        api.send_message(
+            user_id=max_user_id,
+            text=greeting.get(role, "Выберите действие:"),
+            attachments=[keyboard]
+        )
 

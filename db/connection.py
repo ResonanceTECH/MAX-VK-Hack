@@ -50,16 +50,25 @@ def execute_query(query, params=None, fetch_one=False, fetch_all=False):
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query, params)
+            result = None
             if fetch_one:
-                return cur.fetchone()
+                result = cur.fetchone()
             elif fetch_all:
-                return cur.fetchall()
-            else:
+                result = cur.fetchall()
+            # Для INSERT/UPDATE/DELETE с RETURNING нужно делать commit даже при fetch_one/fetch_all
+            # Проверяем, есть ли RETURNING в запросе или это модифицирующий запрос
+            is_modifying = query.strip().upper().startswith(('INSERT', 'UPDATE', 'DELETE'))
+            if is_modifying:
+                conn.commit()
+            elif not fetch_one and not fetch_all:
                 conn.commit()
                 return True
+            return result
     except Exception as e:
         conn.rollback()
         logger.error(f"Ошибка выполнения запроса: {e}")
+        logger.error(f"Запрос: {query}")
+        logger.error(f"Параметры: {params}")
         return None
     finally:
         return_connection(conn)
