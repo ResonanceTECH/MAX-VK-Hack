@@ -30,9 +30,7 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
         ])
     elif role == 'admin':
         buttons.extend([
-            [{"type": "callback", "text": "👨‍🎓 Управление студентами", "payload": "admin_students"}],
-            [{"type": "callback", "text": "👨‍🏫 Управление преподавателями", "payload": "admin_teachers"}],
-            [{"type": "callback", "text": "👥 Группы", "payload": "admin_groups"}],
+            [{"type": "callback", "text": "📅 Редактировать расписание", "payload": "admin_schedule_edit"}],
             [{"type": "callback", "text": "📢 Рассылки", "payload": "admin_broadcasts"}],
             [{"type": "callback", "text": "💬 Поддержка", "payload": "admin_support"}],
             [{"type": "callback", "text": "📊 Отчеты", "payload": "admin_reports"}],
@@ -412,8 +410,8 @@ def create_admin_groups_menu_keyboard() -> Dict:
 def create_admin_broadcasts_menu_keyboard() -> Dict:
     """Создать меню рассылок для администратора"""
     buttons = [
-        [{"type": "callback", "text": "📢 Массовая рассылка", "payload": "admin_broadcast_mass"}],
-        [{"type": "callback", "text": "📝 Шаблоны сообщений", "payload": "admin_broadcast_templates"}],
+        [{"type": "callback", "text": "👨‍🎓 Рассылка всем студентам", "payload": "admin_broadcast_all_students"}],
+        [{"type": "callback", "text": "👨‍🏫 Рассылка всем преподавателям", "payload": "admin_broadcast_all_teachers"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
     
@@ -427,7 +425,6 @@ def create_admin_broadcasts_menu_keyboard() -> Dict:
 def create_admin_reports_menu_keyboard() -> Dict:
     """Создать меню отчетов для администратора"""
     buttons = [
-        [{"type": "callback", "text": "📊 Статистика активности", "payload": "admin_report_activity"}],
         [{"type": "callback", "text": "💬 Отчеты по сообщениям", "payload": "admin_report_messages"}],
         [{"type": "callback", "text": "👥 Отчеты по пользователям", "payload": "admin_report_users"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
@@ -447,7 +444,10 @@ def create_admin_help_menu_keyboard(role: str = 'admin') -> Dict:
     ]
     
     # Для поддержки не показываем "Связь с поддержкой" и "Настройки уведомлений"
-    if role != 'support':
+    # Для админа не показываем "Настройки уведомлений"
+    if role == 'admin':
+        buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
+    elif role != 'support':
         buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
         buttons.append([{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}])
     

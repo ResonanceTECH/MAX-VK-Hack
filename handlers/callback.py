@@ -311,22 +311,12 @@ class CallbackHandler(BaseHandler):
             parts = payload.split('_')
             student_id = int(parts[2])
             self.start_student_chat(student_id, None, user_data, max_user_id, api)
-        elif payload == 'admin_students':
-            self.show_admin_students_menu(user_data, max_user_id, api)
-        elif payload == 'admin_teachers':
-            self.show_admin_teachers_menu(user_data, max_user_id, api)
-        elif payload == 'admin_groups':
-            self.show_admin_groups_menu(user_data, max_user_id, api)
+        elif payload == 'admin_schedule_edit':
+            self.start_edit_schedule(user_data, max_user_id, api)
         elif payload == 'admin_broadcasts':
             self.show_admin_broadcasts_menu(user_data, max_user_id, api)
         elif payload == 'admin_reports':
             self.show_admin_reports_menu(user_data, max_user_id, api)
-        elif payload.startswith('admin_student_'):
-            self.handle_admin_student_action(payload, user_data, max_user_id, api)
-        elif payload.startswith('admin_teacher_'):
-            self.handle_admin_teacher_action(payload, user_data, max_user_id, api)
-        elif payload.startswith('admin_group_'):
-            self.handle_admin_group_action(payload, user_data, max_user_id, api)
         elif payload.startswith('admin_broadcast_'):
             self.handle_admin_broadcast_action(payload, user_data, max_user_id, api)
         elif payload.startswith('admin_report_'):
@@ -2014,48 +2004,69 @@ class CallbackHandler(BaseHandler):
         """Обработать действия с рассылками"""
         action = payload.replace('admin_broadcast_', '')
         
-        if action == 'mass':
-            set_state(max_user_id, 'admin_broadcast_mass', {})
+        if action == 'all_students':
+            set_state(max_user_id, 'admin_broadcast_all_students', {})
             api.send_message(
                 user_id=max_user_id,
-                text="📢 Массовая рассылка\n\nВыберите получателей:\n1. Все студенты\n2. Все преподаватели\n3. Все пользователи\n4. Конкретная группа\n\nОтправьте номер варианта:",
+                text="📢 Рассылка всем студентам\n\nОтправьте сообщение, которое будет доставлено всем студентам:",
                 attachments=[create_cancel_keyboard()]
             )
-        elif action == 'templates':
-            text = "📝 Шаблоны сообщений\n\n"
-            text += "⚠️ Функция шаблонов пока не реализована.\n"
-            text += "В будущем здесь можно будет:\n"
-            text += "• Создавать шаблоны сообщений\n"
-            text += "• Использовать шаблоны для рассылок\n"
-            text += "• Управлять шаблонами"
+        elif action == 'all_teachers':
+            set_state(max_user_id, 'admin_broadcast_all_teachers', {})
             api.send_message(
                 user_id=max_user_id,
-                text=text,
-                attachments=[create_back_keyboard("admin_broadcasts")]
+                text="📢 Рассылка всем преподавателям\n\nОтправьте сообщение, которое будет доставлено всем преподавателям:",
+                attachments=[create_cancel_keyboard()]
             )
     
     def handle_admin_report_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия с отчетами"""
         action = payload.replace('admin_report_', '')
         
-        if action == 'activity':
-            text = "📊 Статистика активности\n\n"
-            text += "⚠️ Функция статистики пока не реализована.\n"
-            text += "В будущем здесь будет:\n"
-            text += "• Активность пользователей\n"
-            text += "• Количество сообщений\n"
-            text += "• Популярные функции"
-            api.send_message(
-                user_id=max_user_id,
-                text=text,
-                attachments=[create_back_keyboard("admin_reports")]
-            )
-        elif action == 'messages':
-            total = execute_query("SELECT COUNT(*) as count FROM messages", (), fetch_one=True)
+        if action == 'messages':
+            # Копируем статистику по сообщениям у поддержки
+            from db.models import Message
+            from db.connection import execute_query
+            
+            # Общая статистика по сообщениям
+            total_query = "SELECT COUNT(*) as count FROM messages"
+            total = execute_query(total_query, (), fetch_one=True)
             total_count = total.get('count', 0) if total else 0
-            text = "💬 Отчеты по сообщениям\n\n"
-            text += f"📊 Всего сообщений в системе: {total_count}\n"
-            text += "⚠️ Детальная статистика пока не реализована."
+            
+            # Непрочитанные сообщения
+            unread_query = "SELECT COUNT(*) as count FROM messages WHERE status = 'unread'"
+            unread = execute_query(unread_query, (), fetch_one=True)
+            unread_count = unread.get('count', 0) if unread else 0
+            
+            # Прочитанные сообщения
+            read_count = total_count - unread_count
+            
+            # Сообщения по ролям отправителей
+            students_query = """
+                SELECT COUNT(*) as count 
+                FROM messages m
+                JOIN users u ON m.from_user_id = u.id
+                WHERE u.role = 'student'
+            """
+            students_msg = execute_query(students_query, (), fetch_one=True)
+            students_count = students_msg.get('count', 0) if students_msg else 0
+            
+            teachers_query = """
+                SELECT COUNT(*) as count 
+                FROM messages m
+                JOIN users u ON m.from_user_id = u.id
+                WHERE u.role = 'teacher'
+            """
+            teachers_msg = execute_query(teachers_query, (), fetch_one=True)
+            teachers_count = teachers_msg.get('count', 0) if teachers_msg else 0
+            
+            text = "💬 Статистика по сообщениям\n\n"
+            text += f"📊 Всего сообщений: {total_count}\n"
+            text += f"✅ Прочитано: {read_count}\n"
+            text += f"📬 Непрочитано: {unread_count}\n\n"
+            text += f"👨‍🎓 От студентов: {students_count}\n"
+            text += f"👨‍🏫 От преподавателей: {teachers_count}\n"
+            
             api.send_message(
                 user_id=max_user_id,
                 text=text,
@@ -2616,6 +2627,18 @@ class CallbackHandler(BaseHandler):
                 text=text,
                 attachments=[keyboard]
             )
+    
+    def start_edit_schedule(self, user: Dict, max_user_id: int, api):
+        """Начать редактирование расписания"""
+        set_state(max_user_id, 'admin_schedule_edit', {})
+        api.send_message(
+            user_id=max_user_id,
+            text="📅 Редактирование расписания\n\n"
+                 "Введите новый URL API для получения расписания.\n"
+                 "Формат: http://host:port/endpoint\n\n"
+                 "Пример: http://localhost:8001/schedule_1",
+            attachments=[create_cancel_keyboard()]
+        )
     
     def show_main_menu(self, user: Dict, max_user_id: int, api):
         """Показать главное меню"""

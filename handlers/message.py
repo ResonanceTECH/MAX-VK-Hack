@@ -80,6 +80,10 @@ class MessageHandler(BaseHandler):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_старостам")
                 self.handle_broadcast_headmen(user, max_user_id, text, state_data, api, message_id)
                 return
+            elif state == 'admin_schedule_edit':
+                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=редактирование_расписания")
+                self.handle_edit_schedule(user, max_user_id, text, api, message_id)
+                return
             elif state.startswith('admin_'):
                 logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=админ_{state}")
                 self.handle_admin_state(user, max_user_id, text, state, state_data, api, message_id)
@@ -717,15 +721,85 @@ class MessageHandler(BaseHandler):
                 )
             clear_state(max_user_id)
         
-        elif state == 'admin_broadcast_mass':
-            # Обработка массовой рассылки
-            # TODO: Реализовать выбор получателей и отправку
+        elif state == 'admin_broadcast_all_students':
+            # Рассылка всем студентам
+            if text.lower() in ['отмена', 'cancel', '/cancel']:
+                logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_рассылки_студентам")
+                clear_state(max_user_id)
+                from handlers.callback import CallbackHandler
+                callback_handler = CallbackHandler()
+                callback_handler.show_admin_broadcasts_menu(user, max_user_id, api)
+                return
+            
+            # Получаем всех студентов
+            students = UserModel.get_all_students()
+            
+            # Отправляем сообщение всем студентам
+            sent_count = 0
+            failed_count = 0
+            
+            for student in students:
+                try:
+                    result = api.send_message(
+                        user_id=student['max_user_id'],
+                        text=f"📢 Сообщение от администрации:\n\n{text}"
+                    )
+                    if result:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке сообщения студенту {student.get('max_user_id')}: {e}")
+                    failed_count += 1
+            
+            clear_state(max_user_id)
             api.send_message(
                 user_id=max_user_id,
-                text="⚠️ Массовая рассылка пока не реализована полностью.\nОтправка сообщений будет добавлена позже.",
-                attachments=[create_main_menu_keyboard(user['role'])]
+                text=f"✅ Рассылка завершена\n\n"
+                     f"📤 Отправлено студентам: {sent_count}\n"
+                     f"❌ Ошибок: {failed_count}",
+                attachments=[create_back_keyboard("admin_broadcasts")]
             )
+        elif state == 'admin_broadcast_all_teachers':
+            # Рассылка всем преподавателям
+            if text.lower() in ['отмена', 'cancel', '/cancel']:
+                logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_рассылки_преподавателям")
+                clear_state(max_user_id)
+                from handlers.callback import CallbackHandler
+                callback_handler = CallbackHandler()
+                callback_handler.show_admin_broadcasts_menu(user, max_user_id, api)
+                return
+            
+            # Получаем всех преподавателей
+            from db.models import Teacher
+            teachers = Teacher.get_all_teachers()
+            
+            # Отправляем сообщение всем преподавателям
+            sent_count = 0
+            failed_count = 0
+            
+            for teacher in teachers:
+                try:
+                    result = api.send_message(
+                        user_id=teacher['max_user_id'],
+                        text=f"📢 Сообщение от администрации:\n\n{text}"
+                    )
+                    if result:
+                        sent_count += 1
+                    else:
+                        failed_count += 1
+                except Exception as e:
+                    logger.error(f"Ошибка при отправке сообщения преподавателю {teacher.get('max_user_id')}: {e}")
+                    failed_count += 1
+            
             clear_state(max_user_id)
+            api.send_message(
+                user_id=max_user_id,
+                text=f"✅ Рассылка завершена\n\n"
+                     f"📤 Отправлено преподавателям: {sent_count}\n"
+                     f"❌ Ошибок: {failed_count}",
+                attachments=[create_back_keyboard("admin_broadcasts")]
+            )
         elif state in ['admin_support_contact', 'support_contact', 'waiting_message_from_support']:
             # Отправка сообщения пользователю из обращения (для admin и support)
             user_id = state_data.get('user_id')
@@ -788,4 +862,39 @@ class MessageHandler(BaseHandler):
                     attachments=[create_cancel_keyboard()]
                 )
             clear_state(max_user_id)
+    
+    def handle_edit_schedule(self, user: Dict, max_user_id: int, text: str, api, message_id: str):
+        """Обработать редактирование расписания"""
+        if text.lower() in ['отмена', 'cancel', '/cancel']:
+            logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_редактирования_расписания")
+            clear_state(max_user_id)
+            from handlers.callback import CallbackHandler
+            callback_handler = CallbackHandler()
+            callback_handler.show_main_menu(user, max_user_id, api)
+            return
+        
+        # Проверяем формат URL
+        if not text.startswith('http://') and not text.startswith('https://'):
+            api.send_message(
+                user_id=max_user_id,
+                text="❌ Неверный формат URL. URL должен начинаться с http:// или https://\n\nПопробуйте еще раз или напишите 'отмена'.",
+                attachments=[create_cancel_keyboard()]
+            )
+            return
+        
+        # Сохраняем URL в переменную окружения
+        import os
+        os.environ['SCHEDULE_API_URL'] = text
+        
+        # Обновляем глобальную переменную в handlers/callback.py
+        import handlers.callback as callback_module
+        callback_module.SCHEDULE_API_URL = text
+        
+        clear_state(max_user_id)
+        api.send_message(
+            user_id=max_user_id,
+            text=f"✅ URL API расписания обновлен:\n{text}\n\n"
+                 f"⚠️ Изменения вступят в силу после перезапуска бота.",
+            attachments=[create_back_keyboard("main_menu")]
+        )
 
