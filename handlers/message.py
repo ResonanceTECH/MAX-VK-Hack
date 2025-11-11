@@ -302,7 +302,13 @@ class MessageHandler(BaseHandler):
         if text.lower() in ['отмена', 'cancel', '/cancel']:
             logger.info(f"[USER] user_id={max_user_id}, first_name={user.get('fio', 'Unknown')}, action=отмена_отправки_в_поддержку")
             clear_state(max_user_id)
-            self.show_main_menu(user, None, max_user_id, api)
+            # Если администратор - возвращаем в меню поддержки, иначе в главное меню
+            if user.get('role') == 'admin':
+                from handlers.callback import CallbackHandler
+                callback_handler = CallbackHandler()
+                callback_handler.show_admin_support_menu(user, max_user_id, api)
+            else:
+                self.show_main_menu(user, None, max_user_id, api)
             return
         
         support_id = state_data.get('support_id')
@@ -353,12 +359,19 @@ class MessageHandler(BaseHandler):
                 max_message_id=sent_message_id
             )
             
+            # Определяем правильную кнопку "Назад" в зависимости от роли
+            if user.get('role') == 'admin':
+                from utils.keyboard import create_back_keyboard
+                back_keyboard = create_back_keyboard("admin_support")
+            else:
+                back_keyboard = create_main_menu_keyboard(user['role'])
+            
             api.send_message(
                 user_id=max_user_id,
                 text=f"✅ Сообщение отправлено в поддержку\n\n"
                      f"📋 Тикет создан: #{ticket_id}\n"
                      f"📊 Статус: На рассмотрении",
-                attachments=[create_main_menu_keyboard(user['role'])]
+                attachments=[back_keyboard]
             )
         else:
             api.send_message(

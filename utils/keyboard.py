@@ -40,7 +40,6 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
         buttons.extend([
             [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "support_tickets"}],
             [{"type": "callback", "text": "📢 Сообщения", "payload": "support_messages"}],
-            [{"type": "callback", "text": "❓ FAQ", "payload": "support_faq"}],
             [{"type": "callback", "text": "📊 Статистика", "payload": "support_stats"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
@@ -220,7 +219,6 @@ def create_schedule_menu_keyboard() -> Dict:
     buttons = [
         [{"type": "callback", "text": "📅 На сегодня", "payload": "schedule_today"}],
         [{"type": "callback", "text": "📆 На неделю", "payload": "schedule_week"}],
-        [{"type": "callback", "text": "⬇️ Скачать расписание", "payload": "schedule_download"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
     
@@ -259,8 +257,6 @@ def create_help_menu_keyboard(role: str = 'student') -> Dict:
     
     if role == 'student':
         buttons.append([{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}])
-    elif role == 'teacher':
-        buttons.append([{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}])
     
     buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
     
@@ -465,7 +461,6 @@ def create_admin_support_menu_keyboard() -> Dict:
     buttons = [
         [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "admin_support_tickets"}],
         [{"type": "callback", "text": "📢 Сообщения", "payload": "admin_support_messages"}],
-        [{"type": "callback", "text": "❓ FAQ", "payload": "admin_support_faq"}],
         [{"type": "callback", "text": "📊 Статистика", "payload": "admin_support_stats"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]

@@ -187,8 +187,6 @@ class CallbackHandler(BaseHandler):
             self.show_schedule_today(user_data, max_user_id, api)
         elif payload.startswith('schedule_week'):
             self.show_schedule_week(user_data, max_user_id, api)
-        elif payload.startswith('schedule_download'):
-            self.download_schedule(user_data, max_user_id, api)
         elif payload.startswith('help_faq'):
             self.show_help_faq(user_data, max_user_id, api)
         elif payload.startswith('help_support'):
@@ -196,6 +194,9 @@ class CallbackHandler(BaseHandler):
         elif payload.startswith('help_common'):
             self.show_help_common(user_data, max_user_id, api)
         elif payload.startswith('write_support_'):
+            support_id = int(payload.split('_')[-1])
+            self.start_support_chat(support_id, user_data, max_user_id, api)
+        elif payload.startswith('admin_write_support_'):
             support_id = int(payload.split('_')[-1])
             self.start_support_chat(support_id, user_data, max_user_id, api)
         elif payload == 'menu_my_groups':
@@ -1239,10 +1240,12 @@ class CallbackHandler(BaseHandler):
         support_user = User.get_by_id(support_id)
         
         if not support_user:
+            # Определяем правильную кнопку "Назад" в зависимости от роли
+            back_payload = "admin_support" if user.get('role') == 'admin' else "help"
             api.send_message(
                 user_id=max_user_id,
                 text="❌ Поддержка не найдена",
-                attachments=[create_back_keyboard("help")]
+                attachments=[create_back_keyboard(back_payload)]
             )
             return
         
@@ -2224,25 +2227,40 @@ class CallbackHandler(BaseHandler):
                         attachments=[create_cancel_keyboard()]
                     )
         elif action == 'messages':
-            # Показать сообщения администрации
-            messages = AdminMessage.get_messages()
-            if not messages:
+            # Написать в поддержку
+            # Получаем пользователя поддержки
+            support_query = """
+                SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                       TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
+                FROM users
+                WHERE role = 'support'
+                LIMIT 1
+            """
+            support_user = execute_query(support_query, (), fetch_one=True)
+            
+            if not support_user:
+                text = "💬 Связь с поддержкой:\n\n"
+                text += "⚠️ Поддержка временно недоступна. Обратитесь к администратору."
+                keyboard = create_back_keyboard("admin_support")
                 api.send_message(
                     user_id=max_user_id,
-                    text="❌ Нет сообщений администрации",
-                    attachments=[create_back_keyboard("admin_support")]
+                    text=text,
+                    attachments=[keyboard]
                 )
                 return
             
-            text = "📢 Сообщения администрации:\n\n"
-            for msg in messages[:10]:  # Показываем последние 10
-                text += f"📋 {msg.get('title', 'Без заголовка')}\n"
-                text += f"   {msg.get('message', '')[:100]}...\n"
-                if msg.get('target_role'):
-                    text += f"   👥 Для: {msg.get('target_role')}\n"
-                text += f"   📅 {msg.get('created_at', '')}\n\n"
+            text = "💬 Связь с поддержкой:\n\n"
+            text += "Вы можете написать сообщение в поддержку.\n"
+            text += "Ваше обращение будет зарегистрировано как тикет, и с вами свяжутся в ближайшее время."
             
-            keyboard = create_back_keyboard("admin_support")
+            buttons = [[
+                {"type": "callback", "text": "✉️ Написать в поддержку", "payload": f"admin_write_support_{support_user['id']}"}
+            ]]
+            buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support"}])
+            keyboard = {
+                "type": "inline_keyboard",
+                "payload": {"buttons": buttons}
+            }
             api.send_message(
                 user_id=max_user_id,
                 text=text,
