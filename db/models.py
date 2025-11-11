@@ -649,3 +649,53 @@ class AdminMessage:
         """
         return execute_query(query, (limit,), fetch_all=True) or []
 
+
+class News:
+    @staticmethod
+    def get_news_by_role(user_role: str, user_id: Optional[int] = None, limit: int = 50) -> List[Dict]:
+        """Получить новости для пользователя по его роли
+        
+        Логика:
+        - Если target_role = 'all' или NULL - показывать всем
+        - Если target_role = user_role - показывать пользователям этой роли
+        - Если target_group_id указан - показывать только пользователям этой группы
+        """
+        # Получаем группы пользователя
+        user_group_ids = []
+        if user_id:
+            if user_role == 'student':
+                user_groups = Group.get_user_groups(user_id)
+                user_group_ids = [g['id'] for g in user_groups]
+            elif user_role == 'teacher':
+                user_groups = Teacher.get_teacher_groups(user_id)
+                user_group_ids = [g['id'] for g in user_groups]
+        
+        # Формируем условия для WHERE
+        conditions = []
+        params = []
+        
+        # Условие для target_role: 'all', NULL или совпадает с ролью пользователя
+        conditions.append("(target_role IS NULL OR target_role = 'all' OR target_role = %s)")
+        params.append(user_role)
+        
+        # Если у пользователя есть группы, добавляем условие для target_group_id
+        if user_group_ids:
+            conditions.append("(target_group_id IS NULL OR target_group_id = ANY(%s))")
+            params.append(user_group_ids)
+        else:
+            # Если у пользователя нет групп, показываем только новости без target_group_id
+            conditions.append("target_group_id IS NULL")
+        
+        where_clause = " AND ".join(conditions)
+        
+        query = f"""
+            SELECT id, title, description, hashtags, target_role, target_group_id, created_at
+            FROM news
+            WHERE {where_clause}
+            ORDER BY created_at DESC
+            LIMIT %s
+        """
+        params.append(limit)
+        
+        return execute_query(query, tuple(params), fetch_all=True) or []
+

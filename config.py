@@ -17,7 +17,7 @@ POLLING_LIMIT = int(os.getenv('POLLING_LIMIT', '100'))
 
 # Настройки PostgreSQL
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
+POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5431'))
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', '')
 POSTGRES_DB = os.getenv('POSTGRES_DB', 'max_bot_db')

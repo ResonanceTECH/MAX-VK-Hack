@@ -1,6 +1,6 @@
 """Обработчик нажатий на кнопки"""
 from handlers.base import BaseHandler
-from db.models import User, Group, Teacher, SupportTicket, FAQ, AdminMessage
+from db.models import User, Group, Teacher, SupportTicket, FAQ, AdminMessage, News
 from db.connection import execute_query
 from utils.keyboard import (
     create_main_menu_keyboard, create_groups_keyboard, 
@@ -8,10 +8,9 @@ from utils.keyboard import (
     create_back_keyboard, create_cancel_keyboard,
     create_role_selection_keyboard, create_group_menu_keyboard,
     create_teachers_menu_keyboard, create_schedule_menu_keyboard,
-    create_news_menu_keyboard, create_help_menu_keyboard,
+    create_help_menu_keyboard,
     create_group_menu_teacher_keyboard, create_headmen_menu_keyboard,
     create_headmen_keyboard, create_teachers_teacher_keyboard,
-    create_news_teacher_menu_keyboard,
     create_admin_students_menu_keyboard, create_admin_teachers_menu_keyboard,
     create_admin_groups_menu_keyboard, create_admin_broadcasts_menu_keyboard,
     create_admin_reports_menu_keyboard, create_admin_help_menu_keyboard,
@@ -169,7 +168,7 @@ class CallbackHandler(BaseHandler):
         elif payload == 'menu_schedule':
             self.show_schedule_menu(user_data, max_user_id, api)
         elif payload == 'menu_news':
-            self.show_news_menu(user_data, max_user_id, api)
+            self.show_news(user_data, max_user_id, api)
         elif payload == 'group_students_list':
             self.show_user_groups(user_data, max_user_id, api)
         elif payload == 'group_write_student':
@@ -190,12 +189,6 @@ class CallbackHandler(BaseHandler):
             self.show_schedule_week(user_data, max_user_id, api)
         elif payload.startswith('schedule_download'):
             self.download_schedule(user_data, max_user_id, api)
-        elif payload.startswith('news_university'):
-            self.show_news_university(user_data, max_user_id, api)
-        elif payload.startswith('news_group'):
-            self.show_news_group(user_data, max_user_id, api)
-        elif payload.startswith('news_admin'):
-            self.show_news_admin(user_data, max_user_id, api)
         elif payload.startswith('help_faq'):
             self.show_help_faq(user_data, max_user_id, api)
         elif payload.startswith('help_support'):
@@ -212,7 +205,7 @@ class CallbackHandler(BaseHandler):
         elif payload == 'menu_teachers_teacher':
             self.show_teachers_teacher(user_data, max_user_id, api)
         elif payload == 'menu_news_teacher':
-            self.show_news_teacher_menu(user_data, max_user_id, api)
+            self.show_news(user_data, max_user_id, api)
         elif payload == 'group_students_list_teacher':
             # Показываем выбор группы для просмотра студентов
             groups = Teacher.get_teacher_groups(user_data['id'])
@@ -249,10 +242,6 @@ class CallbackHandler(BaseHandler):
         elif payload.startswith('teacher_teacher_'):
             teacher_id = int(payload.split('_')[2])
             self.show_teacher_info(teacher_id, user_data, max_user_id, api)
-        elif payload.startswith('news_department'):
-            self.show_news_department(user_data, max_user_id, api)
-        elif payload.startswith('news_institute'):
-            self.show_news_institute(user_data, max_user_id, api)
         elif payload.startswith('help_notifications'):
             self.show_help_notifications(user_data, max_user_id, api)
         elif payload.startswith('group_') and not payload.startswith('group_message'):
@@ -1067,61 +1056,57 @@ class CallbackHandler(BaseHandler):
             attachments=[keyboard]
         )
     
-    def show_news_menu(self, user: Dict, max_user_id: int, api):
-        """Показать меню новостей"""
-        keyboard = create_news_menu_keyboard()
-        api.send_message(
-            user_id=max_user_id,
-            text="📢 Новости\n\nВыберите раздел:",
-            attachments=[keyboard]
-        )
-    
-    def show_news_university(self, user: Dict, max_user_id: int, api):
-        """Показать новости вуза"""
-        # TODO: Получить новости из БД
-        text = "🏛️ Новости вуза:\n\n"
-        text += "⚠️ Новости пока не добавлены.\n"
-        text += "Следите за обновлениями!"
+    def show_news(self, user: Dict, max_user_id: int, api):
+        """Показать новости для пользователя"""
+        news_list = News.get_news_by_role(user['role'], user['id'], limit=20)
         
-        keyboard = create_back_keyboard("menu_news")
-        api.send_message(
-            user_id=max_user_id,
-            text=text,
-            attachments=[keyboard]
-        )
-    
-    def show_news_group(self, user: Dict, max_user_id: int, api):
-        """Показать объявления группы"""
-        groups = Group.get_user_groups(user['id'])
-        if not groups:
+        if not news_list:
+            text = "📢 Новости\n\n"
+            text += "⚠️ Новости пока не добавлены.\n"
+            text += "Следите за обновлениями!"
+            
+            keyboard = create_back_keyboard("main_menu")
             api.send_message(
                 user_id=max_user_id,
-                text="❌ Вы не состоите ни в одной группе",
-                attachments=[create_back_keyboard("menu_news")]
+                text=text,
+                attachments=[keyboard]
             )
             return
         
-        # TODO: Получить объявления группы из БД
-        group_names = ", ".join([g['name'] for g in groups])
-        text = f"👥 Объявления группы ({group_names}):\n\n"
-        text += "⚠️ Объявления пока не добавлены.\n"
-        text += "Следите за обновлениями!"
+        # Формируем текст с новостями
+        text = "📢 Новости\n\n"
         
-        keyboard = create_back_keyboard("menu_news")
-        api.send_message(
-            user_id=max_user_id,
-            text=text,
-            attachments=[keyboard]
-        )
-    
-    def show_news_admin(self, user: Dict, max_user_id: int, api):
-        """Показать уведомления администрации"""
-        # TODO: Получить уведомления из БД
-        text = "⚠️ Уведомления администрации:\n\n"
-        text += "⚠️ Уведомления пока не добавлены.\n"
-        text += "Следите за обновлениями!"
+        for i, news_item in enumerate(news_list, 1):
+            title = news_item.get('title', 'Без названия')
+            description = news_item.get('description', '')
+            hashtags = news_item.get('hashtags', '')
+            created_at = news_item.get('created_at', '')
+            
+            # Форматируем дату
+            if created_at:
+                try:
+                    from datetime import datetime
+                    if isinstance(created_at, str):
+                        date_obj = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    else:
+                        date_obj = created_at
+                    date_str = date_obj.strftime('%d.%m.%Y')
+                except:
+                    date_str = str(created_at)[:10]
+            else:
+                date_str = ''
+            
+            text += f"📌 {title}\n"
+            if hashtags:
+                hashtag_list = [tag.strip() for tag in hashtags.split(',') if tag.strip()]
+                if hashtag_list:
+                    text += f"🏷️ {' '.join(['#' + tag for tag in hashtag_list])}\n"
+            if date_str:
+                text += f"📅 {date_str}\n"
+            text += f"{description}\n"
+            text += "\n" + "─" * 30 + "\n\n"
         
-        keyboard = create_back_keyboard("menu_news")
+        keyboard = create_back_keyboard("main_menu")
         api.send_message(
             user_id=max_user_id,
             text=text,
@@ -1442,42 +1427,6 @@ class CallbackHandler(BaseHandler):
             format_type="markdown"
         )
     
-    def show_news_teacher_menu(self, user: Dict, max_user_id: int, api):
-        """Показать меню новостей для преподавателя"""
-        keyboard = create_news_teacher_menu_keyboard()
-        api.send_message(
-            user_id=max_user_id,
-            text="📢 Новости\n\nВыберите раздел:",
-            attachments=[keyboard]
-        )
-    
-    def show_news_department(self, user: Dict, max_user_id: int, api):
-        """Показать новости кафедры"""
-        # TODO: Получить новости кафедры из БД
-        text = "🏛️ Новости кафедры:\n\n"
-        text += "⚠️ Новости пока не добавлены.\n"
-        text += "Следите за обновлениями!"
-        
-        keyboard = create_back_keyboard("menu_news_teacher")
-        api.send_message(
-            user_id=max_user_id,
-            text=text,
-            attachments=[keyboard]
-        )
-    
-    def show_news_institute(self, user: Dict, max_user_id: int, api):
-        """Показать новости института"""
-        # TODO: Получить новости института из БД
-        text = "🏢 Новости института:\n\n"
-        text += "⚠️ Новости пока не добавлены.\n"
-        text += "Следите за обновлениями!"
-        
-        keyboard = create_back_keyboard("menu_news_teacher")
-        api.send_message(
-            user_id=max_user_id,
-            text=text,
-            attachments=[keyboard]
-        )
     
     def show_help_notifications(self, user: Dict, max_user_id: int, api):
         """Показать настройки уведомлений"""

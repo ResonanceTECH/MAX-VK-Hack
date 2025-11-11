@@ -14,7 +14,7 @@ sys.path.insert(0, project_root)
 
 # Устанавливаем переменные окружения для PostgreSQL напрямую
 os.environ['POSTGRES_HOST'] = 'localhost'
-os.environ['POSTGRES_PORT'] = '5432'
+os.environ['POSTGRES_PORT'] = '5431'
 os.environ['POSTGRES_USER'] = 'maxbot'
 os.environ['POSTGRES_PASSWORD'] = 'maxbot123'
 os.environ['POSTGRES_DB'] = 'maxbot_db'

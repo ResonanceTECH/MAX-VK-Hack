@@ -141,14 +141,8 @@ async def get_student_teachers(user: Dict = Depends(get_current_user)):
 @router.get("/news")
 async def get_news(user: Dict = Depends(get_current_user)):
     """Получить новости для пользователя"""
-    query = """
-        SELECT id, title, description, hashtags, created_at
-        FROM news
-        WHERE target_role IS NULL OR target_role = %s OR target_role = 'all'
-        ORDER BY created_at DESC
-        LIMIT 50
-    """
-    news = execute_query(query, (user['role'],), fetch_all=True) or []
+    from db.models import News
+    news = News.get_news_by_role(user['role'], user['id'], limit=50)
     return news
 
 # ========== Endpoints для поддержки ==========
