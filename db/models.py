@@ -245,7 +245,7 @@ class Teacher:
 
     @staticmethod
     def create_user(max_user_id: int, fio: str, role: str, phone: Optional[str] = None, email: Optional[str] = None) -> \
-    Optional[int]:
+            Optional[int]:
         """Создать пользователя. fio должен быть в формате "Фамилия Имя Отчество" или "Фамилия Имя" """
         # Парсим ФИО на части
         parts = fio.strip().split()

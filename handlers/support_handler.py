@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class SupportHandler:
     """Обработчики для поддержки"""
-    
+
     def handle_support_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия поддержки (для роли support)"""
         action = payload.replace('support_', '')
-        
+
         if action == 'tickets':
             keyboard = create_support_tickets_status_keyboard(role='support')
             api.send_message(
@@ -36,7 +36,7 @@ class SupportHandler:
             }
             status = status_map.get(action)
             tickets = SupportTicket.get_tickets(status=status)
-            
+
             if not tickets:
                 status_text = {
                     'new': 'новых',
@@ -50,8 +50,9 @@ class SupportHandler:
                     attachments=[create_support_tickets_status_keyboard(role='support')]
                 )
                 return
-            
-            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket", back_payload="support_tickets")
+
+            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket",
+                                                            back_payload="support_tickets")
             status_text = {
                 'new': '🆕 Новые',
                 'in_progress': '🔄 В работе',
@@ -66,7 +67,7 @@ class SupportHandler:
         elif action.startswith('ticket_'):
             ticket_id = int(action.split('_')[-1])
             ticket = SupportTicket.get_ticket_by_id(ticket_id)
-            
+
             if not ticket:
                 api.send_message(
                     user_id=max_user_id,
@@ -74,19 +75,19 @@ class SupportHandler:
                     attachments=[create_support_tickets_status_keyboard(role='support')]
                 )
                 return
-            
+
             status_emoji = {
                 'new': '🆕',
                 'in_progress': '🔄',
                 'resolved': '✅'
             }.get(ticket.get('status', 'new'), '📋')
-            
+
             status_text = {
                 'new': 'Новое',
                 'in_progress': 'В работе',
                 'resolved': 'Решено'
             }.get(ticket.get('status', 'new'), 'Неизвестно')
-            
+
             text = f"{status_emoji} Обращение #{ticket['id']}\n\n"
             text += f"👤 Пользователь: {ticket.get('fio', 'Неизвестно')}\n"
             text += f"📋 Статус: {status_text}\n"
@@ -95,10 +96,10 @@ class SupportHandler:
             text += f"📅 Создано: {ticket.get('created_at', 'Неизвестно')}\n\n"
             text += f"📝 Тема: {ticket.get('subject', 'Без темы')}\n\n"
             text += f"💬 Сообщение:\n{ticket.get('message', '')}\n"
-            
+
             if ticket.get('response_time'):
                 text += f"\n⏱ Время реакции: {ticket['response_time']} мин."
-            
+
             keyboard = create_support_ticket_actions_keyboard(ticket_id, ticket.get('status', 'new'), role='support')
             api.send_message(
                 user_id=max_user_id,
@@ -131,7 +132,7 @@ class SupportHandler:
                                     SupportTicket.set_response_time(ticket_id, response_time)
                         except Exception as e:
                             logger.error(f"Ошибка при вычислении времени реакции: {e}")
-                
+
                 api.send_message(
                     user_id=max_user_id,
                     text="✅ Обращение взято в работу",
@@ -171,7 +172,7 @@ class SupportHandler:
                 LIMIT 50
             """
             users = execute_query(users_query, (), fetch_all=True) or []
-            
+
             if not users:
                 api.send_message(
                     user_id=max_user_id,
@@ -179,7 +180,7 @@ class SupportHandler:
                     attachments=[create_back_keyboard("main_menu")]
                 )
                 return
-            
+
             buttons = []
             for user_data in users:
                 user_id = user_data['id']
@@ -190,13 +191,13 @@ class SupportHandler:
                     "text": f"👤 {fio} ({tickets_count} обращений)",
                     "payload": f"support_message_user_{user_id}"
                 }])
-            
+
             buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
             keyboard = {
                 "type": "inline_keyboard",
                 "payload": {"buttons": buttons}
             }
-            
+
             api.send_message(
                 user_id=max_user_id,
                 text=f"💬 Пользователи, которые писали в поддержку ({len(users)}):\n\nВыберите пользователя для отправки сообщения:",
@@ -212,7 +213,7 @@ class SupportHandler:
                     attachments=[create_back_keyboard("support_messages")]
                 )
                 return
-            
+
             set_state(max_user_id, 'waiting_message_from_support', {'user_id': user_id})
             api.send_message(
                 user_id=max_user_id,
@@ -232,11 +233,10 @@ class SupportHandler:
                 text += f"⏱ Среднее время реакции: {avg_time:.1f} мин."
             else:
                 text += f"⏱ Среднее время реакции: не рассчитано"
-            
+
             keyboard = create_back_keyboard("main_menu")
             api.send_message(
                 user_id=max_user_id,
                 text=text,
                 attachments=[keyboard]
             )
-

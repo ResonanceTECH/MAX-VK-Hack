@@ -18,31 +18,31 @@ logger = logging.getLogger(__name__)
 
 class AdminHandler:
     """Обработчики для администрации"""
-    
+
     def show_admin_students_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню управления студентами"""
         text = "👨‍🎓 Управление студентами\n\n"
         text += "📱 Данный функционал доступен в мини-приложении.\n"
-        
+
         keyboard = create_back_keyboard("main_menu")
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
         )
-    
+
     def show_admin_teachers_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню управления преподавателями"""
         text = "👨‍🏫 Управление преподавателями\n\n"
         text += "📱 Данный функционал доступен в мини-приложении.\n"
-        
+
         keyboard = create_back_keyboard("main_menu")
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
         )
-    
+
     def show_admin_groups_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню управления группами"""
         keyboard = create_admin_groups_menu_keyboard()
@@ -51,7 +51,7 @@ class AdminHandler:
             text="👥 Управление группами\n\nВыберите действие:",
             attachments=[keyboard]
         )
-    
+
     def show_admin_broadcasts_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню рассылок"""
         keyboard = create_admin_broadcasts_menu_keyboard()
@@ -60,7 +60,7 @@ class AdminHandler:
             text="📢 Рассылки\n\nВыберите действие:",
             attachments=[keyboard]
         )
-    
+
     def show_admin_reports_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню отчетов"""
         keyboard = create_admin_reports_menu_keyboard()
@@ -69,7 +69,7 @@ class AdminHandler:
             text="📊 Отчеты\n\nВыберите раздел:",
             attachments=[keyboard]
         )
-    
+
     def show_admin_support_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню поддержки для администратора"""
         keyboard = create_admin_support_menu_keyboard()
@@ -78,37 +78,38 @@ class AdminHandler:
             text="💬 Поддержка\n\nВыберите раздел:",
             attachments=[keyboard]
         )
-    
+
     def handle_admin_student_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия со студентами"""
         text = "👨‍🎓 Управление студентами\n\n"
         text += "📱 Данный функционал доступен в мини-приложении.\n"
-        
+
         keyboard = create_back_keyboard("main_menu")
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
         )
-    
+
     def handle_admin_teacher_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия с преподавателями"""
         text = "👨‍🏫 Управление преподавателями\n\n"
         text += "📱 Данный функционал доступен в мини-приложении.\n"
-        
+
         keyboard = create_back_keyboard("main_menu")
         api.send_message(
             user_id=max_user_id,
             text=text,
             attachments=[keyboard]
         )
-    
+
     def handle_admin_group_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия с группами"""
-        from utils.keyboard import create_groups_list_keyboard, create_students_list_keyboard, create_teachers_list_keyboard
+        from utils.keyboard import create_groups_list_keyboard, create_students_list_keyboard, \
+            create_teachers_list_keyboard
         from utils.states import set_state, get_state, clear_state
         action = payload.replace('admin_group_', '')
-        
+
         if action == 'view':
             text = "👥 Просмотр состава группы\n\n"
             text += "📱 Данный функционал доступен в мини-приложении.\n"
@@ -281,11 +282,11 @@ class AdminHandler:
                         attachments=[create_back_keyboard("admin_groups")]
                     )
                     clear_state(max_user_id)
-    
+
     def handle_admin_broadcast_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия с рассылками"""
         action = payload.replace('admin_broadcast_', '')
-        
+
         if action == 'all_students':
             set_state(max_user_id, 'admin_broadcast_all_students', {})
             api.send_message(
@@ -300,28 +301,28 @@ class AdminHandler:
                 text="📢 Рассылка всем преподавателям\n\nОтправьте сообщение, которое будет доставлено всем преподавателям:",
                 attachments=[create_cancel_keyboard()]
             )
-    
+
     def handle_admin_report_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия с отчетами"""
         action = payload.replace('admin_report_', '')
-        
+
         if action == 'messages':
             # Копируем статистику по сообщениям у поддержки
             from db.models import Message
-            
+
             # Общая статистика по сообщениям
             total_query = "SELECT COUNT(*) as count FROM messages"
             total = execute_query(total_query, (), fetch_one=True)
             total_count = total.get('count', 0) if total else 0
-            
+
             # Непрочитанные сообщения
             unread_query = "SELECT COUNT(*) as count FROM messages WHERE status = 'unread'"
             unread = execute_query(unread_query, (), fetch_one=True)
             unread_count = unread.get('count', 0) if unread else 0
-            
+
             # Прочитанные сообщения
             read_count = total_count - unread_count
-            
+
             # Сообщения по ролям отправителей
             students_query = """
                 SELECT COUNT(*) as count 
@@ -331,7 +332,7 @@ class AdminHandler:
             """
             students_msg = execute_query(students_query, (), fetch_one=True)
             students_count = students_msg.get('count', 0) if students_msg else 0
-            
+
             teachers_query = """
                 SELECT COUNT(*) as count 
                 FROM messages m
@@ -340,14 +341,14 @@ class AdminHandler:
             """
             teachers_msg = execute_query(teachers_query, (), fetch_one=True)
             teachers_count = teachers_msg.get('count', 0) if teachers_msg else 0
-            
+
             text = "💬 Статистика по сообщениям\n\n"
             text += f"📊 Всего сообщений: {total_count}\n"
             text += f"✅ Прочитано: {read_count}\n"
             text += f"📬 Непрочитано: {unread_count}\n\n"
             text += f"👨‍🎓 От студентов: {students_count}\n"
             text += f"👨‍🏫 От преподавателей: {teachers_count}\n"
-            
+
             api.send_message(
                 user_id=max_user_id,
                 text=text,
@@ -365,11 +366,11 @@ class AdminHandler:
                 text=text,
                 attachments=[create_back_keyboard("admin_reports")]
             )
-    
+
     def handle_admin_help_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия помощи для администратора"""
         action = payload.replace('admin_help_', '')
-        
+
         if action == 'instructions':
             text = "📖 Инструкции по работе с ботом\n\n"
             text += "👨‍🎓 Управление студентами:\n"
@@ -384,7 +385,7 @@ class AdminHandler:
             text += "• Привязка преподавателей\n\n"
             text += "📢 Рассылки:\n"
             text += "• Массовые уведомления всем пользователям или группам"
-            
+
             # Создаем кнопку "Назад" которая вернет в меню помощи
             buttons = [[{"type": "callback", "text": "◀️ Назад", "payload": "help"}]]
             keyboard = {
@@ -396,12 +397,12 @@ class AdminHandler:
                 text=text,
                 attachments=[keyboard]
             )
-    
+
     def handle_admin_support_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия поддержки для администратора"""
         from utils.states import set_state
         action = payload.replace('admin_support_', '')
-        
+
         if action == 'tickets':
             keyboard = create_support_tickets_status_keyboard(role='admin')
             api.send_message(
@@ -418,7 +419,7 @@ class AdminHandler:
             }
             status = status_map.get(action)
             tickets = SupportTicket.get_tickets(status=status)
-            
+
             if not tickets:
                 status_text = {
                     'new': 'новых',
@@ -432,8 +433,9 @@ class AdminHandler:
                     attachments=[create_support_tickets_status_keyboard(role='admin')]
                 )
                 return
-            
-            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket", back_payload="admin_support_tickets")
+
+            keyboard = create_support_tickets_list_keyboard(tickets, prefix="support_ticket",
+                                                            back_payload="admin_support_tickets")
             status_text = {
                 'new': '🆕 Новые',
                 'in_progress': '🔄 В работе',
@@ -448,7 +450,7 @@ class AdminHandler:
         elif action.startswith('ticket_'):
             ticket_id = int(action.split('_')[-1])
             ticket = SupportTicket.get_ticket_by_id(ticket_id)
-            
+
             if not ticket:
                 api.send_message(
                     user_id=max_user_id,
@@ -456,19 +458,19 @@ class AdminHandler:
                     attachments=[create_support_tickets_status_keyboard(role='admin')]
                 )
                 return
-            
+
             status_emoji = {
                 'new': '🆕',
                 'in_progress': '🔄',
                 'resolved': '✅'
             }.get(ticket.get('status', 'new'), '📋')
-            
+
             status_text = {
                 'new': 'Новое',
                 'in_progress': 'В работе',
                 'resolved': 'Решено'
             }.get(ticket.get('status', 'new'), 'Неизвестно')
-            
+
             text = f"{status_emoji} Обращение #{ticket['id']}\n\n"
             text += f"👤 Пользователь: {ticket.get('fio', 'Неизвестно')}\n"
             text += f"📋 Статус: {status_text}\n"
@@ -477,10 +479,10 @@ class AdminHandler:
             text += f"📅 Создано: {ticket.get('created_at', 'Неизвестно')}\n\n"
             text += f"📝 Тема: {ticket.get('subject', 'Без темы')}\n\n"
             text += f"💬 Сообщение:\n{ticket.get('message', '')}\n"
-            
+
             if ticket.get('response_time'):
                 text += f"\n⏱ Время реакции: {ticket['response_time']} мин."
-            
+
             keyboard = create_support_ticket_actions_keyboard(ticket_id, ticket.get('status', 'new'), role='admin')
             api.send_message(
                 user_id=max_user_id,
@@ -515,7 +517,7 @@ class AdminHandler:
                             import logging
                             logger = logging.getLogger(__name__)
                             logger.error(f"Ошибка при вычислении времени реакции: {e}")
-                
+
                 api.send_message(
                     user_id=max_user_id,
                     text="✅ Обращение взято в работу",
@@ -551,7 +553,7 @@ class AdminHandler:
                 LIMIT 1
             """
             support_user = execute_query(support_query, (), fetch_one=True)
-            
+
             if not support_user:
                 text = "💬 Связь с поддержкой:\n\n"
                 text += "⚠️ Поддержка временно недоступна. Обратитесь к администратору."
@@ -562,13 +564,14 @@ class AdminHandler:
                     attachments=[keyboard]
                 )
                 return
-            
+
             text = "💬 Связь с поддержкой:\n\n"
             text += "Вы можете написать сообщение в поддержку.\n"
             text += "Ваше обращение будет зарегистрировано как тикет, и с вами свяжутся в ближайшее время."
-            
+
             buttons = [[
-                {"type": "callback", "text": "✉️ Написать в поддержку", "payload": f"admin_write_support_{support_user['id']}"}
+                {"type": "callback", "text": "✉️ Написать в поддержку",
+                 "payload": f"admin_write_support_{support_user['id']}"}
             ]]
             buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support"}])
             keyboard = {
@@ -593,14 +596,14 @@ class AdminHandler:
                 text += f"⏱ Среднее время реакции: {avg_time:.1f} мин."
             else:
                 text += f"⏱ Среднее время реакции: не рассчитано"
-            
+
             keyboard = create_back_keyboard("admin_support")
             api.send_message(
                 user_id=max_user_id,
                 text=text,
                 attachments=[keyboard]
             )
-    
+
     def start_edit_schedule(self, user: Dict, max_user_id: int, api):
         """Начать редактирование расписания"""
         set_state(max_user_id, 'admin_schedule_edit', {})
@@ -612,4 +615,3 @@ class AdminHandler:
                  "Пример: http://localhost:8001/schedule_1",
             attachments=[create_cancel_keyboard()]
         )
-

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 class CallbackHandler(BaseHandler):
     """Роутер для обработчиков callback - делегирует вызовы соответствующим обработчикам"""
-    
+
     def __init__(self):
         """Инициализация обработчиков"""
         self.common_handler = CommonHandler()
@@ -26,10 +26,10 @@ class CallbackHandler(BaseHandler):
         self.schedule_handler = ScheduleHandler()
         self.admin_handler = AdminHandler()
         self.support_handler = SupportHandler()
-    
+
     def can_handle(self, update: Dict[str, Any]) -> bool:
         return update.get('update_type') == 'message_callback'
-    
+
     def handle(self, update: Dict[str, Any], api) -> None:
         callback = update.get('callback', {})
         user = callback.get('user', {})
@@ -37,12 +37,12 @@ class CallbackHandler(BaseHandler):
         first_name = user.get('first_name', 'Unknown')
         payload = callback.get('payload', '')
         callback_id = callback.get('callback_id', '')
-        
+
         if not max_user_id or not self.is_user_verified(max_user_id):
             if callback_id:
                 api.answer_callback(callback_id)
             return
-        
+
         # Получаем сохраненную роль или используем приоритетную
         saved_role = get_user_role(max_user_id)
         user_data = User.get_by_max_id(max_user_id, saved_role) if saved_role else User.get_by_max_id(max_user_id)
@@ -50,15 +50,15 @@ class CallbackHandler(BaseHandler):
             if callback_id:
                 api.answer_callback(callback_id)
             return
-        
+
         # Отвечаем на callback сразу
         if callback_id:
             api.answer_callback(callback_id)
-        
+
         # Определяем действие для логирования
         action = self._get_action_for_logging(payload)
         logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action={action}")
-        
+
         # Роутинг по payload
         try:
             self._route_payload(payload, user_data, max_user_id, api)
@@ -69,7 +69,7 @@ class CallbackHandler(BaseHandler):
                 text="❌ Произошла ошибка при обработке запроса",
                 attachments=[create_back_keyboard("main_menu")]
             )
-    
+
     def _get_action_for_logging(self, payload: str) -> str:
         """Определить действие для логирования"""
         action_map = {
@@ -82,7 +82,7 @@ class CallbackHandler(BaseHandler):
             'help': 'просмотр_справки',
             'cancel': 'отмена'
         }
-        
+
         action = action_map.get(payload, payload)
         if payload.startswith('select_role_'):
             action = 'переключение_роли'
@@ -92,13 +92,13 @@ class CallbackHandler(BaseHandler):
             action = 'административное_действие'
         elif payload.startswith('support_'):
             action = 'действие_поддержки'
-        
+
         return action
-    
+
     def _route_payload(self, payload: str, user_data: Dict, max_user_id: int, api):
         """Роутинг payload к соответствующим обработчикам"""
         role = user_data.get('role', 'student')
-        
+
         # Общие действия
         if payload == 'main_menu':
             self.common_handler.show_main_menu(user_data, max_user_id, api)
@@ -122,7 +122,7 @@ class CallbackHandler(BaseHandler):
         elif payload == 'cancel':
             clear_state(max_user_id)
             self.common_handler.show_main_menu(user_data, max_user_id, api)
-        
+
         # Расписание (общее для студентов и преподавателей)
         elif payload == 'menu_schedule':
             self.schedule_handler.show_schedule_menu(user_data, max_user_id, api)
@@ -130,27 +130,27 @@ class CallbackHandler(BaseHandler):
             self.schedule_handler.show_schedule_today(user_data, max_user_id, api)
         elif payload.startswith('schedule_week'):
             self.schedule_handler.show_schedule_week(user_data, max_user_id, api)
-        
+
         # Новости (общее для всех)
         elif payload == 'menu_news' or payload == 'menu_news_teacher':
             self.common_handler.show_news(user_data, max_user_id, api)
-        
+
         # Действия для студентов
         elif role == 'student':
             self._handle_student_payload(payload, user_data, max_user_id, api)
-        
+
         # Действия для преподавателей
         elif role == 'teacher':
             self._handle_teacher_payload(payload, user_data, max_user_id, api)
-        
+
         # Действия для администрации
         elif role == 'admin':
             self._handle_admin_payload(payload, user_data, max_user_id, api)
-        
+
         # Действия для поддержки
         elif role == 'support':
             self._handle_support_payload(payload, user_data, max_user_id, api)
-    
+
     def _handle_student_payload(self, payload: str, user_data: Dict, max_user_id: int, api):
         """Обработка payload для студентов"""
         if payload == 'menu_group':
@@ -189,7 +189,7 @@ class CallbackHandler(BaseHandler):
             self.student_handler.start_group_message(group_id, teacher_id, user_data, max_user_id, api)
         elif payload == 'write_teacher':
             self.student_handler.show_teachers(user_data, max_user_id, api)
-    
+
     def _handle_teacher_payload(self, payload: str, user_data: Dict, max_user_id: int, api):
         """Обработка payload для преподавателей"""
         if payload == 'menu_my_groups':
@@ -261,7 +261,7 @@ class CallbackHandler(BaseHandler):
             self.teacher_handler.show_teacher_info(teacher_id, user_data, max_user_id, api)
         elif payload.startswith('help_notifications'):
             self.teacher_handler.show_help_notifications(user_data, max_user_id, api)
-    
+
     def _handle_admin_payload(self, payload: str, user_data: Dict, max_user_id: int, api):
         """Обработка payload для администрации"""
         if payload == 'admin_students':
@@ -292,7 +292,7 @@ class CallbackHandler(BaseHandler):
             self.admin_handler.handle_admin_support_action(payload, user_data, max_user_id, api)
         elif payload == 'admin_schedule_edit':
             self.admin_handler.start_edit_schedule(user_data, max_user_id, api)
-    
+
     def _handle_support_payload(self, payload: str, user_data: Dict, max_user_id: int, api):
         """Обработка payload для поддержки"""
         if payload.startswith('support_'):
@@ -300,16 +300,16 @@ class CallbackHandler(BaseHandler):
         elif payload.startswith('admin_help_'):
             # Поддержка тоже использует admin_help_ префикс для инструкций
             self.admin_handler.handle_admin_help_action(payload, user_data, max_user_id, api)
-    
+
     # Прокси-методы для вызова из других обработчиков (например, message.py)
     def show_main_menu(self, user: Dict, max_user_id: int, api):
         """Показать главное меню (прокси-метод)"""
         self.common_handler.show_main_menu(user, max_user_id, api)
-    
+
     def show_admin_support_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню поддержки для администратора (прокси-метод)"""
         self.admin_handler.show_admin_support_menu(user, max_user_id, api)
-    
+
     def show_admin_broadcasts_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню рассылок (прокси-метод)"""
         self.admin_handler.show_admin_broadcasts_menu(user, max_user_id, api)

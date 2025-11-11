@@ -41,18 +41,18 @@ def format_teacher_name_for_schedule(fio: str) -> str:
     """
     if not fio:
         return ""
-    
+
     # Убираем лишние пробелы и разбиваем на части
     parts = [p.strip() for p in fio.strip().split() if p.strip()]
-    
+
     if len(parts) >= 2:
         last_name = parts[0]
         first_name = parts[1]
         middle_name = parts[2] if len(parts) > 2 else None
-        
+
         # Берем первую букву имени (в верхнем регистре)
         first_initial = first_name[0].upper() if first_name else ""
-        
+
         # Берем первую букву отчества (в верхнем регистре), если есть
         if middle_name:
             middle_initial = middle_name[0].upper()
@@ -62,15 +62,16 @@ def format_teacher_name_for_schedule(fio: str) -> str:
     elif len(parts) == 1:
         # Если только фамилия, возвращаем как есть
         return parts[0]
-    
+
     return fio
+
 
 logger = logging.getLogger(__name__)
 
 
 class ScheduleHandler:
     """Обработчики расписания"""
-    
+
     def show_schedule_menu(self, user: Dict, max_user_id: int, api):
         """Показать меню расписания"""
         keyboard = create_schedule_menu_keyboard()
@@ -79,7 +80,7 @@ class ScheduleHandler:
             text="📅 Расписание\n\nВыберите действие:",
             attachments=[keyboard]
         )
-    
+
     def show_schedule_today(self, user: Dict, max_user_id: int, api):
         """Показать расписание на сегодня"""
         from datetime import datetime
@@ -96,7 +97,7 @@ class ScheduleHandler:
             'Sunday': 'Воскресенье'
         }
         weekday_name = weekday_ru.get(weekday, weekday)
-        
+
         # Определяем запрос для расписания
         query = None
         if user['role'] == 'student':
@@ -107,7 +108,7 @@ class ScheduleHandler:
         elif user['role'] == 'teacher':
             # Для преподавателей - преобразуем ФИО
             query = format_teacher_name_for_schedule(user.get('fio', ''))
-        
+
         if not query:
             text = f"📅 Расписание на сегодня ({weekday_name}, {today_str}):\n\n"
             text += "⚠️ Не удалось определить запрос для расписания.\n"
@@ -119,13 +120,13 @@ class ScheduleHandler:
                 attachments=[keyboard]
             )
             return
-        
+
         # Получаем расписание из API
         schedule_data = get_schedule_from_api(query)
         events_by_calname = schedule_data.get('events_by_calname', {})
-        
+
         text = f"📅 Расписание на сегодня ({weekday_name}, {today_str}):\n\n"
-        
+
         if not events_by_calname:
             text += f"✅ На {weekday_name} занятий нет."
         else:
@@ -135,7 +136,7 @@ class ScheduleHandler:
                 for event in events:
                     if event.get('day_of_week') == weekday_name:
                         today_events.append((calname, event))
-            
+
             if not today_events:
                 text += f"✅ На {weekday_name} занятий нет.\n"
             else:
@@ -145,7 +146,7 @@ class ScheduleHandler:
                     if calname not in events_by_cal:
                         events_by_cal[calname] = []
                     events_by_cal[calname].append(event)
-                
+
                 for calname, events in events_by_cal.items():
                     text += f"📚 {calname}:\n\n"
                     # Сортируем по времени начала
@@ -158,19 +159,7 @@ class ScheduleHandler:
                         if event.get('description'):
                             text += f"👤 {event.get('description', '').strip()}\n"
                         text += f"📆 {event.get('week_parity', '')}\n\n"
-        
-        keyboard = create_back_keyboard("menu_schedule")
-        api.send_message(
-            user_id=max_user_id,
-            text=text,
-            attachments=[keyboard]
-        )
-    
-    def show_schedule_week(self, user: Dict, max_user_id: int, api):
-        """Показать расписание на неделю"""
-        text = "📆 Расписание на неделю\n\n"
-        text += "📱 Данный функционал доступен в мини-приложении.\n"
-        
+
         keyboard = create_back_keyboard("menu_schedule")
         api.send_message(
             user_id=max_user_id,
@@ -178,3 +167,14 @@ class ScheduleHandler:
             attachments=[keyboard]
         )
 
+    def show_schedule_week(self, user: Dict, max_user_id: int, api):
+        """Показать расписание на неделю"""
+        text = "📆 Расписание на неделю\n\n"
+        text += "📱 Данный функционал доступен в мини-приложении.\n"
+
+        keyboard = create_back_keyboard("menu_schedule")
+        api.send_message(
+            user_id=max_user_id,
+            text=text,
+            attachments=[keyboard]
+        )
