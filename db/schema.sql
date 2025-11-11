@@ -68,17 +68,6 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- FAQ (Часто задаваемые вопросы)
-CREATE TABLE IF NOT EXISTS faq (
-    id SERIAL PRIMARY KEY,
-    question TEXT NOT NULL,
-    answer TEXT NOT NULL,
-    category VARCHAR(50) DEFAULT 'general',  -- 'general', 'student', 'teacher', 'admin'
-    created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,  -- Кто создал FAQ
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Сообщения администрации (рассылки)
 CREATE TABLE IF NOT EXISTS admin_messages (
     id SERIAL PRIMARY KEY,
@@ -117,7 +106,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_to_status ON messages(to_user_id, status
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_admin ON support_tickets(admin_id);
-CREATE INDEX IF NOT EXISTS idx_faq_category ON faq(category);
 CREATE INDEX IF NOT EXISTS idx_admin_messages_role ON admin_messages(target_role);
 CREATE INDEX IF NOT EXISTS idx_news_role ON news(target_role);
 CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at);
