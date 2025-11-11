@@ -2,20 +2,30 @@
 from db.connection import execute_query
 from typing import Optional, List, Dict
 
+
+def format_fio(first_name: str, last_name: str, middle_name: Optional[str] = None) -> str:
+    """Формирует полное ФИО из отдельных полей"""
+    parts = [last_name, first_name]
+    if middle_name:
+        parts.append(middle_name)
+    return ' '.join(parts)
+
 class User:
     @staticmethod
     def get_by_max_id(max_user_id: int, role: Optional[str] = None) -> Optional[Dict]:
         """Получить пользователя по Max ID. Если указана роль, вернет пользователя с этой ролью"""
         if role:
             query = """
-                SELECT id, max_user_id, fio, role, phone, email
+                SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                       TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
                 FROM users WHERE max_user_id = %s AND role = %s
             """
             return execute_query(query, (max_user_id, role), fetch_one=True)
         else:
             # Если роль не указана, возвращаем первую найденную запись (приоритет: admin > support > teacher > student)
             query = """
-                SELECT id, max_user_id, fio, role, phone, email
+                SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                       TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
                 FROM users WHERE max_user_id = %s
                 ORDER BY CASE role 
                     WHEN 'admin' THEN 1 
@@ -32,7 +42,8 @@ class User:
     def get_all_roles(max_user_id: int) -> List[Dict]:
         """Получить все роли пользователя"""
         query = """
-            SELECT id, max_user_id, fio, role, phone, email
+            SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                   TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
             FROM users WHERE max_user_id = %s
             ORDER BY CASE role 
                 WHEN 'admin' THEN 1 
@@ -48,7 +59,8 @@ class User:
     def get_by_id(user_id: int) -> Optional[Dict]:
         """Получить пользователя по ID"""
         query = """
-            SELECT id, max_user_id, fio, role, phone, email
+            SELECT id, max_user_id, first_name, last_name, middle_name, role, phone, email,
+                   TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
             FROM users WHERE id = %s
         """
         return execute_query(query, (user_id,), fetch_one=True)
@@ -62,10 +74,11 @@ class User:
     def get_all_students() -> List[Dict]:
         """Получить всех студентов"""
         query = """
-            SELECT id, max_user_id, fio, phone, email
+            SELECT id, max_user_id, first_name, last_name, middle_name, phone, email,
+                   TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
             FROM users
             WHERE role = 'student'
-            ORDER BY fio
+            ORDER BY last_name, first_name, middle_name
         """
         return execute_query(query, (), fetch_all=True) or []
 
@@ -86,11 +99,12 @@ class Group:
     def get_group_members(group_id: int) -> List[Dict]:
         """Получить участников группы"""
         query = """
-            SELECT u.id, u.max_user_id, u.fio, u.phone, u.email, gm.is_headman
+            SELECT u.id, u.max_user_id, u.first_name, u.last_name, u.middle_name, u.phone, u.email, gm.is_headman,
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio
             FROM users u
             JOIN group_members gm ON u.id = gm.user_id
             WHERE gm.group_id = %s AND u.role = 'student'
-            ORDER BY u.fio
+            ORDER BY u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (group_id,), fetch_all=True) or []
     
@@ -140,12 +154,13 @@ class Teacher:
     def get_student_teachers(student_id: int) -> List[Dict]:
         """Получить преподавателей студента (через группы)"""
         query = """
-            SELECT DISTINCT u.id, u.max_user_id, u.fio, u.phone, u.email
+            SELECT DISTINCT u.id, u.max_user_id, u.first_name, u.last_name, u.middle_name, u.phone, u.email,
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio
             FROM users u
             JOIN teacher_groups tg ON u.id = tg.teacher_id
             JOIN group_members gm ON tg.group_id = gm.group_id
             WHERE gm.user_id = %s AND u.role = 'teacher'
-            ORDER BY u.fio
+            ORDER BY u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (student_id,), fetch_all=True) or []
     
@@ -158,13 +173,14 @@ class Teacher:
     def get_teacher_headmen(teacher_id: int) -> List[Dict]:
         """Получить старост групп преподавателя"""
         query = """
-            SELECT DISTINCT u.id, u.max_user_id, u.fio, u.phone, u.email, g.id as group_id, g.name as group_name
+            SELECT DISTINCT u.id, u.max_user_id, u.first_name, u.last_name, u.middle_name, u.phone, u.email, g.id as group_id, g.name as group_name,
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio
             FROM users u
             JOIN group_members gm ON u.id = gm.user_id
             JOIN groups g ON gm.group_id = g.id
             JOIN teacher_groups tg ON g.id = tg.group_id
             WHERE tg.teacher_id = %s AND gm.is_headman = TRUE AND u.role = 'student'
-            ORDER BY g.name, u.fio
+            ORDER BY g.name, u.last_name, u.first_name, u.middle_name
         """
         return execute_query(query, (teacher_id,), fetch_all=True) or []
     
@@ -172,33 +188,58 @@ class Teacher:
     def get_all_teachers() -> List[Dict]:
         """Получить всех преподавателей"""
         query = """
-            SELECT DISTINCT id, max_user_id, fio, phone, email
+            SELECT DISTINCT id, max_user_id, first_name, last_name, middle_name, phone, email,
+                   TRIM(CONCAT_WS(' ', last_name, first_name, middle_name)) as fio
             FROM users
             WHERE role = 'teacher'
-            ORDER BY fio
+            ORDER BY last_name, first_name, middle_name
         """
         return execute_query(query, (), fetch_all=True) or []
     
     @staticmethod
     def create_user(max_user_id: int, fio: str, role: str, phone: Optional[str] = None, email: Optional[str] = None) -> Optional[int]:
-        """Создать пользователя"""
+        """Создать пользователя. fio должен быть в формате "Фамилия Имя Отчество" или "Фамилия Имя" """
+        # Парсим ФИО на части
+        parts = fio.strip().split()
+        if len(parts) >= 2:
+            last_name = parts[0]
+            first_name = parts[1]
+            middle_name = parts[2] if len(parts) > 2 else None
+        else:
+            # Если формат неправильный, используем как есть
+            last_name = fio
+            first_name = ""
+            middle_name = None
+        
         query = """
-            INSERT INTO users (max_user_id, fio, role, phone, email)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO users (max_user_id, first_name, last_name, middle_name, role, phone, email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
-        result = execute_query(query, (max_user_id, fio, role, phone, email), fetch_one=True)
+        result = execute_query(query, (max_user_id, first_name, last_name, middle_name, role, phone, email), fetch_one=True)
         return result.get('id') if result else None
     
     @staticmethod
     def update_user(user_id: int, fio: Optional[str] = None, phone: Optional[str] = None, email: Optional[str] = None) -> bool:
-        """Обновить данные пользователя"""
+        """Обновить данные пользователя. fio должен быть в формате "Фамилия Имя Отчество" или "Фамилия Имя" """
         updates = []
         params = []
         
         if fio is not None:
-            updates.append("fio = %s")
-            params.append(fio)
+            # Парсим ФИО на части
+            parts = fio.strip().split()
+            if len(parts) >= 2:
+                last_name = parts[0]
+                first_name = parts[1]
+                middle_name = parts[2] if len(parts) > 2 else None
+            else:
+                # Если формат неправильный, используем как есть
+                last_name = fio
+                first_name = ""
+                middle_name = None
+            
+            updates.append("first_name = %s, last_name = %s, middle_name = %s")
+            params.extend([first_name, last_name, middle_name])
         if phone is not None:
             updates.append("phone = %s")
             params.append(phone)
@@ -292,9 +333,9 @@ class Message:
             SELECT 
                 m.id,
                 m.from_user_id,
-                u1.fio as from_user_fio,
+                TRIM(CONCAT_WS(' ', u1.last_name, u1.first_name, u1.middle_name)) as from_user_fio,
                 m.to_user_id,
-                u2.fio as to_user_fio,
+                TRIM(CONCAT_WS(' ', u2.last_name, u2.first_name, u2.middle_name)) as to_user_fio,
                 m.group_id,
                 g.name as group_name,
                 m.text,
@@ -373,7 +414,7 @@ class SupportTicket:
         query = """
             SELECT st.id, st.user_id, st.subject, st.message, st.status, 
                    st.admin_id, st.response_time, st.resolved_at, st.created_at,
-                   u.fio, u.max_user_id, u.role
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio, u.max_user_id, u.role
             FROM support_tickets st
             JOIN users u ON st.user_id = u.id
             WHERE 1=1
@@ -399,8 +440,8 @@ class SupportTicket:
         query = """
             SELECT st.id, st.user_id, st.subject, st.message, st.status,
                    st.admin_id, st.response_time, st.resolved_at, st.created_at,
-                   u.fio, u.max_user_id, u.role,
-                   admin_user.fio as admin_fio
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as fio, u.max_user_id, u.role,
+                   TRIM(CONCAT_WS(' ', admin_user.last_name, admin_user.first_name, admin_user.middle_name)) as admin_fio
             FROM support_tickets st
             JOIN users u ON st.user_id = u.id
             LEFT JOIN users admin_user ON st.admin_id = admin_user.id
@@ -548,7 +589,7 @@ class AdminMessage:
         query = """
             SELECT am.id, am.title, am.message, am.target_role, am.target_group_id,
                    am.sent_at, am.created_at,
-                   u.fio as admin_fio,
+                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as admin_fio,
                    g.name as group_name
             FROM admin_messages am
             LEFT JOIN users u ON am.admin_id = u.id
