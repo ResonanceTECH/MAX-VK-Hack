@@ -1,6 +1,6 @@
 """Обработчик текстовых сообщений"""
 from handlers.base import BaseHandler
-from db.models import User, Message, SupportTicket, FAQ
+from db.models import User, Message, SupportTicket
 from utils.keyboard import create_main_menu_keyboard, create_back_keyboard, create_cancel_keyboard
 from utils.states import get_state, clear_state, is_in_state, get_state_data, set_state, get_user_role
 from typing import Dict, Any
@@ -864,38 +864,6 @@ class MessageHandler(BaseHandler):
                             text="❌ Ошибка при отправке сообщения",
                             attachments=[create_back_keyboard(back_payload)]
                         )
-            clear_state(max_user_id)
-        elif state == 'admin_support_faq_add':
-            # Добавление FAQ
-            # Формат: Вопрос\nОтвет
-            lines = text.split('\n', 1)
-            if len(lines) < 2:
-                api.send_message(
-                    user_id=max_user_id,
-                    text="❌ Неверный формат. Используйте:\nВопрос\nОтвет",
-                    attachments=[create_cancel_keyboard()]
-                )
-                return
-
-            question = lines[0].strip()
-            answer = lines[1].strip()
-
-            admin_user = UserModel.get_by_max_id(max_user_id, role='admin')
-            created_by = admin_user['id'] if admin_user else None
-
-            faq_id = FAQ.create_faq(question, answer, category='general', created_by=created_by)
-            if faq_id:
-                api.send_message(
-                    user_id=max_user_id,
-                    text="✅ FAQ добавлен",
-                    attachments=[create_back_keyboard("admin_support_faq")]
-                )
-            else:
-                api.send_message(
-                    user_id=max_user_id,
-                    text="❌ Ошибка при добавлении FAQ",
-                    attachments=[create_cancel_keyboard()]
-                )
             clear_state(max_user_id)
 
     def handle_edit_schedule(self, user: Dict, max_user_id: int, text: str, api, message_id: str):

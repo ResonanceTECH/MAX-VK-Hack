@@ -1,10 +1,10 @@
 """Обработчики для поддержки"""
 from typing import Dict, Any
-from db.models import User, SupportTicket, FAQ
+from db.models import User, SupportTicket
 from db.connection import execute_query
 from utils.keyboard import (
     create_support_tickets_status_keyboard, create_support_tickets_list_keyboard,
-    create_support_ticket_actions_keyboard, create_faq_list_keyboard,
+    create_support_ticket_actions_keyboard,
     create_back_keyboard, create_cancel_keyboard
 )
 from utils.states import set_state
@@ -219,34 +219,6 @@ class SupportHandler:
                 text=f"💬 Написать пользователю {target_user.get('fio', '')}\n\nОтправьте сообщение:",
                 attachments=[create_cancel_keyboard()]
             )
-        elif action == 'faq':
-            faq_list = FAQ.get_faq()
-            if not faq_list:
-                api.send_message(
-                    user_id=max_user_id,
-                    text="❌ Нет FAQ",
-                    attachments=[create_back_keyboard("main_menu")]
-                )
-                return
-            
-            keyboard = create_faq_list_keyboard(faq_list)
-            api.send_message(
-                user_id=max_user_id,
-                text=f"❓ Часто задаваемые вопросы ({len(faq_list)}):",
-                attachments=[keyboard]
-            )
-        elif action.startswith('faq_view_'):
-            faq_id = int(action.split('_')[-1])
-            faq = FAQ.get_faq_by_id(faq_id)
-            if faq:
-                text = f"❓ {faq.get('question', '')}\n\n"
-                text += f"💬 {faq.get('answer', '')}\n"
-                keyboard = create_back_keyboard("support_faq")
-                api.send_message(
-                    user_id=max_user_id,
-                    text=text,
-                    attachments=[keyboard]
-                )
         elif action == 'stats':
             stats = SupportTicket.get_stats()
             text = "📊 Статистика поддержки:\n\n"

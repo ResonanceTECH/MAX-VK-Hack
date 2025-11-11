@@ -68,18 +68,6 @@ CREATE TABLE IF NOT EXISTS support_tickets (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Сообщения администрации (рассылки)
-CREATE TABLE IF NOT EXISTS admin_messages (
-    id SERIAL PRIMARY KEY,
-    admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-    title VARCHAR(255) NOT NULL,
-    message TEXT NOT NULL,
-    target_role VARCHAR(50),  -- 'student', 'teacher', 'all' или NULL для всех
-    target_group_id INTEGER REFERENCES groups(id) ON DELETE SET NULL,  -- NULL для всех групп
-    sent_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Новости
 CREATE TABLE IF NOT EXISTS news (
     id SERIAL PRIMARY KEY,
@@ -106,7 +94,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_to_status ON messages(to_user_id, status
 CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status);
 CREATE INDEX IF NOT EXISTS idx_support_tickets_admin ON support_tickets(admin_id);
-CREATE INDEX IF NOT EXISTS idx_admin_messages_role ON admin_messages(target_role);
 CREATE INDEX IF NOT EXISTS idx_news_role ON news(target_role);
 CREATE INDEX IF NOT EXISTS idx_news_created_at ON news(created_at);
 

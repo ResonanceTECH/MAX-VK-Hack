@@ -538,29 +538,6 @@ def create_support_ticket_actions_keyboard(ticket_id: int, status: str, role: st
         }
     }
 
-def create_faq_list_keyboard(faq_list: List[Dict], prefix: str = "admin_support_faq") -> Dict:
-    """Создать клавиатуру со списком FAQ"""
-    buttons = []
-    for faq in faq_list[:20]:  # Ограничиваем 20 записями
-        faq_id = faq.get('id')
-        question = faq.get('question', 'Без вопроса')[:40]  # Обрезаем длинные вопросы
-        
-        buttons.append([{
-            "type": "callback",
-            "text": f"❓ {question}",
-            "payload": f"{prefix}_view_{faq_id}"
-        }])
-    
-    buttons.append([{"type": "callback", "text": "➕ Добавить FAQ", "payload": "admin_support_faq_add"}])
-    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support"}])
-    
-    return {
-        "type": "inline_keyboard",
-        "payload": {
-            "buttons": buttons
-        }
-    }
-
 def create_students_list_keyboard(students: List[Dict], prefix: str = "admin_student") -> Dict:
     """Создать клавиатуру со списком студентов"""
     buttons = []

@@ -1,6 +1,6 @@
 """Обработчики для администрации"""
 from typing import Dict, Any
-from db.models import User, Group, Teacher, SupportTicket, FAQ
+from db.models import User, Group, Teacher, SupportTicket
 from db.connection import execute_query
 from utils.keyboard import (
     create_admin_students_menu_keyboard, create_admin_teachers_menu_keyboard,
@@ -8,7 +8,6 @@ from utils.keyboard import (
     create_admin_reports_menu_keyboard, create_admin_help_menu_keyboard,
     create_admin_support_menu_keyboard, create_support_tickets_status_keyboard,
     create_support_tickets_list_keyboard, create_support_ticket_actions_keyboard,
-    create_faq_list_keyboard,
     create_back_keyboard, create_cancel_keyboard
 )
 from utils.states import set_state, clear_state, get_state
@@ -400,7 +399,6 @@ class AdminHandler:
     
     def handle_admin_support_action(self, payload: str, user: Dict, max_user_id: int, api):
         """Обработать действия поддержки для администратора"""
-        from db.models import FAQ
         from utils.states import set_state
         action = payload.replace('admin_support_', '')
         
@@ -581,41 +579,6 @@ class AdminHandler:
                 user_id=max_user_id,
                 text=text,
                 attachments=[keyboard]
-            )
-        elif action == 'faq':
-            faq_list = FAQ.get_faq()
-            if not faq_list:
-                api.send_message(
-                    user_id=max_user_id,
-                    text="❌ Нет FAQ",
-                    attachments=[create_back_keyboard("admin_support")]
-                )
-                return
-            
-            keyboard = create_faq_list_keyboard(faq_list)
-            api.send_message(
-                user_id=max_user_id,
-                text=f"❓ Часто задаваемые вопросы ({len(faq_list)}):",
-                attachments=[keyboard]
-            )
-        elif action.startswith('faq_view_'):
-            faq_id = int(action.split('_')[-1])
-            faq = FAQ.get_faq_by_id(faq_id)
-            if faq:
-                text = f"❓ {faq.get('question', '')}\n\n"
-                text += f"💬 {faq.get('answer', '')}\n"
-                keyboard = create_back_keyboard("admin_support_faq")
-                api.send_message(
-                    user_id=max_user_id,
-                    text=text,
-                    attachments=[keyboard]
-                )
-        elif action == 'faq_add':
-            set_state(max_user_id, 'admin_support_faq_add', {})
-            api.send_message(
-                user_id=max_user_id,
-                text="➕ Добавление FAQ\n\nОтправьте данные в формате:\nВопрос\nОтвет\n\nПример:\nКак написать преподавателю?\nВыберите 'Преподаватели' → 'Написать преподавателю'",
-                attachments=[create_cancel_keyboard()]
             )
         elif action == 'stats':
             stats = SupportTicket.get_stats()

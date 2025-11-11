@@ -404,12 +404,6 @@ class Message:
         return execute_query(query, tuple(params), fetch_all=True) or []
 
     @staticmethod
-    def get_teacher_messages(teacher_id: int, status: Optional[str] = None,
-                             group_id: Optional[int] = None) -> List[Dict]:
-        """Получить сообщения для преподавателя от студентов (для обратной совместимости)"""
-        return Message.get_user_messages(teacher_id, status, group_id)
-
-    @staticmethod
     def get_by_id(message_id: int) -> Optional[Dict]:
         """Получить сообщение по ID"""
         query = """
@@ -568,97 +562,6 @@ class SupportTicket:
             'avg_response_time': float(result.get('avg_response_time', 0) or 0),
             'total_resolved': result.get('total_resolved', 0) or 0
         }
-
-
-class FAQ:
-    @staticmethod
-    def get_faq(category: Optional[str] = None, limit: int = 50) -> List[Dict]:
-        """Получить FAQ"""
-        query = """
-            SELECT id, question, answer, category, created_at
-            FROM faq
-            WHERE 1=1
-        """
-        params = []
-
-        if category:
-            query += " AND category = %s"
-            params.append(category)
-
-        query += " ORDER BY created_at DESC LIMIT %s"
-        params.append(limit)
-
-        return execute_query(query, tuple(params), fetch_all=True) or []
-
-    @staticmethod
-    def get_faq_by_id(faq_id: int) -> Optional[Dict]:
-        """Получить FAQ по ID"""
-        query = """
-            SELECT id, question, answer, category, created_at
-            FROM faq
-            WHERE id = %s
-        """
-        return execute_query(query, (faq_id,), fetch_one=True)
-
-    @staticmethod
-    def create_faq(question: str, answer: str, category: str = 'general', created_by: Optional[int] = None) -> Optional[
-        int]:
-        """Создать FAQ"""
-        query = """
-            INSERT INTO faq (question, answer, category, created_by)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-        """
-        result = execute_query(query, (question, answer, category, created_by), fetch_one=True)
-        return result.get('id') if result else None
-
-    @staticmethod
-    def update_faq(faq_id: int, question: str, answer: str, category: str = 'general') -> bool:
-        """Обновить FAQ"""
-        query = """
-            UPDATE faq
-            SET question = %s, answer = %s, category = %s, updated_at = CURRENT_TIMESTAMP
-            WHERE id = %s
-        """
-        execute_query(query, (question, answer, category, faq_id))
-        return True
-
-    @staticmethod
-    def delete_faq(faq_id: int) -> bool:
-        """Удалить FAQ"""
-        query = "DELETE FROM faq WHERE id = %s"
-        execute_query(query, (faq_id,))
-        return True
-
-
-class AdminMessage:
-    @staticmethod
-    def create_message(admin_id: int, title: str, message: str, target_role: Optional[str] = None,
-                       target_group_id: Optional[int] = None) -> Optional[int]:
-        """Создать сообщение администрации"""
-        query = """
-            INSERT INTO admin_messages (admin_id, title, message, target_role, target_group_id)
-            VALUES (%s, %s, %s, %s, %s)
-            RETURNING id
-        """
-        result = execute_query(query, (admin_id, title, message, target_role, target_group_id), fetch_one=True)
-        return result.get('id') if result else None
-
-    @staticmethod
-    def get_messages(limit: int = 50) -> List[Dict]:
-        """Получить сообщения администрации"""
-        query = """
-            SELECT am.id, am.title, am.message, am.target_role, am.target_group_id,
-                   am.sent_at, am.created_at,
-                   TRIM(CONCAT_WS(' ', u.last_name, u.first_name, u.middle_name)) as admin_fio,
-                   g.name as group_name
-            FROM admin_messages am
-            LEFT JOIN users u ON am.admin_id = u.id
-            LEFT JOIN groups g ON am.target_group_id = g.id
-            ORDER BY am.created_at DESC
-            LIMIT %s
-        """
-        return execute_query(query, (limit,), fetch_all=True) or []
 
 
 class News:
