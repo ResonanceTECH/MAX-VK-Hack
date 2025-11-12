@@ -21,10 +21,10 @@ import SupportTicketsPage from './pages/support/SupportTicketsPage'
 import StatsPage from './pages/support/StatsPage'
 
 // Импорты страниц для администрации
-import AdminStudentsPage from './pages/admin/AdminStudentsPage'
-import AdminTeachersPage from './pages/admin/AdminTeachersPage'
-import AdminGroupsPage from './pages/admin/AdminGroupsPage'
-import AdminNewsPage from './pages/admin/AdminNewsPage'
+import AdminStudentsPage from './pages/admin/students/AdminStudentsPage'
+import AdminTeachersPage from './pages/admin/teachers/AdminTeachersPage'
+import AdminGroupsPage from './pages/admin/groups/AdminGroupsPage'
+import AdminNewsPage from './pages/admin/news/AdminNewsPage'
 
 // Функция для определения дефолтного маршрута в зависимости от роли
 const getDefaultRoute = (role: string): string => {
@@ -88,6 +88,7 @@ function AppContent() {
   const hasMultipleRoles = user.all_roles && user.all_roles.length > 1
 
   return (
+<<<<<<< Updated upstream
     <div className="app-container">
       {hasMultipleRoles && (
         <RoleSelector
@@ -100,23 +101,42 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
             
+=======
+    <Router>
+      <div className="app-container">
+        {hasMultipleRoles && (
+          <RoleSelector
+            roles={user.all_roles}
+            currentRole={user.role}
+            onRoleChange={setSelectedRole}
+          />
+        )}
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
+
+>>>>>>> Stashed changes
             {/* Общие маршруты */}
             <Route path="/messages" element={<MessagesPage />} />
-            
+
             {/* Маршруты для студентов */}
             <Route path="/my-group" element={<MyGroupPage />} />
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/teachers" element={<TeachersPage />} />
             <Route path="/news" element={<NewsPage />} />
-            
+
             {/* Маршруты для преподавателей */}
             <Route path="/my-groups" element={<MyGroupsPage />} />
+<<<<<<< Updated upstream
             <Route path="/groups/:groupId" element={<GroupStudentsPage />} />
             
+=======
+
+>>>>>>> Stashed changes
             {/* Маршруты для поддержки */}
             <Route path="/support-tickets" element={<SupportTicketsPage />} />
             <Route path="/stats" element={<StatsPage />} />
-            
+
             {/* Маршруты для администрации */}
             <Route path="/admin/students" element={<AdminStudentsPage />} />
             <Route path="/admin/teachers" element={<AdminTeachersPage />} />
