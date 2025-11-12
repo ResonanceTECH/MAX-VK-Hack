@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     networks:
       - miniapp_network
-    entrypoint: ["/bin/sh", "-c", "if [ ! -f /etc/nginx/ssl/nginx.crt ]; then apk add --no-cache openssl > /dev/null 2>&1 && mkdir -p /etc/nginx/ssl && openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj '/C=RU/ST=Moscow/L=Moscow/O=MaxBot/CN=127.0.0.1' -addext 'subjectAltName=IP:127.0.0.1,IP:::1' && echo 'SSL certificate generated'; fi && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+    entrypoint: ["/bin/sh", "-c", "if [ ! -f /etc/nginx/ssl/nginx.crt ]; then apk add --no-cache openssl > /dev/null 2>&1 && mkdir -p /etc/nginx/ssl && openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj '/C=RU/ST=Moscow/L=Moscow/O=MaxBot/CN=178.72.139.15' -addext 'subjectAltName=IP:178.72.139.15,IP:127.0.0.1,IP:::1' && chmod 600 /etc/nginx/ssl/nginx.key && chmod 644 /etc/nginx/ssl/nginx.crt && echo 'SSL certificate generated for 178.72.139.15'; fi && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
 
   frontend:
     build:
