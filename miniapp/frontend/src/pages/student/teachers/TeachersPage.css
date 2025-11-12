@@ -57,6 +57,11 @@
   font-size: 14px;
   font-weight: 400;
   color: #64748b;
+  position: relative;
+}
+
+.contact-item span {
+  flex: 1;
 }
 
 .contact-icon {
@@ -64,8 +69,34 @@
   color: #64748b;
 }
 
-.contact-item span {
+.copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
   color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.copy-btn:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
+}
+
+.copy-btn svg {
+  pointer-events: none;
 }
 
 .empty-state {

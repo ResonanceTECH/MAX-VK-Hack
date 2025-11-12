@@ -21,6 +21,19 @@ const UserIcon = ({ size = 18 }: { size?: number }) => (
     </svg>
 )
 
+const CopyIcon = ({ size = 16 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 5.00005C7.01165 5.00005 6.49359 5.00005 6.09202 5.21799C5.71569 5.40973 5.40973 5.71569 5.21799 6.09202C5 6.49359 5 7.01165 5 8.00005V16C5 16.9884 5 17.5065 5.21799 17.908C5.40973 18.2843 5.71569 18.5903 6.09202 18.782C6.49359 19 7.01165 19 8 19H16C16.9884 19 17.5065 19 17.908 18.782C18.2843 18.5903 18.5903 18.2843 18.782 17.908C19 17.5065 19 16.9884 19 16V8.00005C19 7.01165 19 6.49359 18.782 6.09202C18.5903 5.71569 18.2843 5.40973 17.908 5.21799C17.5065 5.00005 16.9884 5.00005 16 5.00005H8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M9 3C8.01165 3 7.49359 3 7.09202 3.21799C6.71569 3.40973 6.40973 3.71569 6.21799 4.09202C6 4.49359 6 5.01165 6 6V8H16C16.9884 8 17.5065 8 17.908 7.78201C18.2843 7.59027 18.5903 7.28431 18.782 6.90798C19 6.50641 19 5.98835 19 5V3H9Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+)
+
+const CheckIcon = ({ size = 16 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+)
+
 interface Teacher {
     id: number
     fio: string
@@ -32,6 +45,7 @@ interface Teacher {
 const TeachersPage: React.FC = () => {
     const [teachers, setTeachers] = useState<Teacher[]>([])
     const [loading, setLoading] = useState(true)
+    const [copiedId, setCopiedId] = useState<string | null>(null)
 
     useEffect(() => {
         loadTeachers()
@@ -46,6 +60,16 @@ const TeachersPage: React.FC = () => {
             console.error('Ошибка загрузки преподавателей:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const copyToClipboard = async (text: string, id: string) => {
+        try {
+            await navigator.clipboard.writeText(text)
+            setCopiedId(id)
+            setTimeout(() => setCopiedId(null), 2000)
+        } catch (error) {
+            console.error('Ошибка копирования:', error)
         }
     }
 
@@ -80,12 +104,34 @@ const TeachersPage: React.FC = () => {
                                         <div className="contact-item">
                                             <PhoneIcon size={18} />
                                             <span>{teacher.phone}</span>
+                                            <button
+                                                className="copy-btn"
+                                                onClick={() => copyToClipboard(teacher.phone!, `phone-${teacher.id}`)}
+                                                title="Копировать"
+                                            >
+                                                {copiedId === `phone-${teacher.id}` ? (
+                                                    <CheckIcon size={16} />
+                                                ) : (
+                                                    <CopyIcon size={16} />
+                                                )}
+                                            </button>
                                         </div>
                                     )}
                                     {teacher.email && (
                                         <div className="contact-item">
                                             <MailIcon size={18} />
                                             <span>{teacher.email}</span>
+                                            <button
+                                                className="copy-btn"
+                                                onClick={() => copyToClipboard(teacher.email!, `email-${teacher.id}`)}
+                                                title="Копировать"
+                                            >
+                                                {copiedId === `email-${teacher.id}` ? (
+                                                    <CheckIcon size={16} />
+                                                ) : (
+                                                    <CopyIcon size={16} />
+                                                )}
+                                            </button>
                                         </div>
                                     )}
                                     {teacher.max_user_id && (
