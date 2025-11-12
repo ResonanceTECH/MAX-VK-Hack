@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 
 from db.models import User, Group, Teacher, Message, SupportTicket, News
 from db.connection import execute_query
-from miniapp.backend.api.auth import get_current_user
+from api.auth import get_current_user
 
 router = APIRouter()
 

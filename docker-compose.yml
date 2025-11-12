@@ -35,12 +35,6 @@ services:
       - .:/app
     restart: unless-stopped
 
-  schedule:
-    build: ./shedule_fix
-    container_name: max_schedule
-    ports:
-      - "8001:8001"
-    restart: unless-stopped
 
 volumes:
   postgres_data:

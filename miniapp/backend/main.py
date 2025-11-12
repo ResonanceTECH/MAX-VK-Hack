@@ -9,23 +9,28 @@ import os
 import logging
 
 # Добавляем путь к корневому проекту для импорта общих модулей
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+# В Docker контейнере используем /app/root, иначе относительный путь
+if os.path.exists('/app/root'):
+    project_root = '/app/root'
+else:
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 sys.path.insert(0, project_root)
 
-# Устанавливаем переменные окружения для PostgreSQL напрямую
-os.environ['POSTGRES_HOST'] = 'localhost'
-os.environ['POSTGRES_PORT'] = '5431'
-os.environ['POSTGRES_USER'] = 'maxbot'
-os.environ['POSTGRES_PASSWORD'] = 'maxbot123'
-os.environ['POSTGRES_DB'] = 'maxbot_db'
+# Устанавливаем переменные окружения для PostgreSQL из env или значения по умолчанию
+os.environ.setdefault('POSTGRES_HOST', os.getenv('POSTGRES_HOST', 'localhost'))
+os.environ.setdefault('POSTGRES_PORT', os.getenv('POSTGRES_PORT', '5431'))
+os.environ.setdefault('POSTGRES_USER', os.getenv('POSTGRES_USER', 'maxbot'))
+os.environ.setdefault('POSTGRES_PASSWORD', os.getenv('POSTGRES_PASSWORD', 'maxbot123'))
+os.environ.setdefault('POSTGRES_DB', os.getenv('POSTGRES_DB', 'maxbot_db'))
 
-# Временный обход авторизации для локального тестирования
-os.environ['SKIP_AUTH'] = 'true'
+# Временный обход авторизации для локального тестирования (по умолчанию false в продакшене)
+os.environ.setdefault('SKIP_AUTH', os.getenv('SKIP_AUTH', 'false'))
+os.environ.setdefault('SKIP_INITDATA_VERIFY', os.getenv('SKIP_INITDATA_VERIFY', 'true'))
 
 from db.models import User, Group, Teacher, Message
 from db.connection import get_connection, init_db_pool, close_db_pool
-from miniapp.backend.api.auth import verify_init_data, get_current_user
-from miniapp.backend.api.routes import router
+from api.auth import verify_init_data, get_current_user
+from api.routes import router
 
 # Настройка логирования
 logging.basicConfig(
@@ -68,8 +73,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Подключаем роуты
-app.include_router(router, prefix="/api", tags=["api"])
+# Подключаем роуты (префикс /api добавляется nginx)
+app.include_router(router, tags=["api"])
 
 @app.get("/")
 async def root():
