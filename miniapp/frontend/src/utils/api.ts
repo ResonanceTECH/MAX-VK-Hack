@@ -1,7 +1,9 @@
 import axios from 'axios'
 import { getInitData } from './getInitData'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+// В продакшене используем относительный путь через nginx
+// В разработке можно использовать полный URL
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 // Функция для создания мок initData (для разработки)
 function createMockInitData(): string {
