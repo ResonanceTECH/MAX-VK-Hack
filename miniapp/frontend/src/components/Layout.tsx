@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import RoleSelector from './RoleSelector'
 import './Layout.css'
 
 // Иконки в стиле Hugeicons
@@ -72,13 +73,14 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation()
-  const { user } = useAuth()
+  const { user, selectedRole, setSelectedRole } = useAuth()
 
   if (!user) {
     return <div className="layout"><main className="main-content">{children}</main></div>
   }
 
   const role = user.role
+  const hasMultipleRoles = user.all_roles && user.all_roles.length > 1
 
   // Меню для студентов
   const studentMenu: MenuItem[] = [
@@ -136,19 +138,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="layout">
       <nav className="navbar">
-        {menuItems.map(item => {
-          const isActive = location.pathname === item.path
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive ? 'active' : ''}`}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </Link>
-          )
-        })}
+        {hasMultipleRoles && (
+          <div className="navbar-role-selector">
+            <RoleSelector
+              roles={user.all_roles}
+              currentRole={user.role}
+              onRoleChange={setSelectedRole}
+            />
+          </div>
+        )}
+        <div className="navbar-menu">
+          {menuItems.map(item => {
+            const isActive = location.pathname === item.path
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${isActive ? 'active' : ''}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            )
+          })}
+        </div>
       </nav>
       <main className="main-content">
         {children}
