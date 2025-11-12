@@ -178,6 +178,12 @@ const SchedulePage: React.FC = () => {
         return Math.floor(diffDays / 7) + 1
     }
 
+    // Получить четность недели по дате
+    const getWeekParity = (date: Date): 'четная' | 'нечетная' => {
+        const weekNumber = getWeekNumber(date)
+        return weekNumber % 2 === 0 ? 'четная' : 'нечетная'
+    }
+
     // Получить русское название дня недели по дате
     const getDayOfWeekByDate = (date: Date): string => {
         const dayIndex = date.getDay()
@@ -214,14 +220,53 @@ const SchedulePage: React.FC = () => {
         setCurrentWeek(newDate)
     }
 
+    // Определить доступные недели для выбранного дня
+    const getAvailableWeekParities = (dayName: string): ('четная' | 'нечетная')[] => {
+        const dayEvents = schedule.filter(event => event.day_of_week === dayName)
+        const parities = new Set<'четная' | 'нечетная'>()
+
+        dayEvents.forEach(event => {
+            parities.add(event.week_parity as 'четная' | 'нечетная')
+        })
+
+        return Array.from(parities)
+    }
+
+    // Автоматически определить неделю для выбранного дня
+    useEffect(() => {
+        if (selectedDay) {
+            const availableParities = getAvailableWeekParities(selectedDay)
+            if (availableParities.length > 0) {
+                // Если есть занятия только на одну неделю, автоматически выбрать её
+                if (availableParities.length === 1) {
+                    setSelectedWeekParity(availableParities[0])
+                } else {
+                    // Если есть на обе недели, использовать текущую выбранную или первую доступную
+                    setSelectedWeekParity(prevParity => {
+                        if (availableParities.includes(prevParity)) {
+                            return prevParity
+                        }
+                        return availableParities[0]
+                    })
+                }
+            }
+        }
+    }, [selectedDay, schedule])
+
     const groupByDay = () => {
         const grouped: { [key: string]: Event[] } = {}
 
-        let filteredSchedule = schedule.filter(event => event.week_parity === selectedWeekParity)
+        let filteredSchedule = schedule
 
-        // Если выбран конкретный день, показываем только его
+        // Если выбран конкретный день, фильтруем по дню и неделе
         if (selectedDay) {
-            filteredSchedule = filteredSchedule.filter(event => event.day_of_week === selectedDay)
+            filteredSchedule = schedule.filter(event =>
+                event.day_of_week === selectedDay &&
+                event.week_parity === selectedWeekParity
+            )
+        } else {
+            // Если день не выбран, показываем все расписание без фильтрации по неделе
+            filteredSchedule = schedule
         }
 
         filteredSchedule.forEach(event => {
@@ -264,6 +309,7 @@ const SchedulePage: React.FC = () => {
     const groupedSchedule = groupByDay()
     const weekDates = getWeekDates(currentWeek)
     const weekNumber = getWeekNumber(currentWeek)
+    const weekParity = getWeekParity(currentWeek)
     const currentMonth = months[currentWeek.getMonth()]
     const currentYear = currentWeek.getFullYear()
     const today = new Date()
@@ -285,7 +331,7 @@ const SchedulePage: React.FC = () => {
                             <ChevronLeft size={20} />
                         </button>
                         <div className="calendar-title">
-                            {currentMonth} {currentYear} – {weekNumber} неделя
+                            {currentMonth} {currentYear} – {weekNumber} неделя ({weekParity})
                         </div>
                         <button className="calendar-nav-btn" onClick={goToNextWeek}>
                             <ChevronRight size={20} />
@@ -330,21 +376,6 @@ const SchedulePage: React.FC = () => {
                             </button>
                         </div>
                     )}
-                </div>
-
-                <div className="week-selector">
-                    <button
-                        className={`week-btn ${selectedWeekParity === 'нечетная' ? 'active' : ''}`}
-                        onClick={() => setSelectedWeekParity('нечетная')}
-                    >
-                        Нечетная неделя
-                    </button>
-                    <button
-                        className={`week-btn ${selectedWeekParity === 'четная' ? 'active' : ''}`}
-                        onClick={() => setSelectedWeekParity('четная')}
-                    >
-                        Четная неделя
-                    </button>
                 </div>
             </div>
 

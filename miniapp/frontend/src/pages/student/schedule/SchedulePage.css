@@ -81,27 +81,30 @@
 .calendar-week {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
+  justify-items: center;
 }
 
 .calendar-day-label {
   text-align: center;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: #64748b;
-  padding: 1px;
+  padding: 0;
+  width: 100%;
 }
 
 .calendar-dates {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
+  justify-items: center;
 }
 
 .calendar-date {
@@ -188,7 +191,7 @@
   border-radius: 6px;
   border: 1px solid #dbeafe;
   color: #1e40af;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 500;
 }
 
@@ -245,6 +248,19 @@
   background: #2563eb;
   border-color: #2563eb;
   color: white;
+}
+
+.week-btn.disabled,
+.week-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.week-btn.disabled:hover,
+.week-btn:disabled:hover {
+  border-color: #e2e8f0;
+  background: white;
 }
 
 /* Контент расписания */
@@ -603,7 +619,7 @@
   }
 
   .calendar-day-label {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .calendar-date {
@@ -624,7 +640,7 @@
 
   .selected-date-display {
     padding: 6px 8px;
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .week-selector {
