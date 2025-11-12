@@ -96,7 +96,15 @@ const MessagesPage: React.FC = () => {
   }
 
   if (loading && messages.length === 0) {
-    return <div className="loading">Загрузка сообщений...</div>
+    return (
+      <div className="messages-page">
+        <h1>{getPageTitle()}</h1>
+        <div className="loading">
+          <div className="loading-spinner"></div>
+          <p>Загрузка сообщений...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
