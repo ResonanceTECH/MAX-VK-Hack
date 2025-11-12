@@ -8,6 +8,7 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def init_database():
     """Создать таблицы в базе данных"""
     try:
@@ -21,21 +22,21 @@ def init_database():
         )
         conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cur = conn.cursor()
-        
+
         # Читаем и выполняем SQL схему
         schema_path = os.path.join(os.path.dirname(__file__), 'schema.sql')
         with open(schema_path, 'r', encoding='utf-8') as f:
             schema_sql = f.read()
-        
+
         # Выполняем SQL по частям (psycopg2 не поддерживает множественные команды в одном execute)
         for statement in schema_sql.split(';'):
             statement = statement.strip()
             if statement:
                 cur.execute(statement)
-        
+
         cur.close()
         conn.close()
-        
+
         logger.info("✓ База данных успешно инициализирована")
         return True
     except Exception as e:
@@ -44,6 +45,6 @@ def init_database():
         traceback.print_exc()
         return False
 
+
 if __name__ == '__main__':
     init_database()
-

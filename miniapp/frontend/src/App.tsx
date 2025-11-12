@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import MessagesPage from './pages/MessagesPage'
 import Layout from './components/Layout'
 import RoleSelector from './components/RoleSelector'
@@ -14,6 +14,7 @@ import NewsPage from './pages/student/NewsPage'
 
 // Импорты страниц для преподавателей
 import MyGroupsPage from './pages/teacher/MyGroupsPage'
+import GroupStudentsPage from './pages/teacher/GroupStudentsPage'
 
 // Импорты страниц для поддержки
 import SupportTicketsPage from './pages/support/SupportTicketsPage'
@@ -41,12 +42,30 @@ const getDefaultRoute = (role: string): string => {
   }
 }
 
-function App() {
+// Внутренний компонент для обработки навигации при смене роли
+function AppContent() {
   const { user, loading, initMaxWebApp, selectedRole, setSelectedRole } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [prevRole, setPrevRole] = useState<string | null>(null)
 
   useEffect(() => {
     initMaxWebApp()
   }, [])
+
+  // Отслеживаем изменение роли и перенаправляем на правильный маршрут
+  useEffect(() => {
+    if (user && user.role && prevRole && prevRole !== user.role) {
+      // Роль изменилась, перенаправляем на дефолтный маршрут для новой роли
+      const defaultRoute = getDefaultRoute(user.role)
+      if (location.pathname !== defaultRoute) {
+        navigate(defaultRoute, { replace: true })
+      }
+    }
+    if (user && user.role) {
+      setPrevRole(user.role)
+    }
+  }, [user?.role, navigate, location.pathname, prevRole])
 
   if (loading) {
     return (
@@ -69,18 +88,17 @@ function App() {
   const hasMultipleRoles = user.all_roles && user.all_roles.length > 1
 
   return (
-    <Router>
-      <div className="app-container">
-        {hasMultipleRoles && (
-          <RoleSelector
-            roles={user.all_roles}
-            currentRole={user.role}
-            onRoleChange={setSelectedRole}
-          />
-        )}
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
+    <div className="app-container">
+      {hasMultipleRoles && (
+        <RoleSelector
+          roles={user.all_roles}
+          currentRole={user.role}
+          onRoleChange={setSelectedRole}
+        />
+      )}
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
             
             {/* Общие маршруты */}
             <Route path="/messages" element={<MessagesPage />} />
@@ -93,6 +111,7 @@ function App() {
             
             {/* Маршруты для преподавателей */}
             <Route path="/my-groups" element={<MyGroupsPage />} />
+            <Route path="/groups/:groupId" element={<GroupStudentsPage />} />
             
             {/* Маршруты для поддержки */}
             <Route path="/support-tickets" element={<SupportTicketsPage />} />
@@ -106,6 +125,13 @@ function App() {
           </Routes>
         </Layout>
       </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   )
 }

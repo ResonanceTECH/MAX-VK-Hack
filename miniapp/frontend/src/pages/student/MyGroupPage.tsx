@@ -63,6 +63,7 @@ const MyGroupPage: React.FC = () => {
                 <th>Телефон</th>
                 <th>Email</th>
                 <th>Статус</th>
+                <th>Профиль</th>
               </tr>
             </thead>
             <tbody>
@@ -72,6 +73,20 @@ const MyGroupPage: React.FC = () => {
                   <td>{member.phone || '-'}</td>
                   <td>{member.email || '-'}</td>
                   <td>{member.is_headman ? '⭐ Староста' : 'Студент'}</td>
+                  <td>
+                    {member.max_user_id ? (
+                      <a 
+                        href={`max://user/${member.max_user_id}`}
+                        className="max-profile-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        👤 Профиль
+                      </a>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

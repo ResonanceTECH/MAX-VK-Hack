@@ -19,6 +19,6 @@ ENV/
 .idea
 .vscode
 *.pdf
-swagger.json
+api/swagger.json
 .DS_Store
 

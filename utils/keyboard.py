@@ -40,7 +40,6 @@ def create_main_menu_keyboard(role: str, has_multiple_roles: bool = False) -> Di
         buttons.extend([
             [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "support_tickets"}],
             [{"type": "callback", "text": "📢 Сообщения", "payload": "support_messages"}],
-            [{"type": "callback", "text": "❓ FAQ", "payload": "support_faq"}],
             [{"type": "callback", "text": "📊 Статистика", "payload": "support_stats"}],
             [{"type": "callback", "text": "❓ Помощь", "payload": "help"}]
         ])
@@ -220,7 +219,6 @@ def create_schedule_menu_keyboard() -> Dict:
     buttons = [
         [{"type": "callback", "text": "📅 На сегодня", "payload": "schedule_today"}],
         [{"type": "callback", "text": "📆 На неделю", "payload": "schedule_week"}],
-        [{"type": "callback", "text": "⬇️ Скачать расписание", "payload": "schedule_download"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
     
@@ -256,11 +254,6 @@ def create_help_menu_keyboard(role: str = 'student') -> Dict:
     # Для поддержки не показываем "Связь с поддержкой" и "Настройки уведомлений"
     if role != 'support':
         buttons.append([{"type": "callback", "text": "💬 Связь с поддержкой", "payload": "help_support"}])
-    
-    if role == 'student':
-        buttons.append([{"type": "callback", "text": "📋 Частые вопросы", "payload": "help_common"}])
-    elif role == 'teacher':
-        buttons.append([{"type": "callback", "text": "⚙️ Настройки уведомлений", "payload": "help_notifications"}])
     
     buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}])
     
@@ -465,7 +458,6 @@ def create_admin_support_menu_keyboard() -> Dict:
     buttons = [
         [{"type": "callback", "text": "📋 Запросы в поддержку", "payload": "admin_support_tickets"}],
         [{"type": "callback", "text": "📢 Сообщения", "payload": "admin_support_messages"}],
-        [{"type": "callback", "text": "❓ FAQ", "payload": "admin_support_faq"}],
         [{"type": "callback", "text": "📊 Статистика", "payload": "admin_support_stats"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "main_menu"}]
     ]
@@ -515,7 +507,7 @@ def create_support_tickets_list_keyboard(tickets: List[Dict], prefix: str = "adm
             "payload": f"{prefix}_{ticket_id}"
         }])
     
-    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support_tickets"}])
+    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": back_payload}])
     
     return {
         "type": "inline_keyboard",
@@ -538,29 +530,6 @@ def create_support_ticket_actions_keyboard(ticket_id: int, status: str, role: st
     
     buttons.append([{"type": "callback", "text": "💬 Написать пользователю", "payload": f"{prefix}_ticket_contact_{ticket_id}"}])
     buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": back_payload}])
-    
-    return {
-        "type": "inline_keyboard",
-        "payload": {
-            "buttons": buttons
-        }
-    }
-
-def create_faq_list_keyboard(faq_list: List[Dict], prefix: str = "admin_support_faq") -> Dict:
-    """Создать клавиатуру со списком FAQ"""
-    buttons = []
-    for faq in faq_list[:20]:  # Ограничиваем 20 записями
-        faq_id = faq.get('id')
-        question = faq.get('question', 'Без вопроса')[:40]  # Обрезаем длинные вопросы
-        
-        buttons.append([{
-            "type": "callback",
-            "text": f"❓ {question}",
-            "payload": f"{prefix}_view_{faq_id}"
-        }])
-    
-    buttons.append([{"type": "callback", "text": "➕ Добавить FAQ", "payload": "admin_support_faq_add"}])
-    buttons.append([{"type": "callback", "text": "◀️ Назад", "payload": "admin_support"}])
     
     return {
         "type": "inline_keyboard",

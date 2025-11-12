@@ -14,7 +14,7 @@ sys.path.insert(0, project_root)
 
 # Устанавливаем переменные окружения для PostgreSQL напрямую
 os.environ['POSTGRES_HOST'] = 'localhost'
-os.environ['POSTGRES_PORT'] = '5432'
+os.environ['POSTGRES_PORT'] = '5431'
 os.environ['POSTGRES_USER'] = 'maxbot'
 os.environ['POSTGRES_PASSWORD'] = 'maxbot123'
 os.environ['POSTGRES_DB'] = 'maxbot_db'
@@ -53,7 +53,10 @@ app = FastAPI(
     title="Max Bot Miniapp API",
     description="API для мини-приложения бота Max",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # CORS для React приложения

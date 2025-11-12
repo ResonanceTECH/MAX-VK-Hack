@@ -35,3 +35,15 @@
   color: #666;
 }
 
+.max-profile-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.max-profile-link:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+

@@ -5,6 +5,7 @@ import './TeachersPage.css'
 interface Teacher {
   id: number
   fio: string
+  max_user_id?: number
   phone?: string
   email?: string
 }
@@ -49,6 +50,18 @@ const TeachersPage: React.FC = () => {
                 <h3>{teacher.fio}</h3>
                 {teacher.phone && <p>📞 {teacher.phone}</p>}
                 {teacher.email && <p>📧 {teacher.email}</p>}
+                {teacher.max_user_id && (
+                  <p>
+                    <a 
+                      href={`max://user/${teacher.max_user_id}`}
+                      className="max-profile-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      👤 Профиль в Max
+                    </a>
+                  </p>
+                )}
               </div>
             ))}
           </div>
