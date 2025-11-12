@@ -88,7 +88,6 @@ function AppContent() {
   const hasMultipleRoles = user.all_roles && user.all_roles.length > 1
 
   return (
-<<<<<<< Updated upstream
     <div className="app-container">
       {hasMultipleRoles && (
         <RoleSelector
@@ -100,51 +99,32 @@ function AppContent() {
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
-            
-=======
-    <Router>
-      <div className="app-container">
-        {hasMultipleRoles && (
-          <RoleSelector
-            roles={user.all_roles}
-            currentRole={user.role}
-            onRoleChange={setSelectedRole}
-          />
-        )}
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
 
->>>>>>> Stashed changes
-            {/* Общие маршруты */}
-            <Route path="/messages" element={<MessagesPage />} />
+          {/* Общие маршруты */}
+          <Route path="/messages" element={<MessagesPage />} />
 
-            {/* Маршруты для студентов */}
-            <Route path="/my-group" element={<MyGroupPage />} />
-            <Route path="/schedule" element={<SchedulePage />} />
-            <Route path="/teachers" element={<TeachersPage />} />
-            <Route path="/news" element={<NewsPage />} />
+          {/* Маршруты для студентов */}
+          <Route path="/my-group" element={<MyGroupPage />} />
+          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/teachers" element={<TeachersPage />} />
+          <Route path="/news" element={<NewsPage />} />
 
-            {/* Маршруты для преподавателей */}
-            <Route path="/my-groups" element={<MyGroupsPage />} />
-<<<<<<< Updated upstream
-            <Route path="/groups/:groupId" element={<GroupStudentsPage />} />
-            
-=======
+          {/* Маршруты для преподавателей */}
+          <Route path="/my-groups" element={<MyGroupsPage />} />
+          <Route path="/groups/:groupId" element={<GroupStudentsPage />} />
 
->>>>>>> Stashed changes
-            {/* Маршруты для поддержки */}
-            <Route path="/support-tickets" element={<SupportTicketsPage />} />
-            <Route path="/stats" element={<StatsPage />} />
+          {/* Маршруты для поддержки */}
+          <Route path="/support-tickets" element={<SupportTicketsPage />} />
+          <Route path="/stats" element={<StatsPage />} />
 
-            {/* Маршруты для администрации */}
-            <Route path="/admin/students" element={<AdminStudentsPage />} />
-            <Route path="/admin/teachers" element={<AdminTeachersPage />} />
-            <Route path="/admin/groups" element={<AdminGroupsPage />} />
-            <Route path="/admin/news" element={<AdminNewsPage />} />
-          </Routes>
-        </Layout>
-      </div>
+          {/* Маршруты для администрации */}
+          <Route path="/admin/students" element={<AdminStudentsPage />} />
+          <Route path="/admin/teachers" element={<AdminTeachersPage />} />
+          <Route path="/admin/groups" element={<AdminGroupsPage />} />
+          <Route path="/admin/news" element={<AdminNewsPage />} />
+        </Routes>
+      </Layout>
+    </div>
   )
 }
 
