@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { UserCircle2, MapPin } from 'lucide-react'
+import { UserCircle2, MapPin, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import './SchedulePage.css'
 
 interface Event {
@@ -23,6 +23,8 @@ const SchedulePage: React.FC = () => {
     const [groupName, setGroupName] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [selectedWeekParity, setSelectedWeekParity] = useState<'четная' | 'нечетная'>('нечетная')
+    const [currentWeek, setCurrentWeek] = useState<Date>(new Date())
+    const [selectedDay, setSelectedDay] = useState<string | null>(null)
 
     // Определение текущей недели (четная/нечетная)
     const getCurrentWeekParity = (): 'четная' | 'нечетная' => {
@@ -131,18 +133,103 @@ const SchedulePage: React.FC = () => {
     }
 
     const daysOfWeek = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+    const daysOfWeekShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+    const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    // Получить начало недели (понедельник)
+    const getWeekStart = (date: Date): Date => {
+        const d = new Date(date)
+        const day = d.getDay()
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Понедельник = 1
+        return new Date(d.setDate(diff))
+    }
+
+    // Получить даты недели
+    const getWeekDates = (date: Date): Date[] => {
+        const weekStart = getWeekStart(date)
+        const dates: Date[] = []
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart)
+            d.setDate(weekStart.getDate() + i)
+            dates.push(d)
+        }
+        return dates
+    }
+
+    // Получить номер недели с начала учебного года (1 сентября)
+    const getWeekNumber = (date: Date): number => {
+        // Определяем год начала учебного года
+        const currentYear = date.getFullYear()
+        const currentMonth = date.getMonth() // 0-11
+        let academicYearStart: Date
+
+        // Если текущая дата до сентября, то учебный год начался в прошлом году
+        if (currentMonth < 8) { // 8 = сентябрь (0-indexed)
+            academicYearStart = new Date(currentYear - 1, 8, 1) // 1 сентября прошлого года
+        } else {
+            academicYearStart = new Date(currentYear, 8, 1) // 1 сентября текущего года
+        }
+
+        // Разница в днях
+        const diffTime = date.getTime() - academicYearStart.getTime()
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+
+        // Номер недели с начала учебного года (начинаем с 1)
+        return Math.floor(diffDays / 7) + 1
+    }
+
+    // Получить русское название дня недели по дате
+    const getDayOfWeekByDate = (date: Date): string => {
+        const dayIndex = date.getDay()
+        const dayMap: { [key: number]: string } = {
+            1: 'Понедельник',
+            2: 'Вторник',
+            3: 'Среда',
+            4: 'Четверг',
+            5: 'Пятница',
+            6: 'Суббота',
+            0: 'Воскресенье'
+        }
+        return dayMap[dayIndex] || 'Понедельник'
+    }
+
+    // Проверить, есть ли события в день
+    const hasEventsOnDay = (dayName: string): boolean => {
+        return schedule.some(event =>
+            event.day_of_week === dayName &&
+            event.week_parity === selectedWeekParity
+        )
+    }
+
+    // Навигация по неделям
+    const goToPreviousWeek = () => {
+        const newDate = new Date(currentWeek)
+        newDate.setDate(newDate.getDate() - 7)
+        setCurrentWeek(newDate)
+    }
+
+    const goToNextWeek = () => {
+        const newDate = new Date(currentWeek)
+        newDate.setDate(newDate.getDate() + 7)
+        setCurrentWeek(newDate)
+    }
 
     const groupByDay = () => {
         const grouped: { [key: string]: Event[] } = {}
 
-        schedule
-            .filter(event => event.week_parity === selectedWeekParity)
-            .forEach(event => {
-                if (!grouped[event.day_of_week]) {
-                    grouped[event.day_of_week] = []
-                }
-                grouped[event.day_of_week].push(event)
-            })
+        let filteredSchedule = schedule.filter(event => event.week_parity === selectedWeekParity)
+
+        // Если выбран конкретный день, показываем только его
+        if (selectedDay) {
+            filteredSchedule = filteredSchedule.filter(event => event.day_of_week === selectedDay)
+        }
+
+        filteredSchedule.forEach(event => {
+            if (!grouped[event.day_of_week]) {
+                grouped[event.day_of_week] = []
+            }
+            grouped[event.day_of_week].push(event)
+        })
 
         // Сортируем по времени внутри каждого дня
         Object.keys(grouped).forEach(day => {
@@ -150,6 +237,17 @@ const SchedulePage: React.FC = () => {
         })
 
         return grouped
+    }
+
+    // Обработчик клика по дню в календаре
+    const handleDayClick = (dayName: string) => {
+        if (selectedDay === dayName) {
+            // Если кликнули по уже выбранному дню, снимаем выбор
+            setSelectedDay(null)
+        } else {
+            // Выбираем новый день
+            setSelectedDay(dayName)
+        }
     }
 
     if (loading) {
@@ -164,6 +262,11 @@ const SchedulePage: React.FC = () => {
     }
 
     const groupedSchedule = groupByDay()
+    const weekDates = getWeekDates(currentWeek)
+    const weekNumber = getWeekNumber(currentWeek)
+    const currentMonth = months[currentWeek.getMonth()]
+    const currentYear = currentWeek.getFullYear()
+    const today = new Date()
 
     return (
         <div className="schedule-page">
@@ -173,6 +276,60 @@ const SchedulePage: React.FC = () => {
                         Расписание
                     </h1>
                     <p className="group-name">{groupName}</p>
+                </div>
+
+                {/* Календарь недели */}
+                <div className="week-calendar">
+                    <div className="calendar-header">
+                        <button className="calendar-nav-btn" onClick={goToPreviousWeek}>
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div className="calendar-title">
+                            {currentMonth} {currentYear} – {weekNumber} неделя
+                        </div>
+                        <button className="calendar-nav-btn" onClick={goToNextWeek}>
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                    <div className="calendar-week">
+                        <div className="calendar-days">
+                            {daysOfWeekShort.map((day) => (
+                                <div key={day} className="calendar-day-label">{day}</div>
+                            ))}
+                        </div>
+                        <div className="calendar-dates">
+                            {weekDates.map((date, index) => {
+                                const dayName = getDayOfWeekByDate(date)
+                                const isToday = date.toDateString() === today.toDateString()
+                                const hasEvents = hasEventsOnDay(dayName)
+                                const isSelected = selectedDay === dayName
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className={`calendar-date ${isToday ? 'today' : ''} ${hasEvents ? 'has-events' : ''} ${isSelected ? 'selected' : ''}`}
+                                        onClick={() => handleDayClick(dayName)}
+                                    >
+                                        <span className="date-number">{date.getDate()}</span>
+                                        {hasEvents && <span className="event-dot"></span>}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                    {selectedDay && (
+                        <div className="selected-date-display">
+                            <Calendar size={16} />
+                            <span>{selectedDay}</span>
+                            <button
+                                className="clear-day-btn"
+                                onClick={() => setSelectedDay(null)}
+                                title="Показать все дни"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="week-selector">
