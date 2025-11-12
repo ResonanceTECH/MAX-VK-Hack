@@ -7,10 +7,10 @@ import { useAuth } from './hooks/useAuth'
 import './App.css'
 
 // Импорты страниц для студентов
-import MyGroupPage from './pages/student/MyGroupPage'
-import SchedulePage from './pages/student/SchedulePage'
-import TeachersPage from './pages/student/TeachersPage'
-import NewsPage from './pages/student/NewsPage'
+import MyGroupPage from './pages/student/my-group/MyGroupPage'
+import SchedulePage from './pages/student/schedule/SchedulePage'
+import TeachersPage from './pages/student/teachers/TeachersPage'
+import NewsPage from './pages/student/news/NewsPage'
 
 // Импорты страниц для преподавателей
 import MyGroupsPage from './pages/teacher/MyGroupsPage'
