@@ -5,36 +5,136 @@
 }
 
 .navbar {
-  background-color: #1976d2;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: white;
-  padding: 12px 16px;
+  padding: 0;
   display: flex;
-  gap: 16px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 100;
+  min-height: 64px;
 }
 
-.navbar a {
-  color: white;
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  padding: 16px 20px;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  min-height: 64px;
 }
 
-.navbar a:hover {
+.nav-item::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0);
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
-.navbar a.active {
-  background-color: rgba(255, 255, 255, 0.2);
+.nav-item:hover::after {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.nav-item.active {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: white;
   font-weight: 600;
+}
+
+.nav-item.active::after {
+  background: white;
+  height: 3px;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.nav-label {
+  line-height: 1.2;
 }
 
 .main-content {
   flex: 1;
-  padding: 16px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
   width: 100%;
+  overflow-x: hidden;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .navbar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .navbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item {
+    padding: 14px 16px;
+    font-size: 13px;
+    min-height: 56px;
+  }
+
+  .nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    min-height: 56px;
+  }
+
+  .nav-item {
+    padding: 14px 12px;
+    font-size: 12px;
+    gap: 6px;
+    min-height: 56px;
+  }
+
+  .nav-label {
+    display: none;
+  }
+
+  .nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
