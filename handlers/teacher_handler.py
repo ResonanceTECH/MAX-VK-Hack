@@ -285,7 +285,6 @@ class TeacherHandler:
     def show_help_notifications(self, user: Dict, max_user_id: int, api):
         """Показать настройки уведомлений"""
         from utils.keyboard import create_back_keyboard
-        # TODO: Реализовать настройки уведомлений
         text = "⚙️ Настройки уведомлений:\n\n"
         text += "⚠️ Функция настройки уведомлений пока не реализована.\n"
         text += "В будущем здесь можно будет настроить:\n"

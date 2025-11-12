@@ -198,7 +198,7 @@ class AdminHandler:
             if state_data and state_data.get('state') == 'admin_group_add_student':
                 group_id = state_data.get('data', {}).get('group_id')
                 if group_id:
-                    User.assign_user_to_group(student_id, group_id)
+                    Teacher.assign_user_to_group(student_id, group_id)
                     student = User.get_by_id(student_id)
                     group = Group.get_by_id(group_id)
                     api.send_message(
@@ -241,7 +241,7 @@ class AdminHandler:
             if state_data and state_data.get('state') == 'admin_group_remove_student':
                 group_id = state_data.get('data', {}).get('group_id')
                 if group_id:
-                    User.remove_user_from_group(student_id, group_id)
+                    Teacher.remove_user_from_group(student_id, group_id)
                     student = User.get_by_id(student_id)
                     group = Group.get_by_id(group_id)
                     api.send_message(

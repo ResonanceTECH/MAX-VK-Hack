@@ -62,6 +62,7 @@ export const useAuth = () => {
     }
     setSelectedRoleState(role)
     // Перезагружаем пользователя с новой ролью
+    setLoading(true)
     fetchUser(role)
   }
 

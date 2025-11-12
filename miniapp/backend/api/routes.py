@@ -7,7 +7,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
 
-from db.models import User, Group, Teacher, Message, SupportTicket
+from db.models import User, Group, Teacher, Message, SupportTicket, News
 from db.connection import execute_query
 from miniapp.backend.api.auth import get_current_user
 
@@ -142,12 +142,17 @@ async def get_messages_stats(user: Dict = Depends(get_current_user)):
 
 @router.get("/teachers")
 async def get_student_teachers(user: Dict = Depends(get_current_user)):
-    """Получить преподавателей студента"""
-    if user['role'] != 'student':
-        raise HTTPException(status_code=403, detail="Доступ только для студентов")
-
-    teachers = Teacher.get_student_teachers(user['id'])
-    return teachers
+    """Получить преподавателей студента или всех преподавателей для преподавателя"""
+    if user['role'] == 'student':
+        teachers = Teacher.get_student_teachers(user['id'])
+        return teachers
+    elif user['role'] == 'teacher':
+        # Для преподавателей возвращаем всех преподавателей (исключая себя)
+        all_teachers = Teacher.get_all_teachers()
+        teachers = [t for t in all_teachers if t['id'] != user['id']]
+        return teachers
+    else:
+        raise HTTPException(status_code=403, detail="Доступ только для студентов и преподавателей")
 
 
 @router.get("/news")
@@ -223,7 +228,7 @@ async def create_student(student_data: Dict, user: Dict = Depends(get_current_us
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    student_id = User.create_user(
+    student_id = Teacher.create_user(
         max_user_id=student_data['max_user_id'],
         fio=student_data['fio'],
         role='student',
@@ -243,7 +248,7 @@ async def update_student(
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    User.update_user(
+    Teacher.update_user(
         student_id,
         student_data.get('fio'),
         student_data.get('phone'),
@@ -258,7 +263,7 @@ async def delete_student(student_id: int, user: Dict = Depends(get_current_user)
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    User.delete_user(student_id)
+    Teacher.delete_user(student_id)
     return {"success": True}
 
 
@@ -278,7 +283,7 @@ async def create_teacher(teacher_data: Dict, user: Dict = Depends(get_current_us
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    teacher_id = User.create_user(
+    teacher_id = Teacher.create_user(
         max_user_id=teacher_data['max_user_id'],
         fio=teacher_data['fio'],
         role='teacher',
@@ -298,7 +303,7 @@ async def update_teacher(
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    User.update_user(
+    Teacher.update_user(
         teacher_id,
         teacher_data.get('fio'),
         teacher_data.get('phone'),
@@ -313,7 +318,7 @@ async def delete_teacher(teacher_id: int, user: Dict = Depends(get_current_user)
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    User.delete_user(teacher_id)
+    Teacher.delete_user(teacher_id)
     return {"success": True}
 
 
@@ -404,7 +409,7 @@ async def add_student_to_group(
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
-    User.assign_user_to_group(student_id, group_id)
+    Teacher.assign_user_to_group(student_id, group_id)
     return {"success": True}
 
 
