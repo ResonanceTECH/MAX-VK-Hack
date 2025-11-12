@@ -93,12 +93,23 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
 
 
 def get_current_user(
-        x_init_data: Optional[str] = Header(None, alias="X-Init-Data"),
-        x_selected_role: Optional[str] = Header(None, alias="X-Selected-Role")
+        x_init_data: Optional[str] = Header(
+            None, 
+            alias="X-Init-Data",
+            description="Данные инициализации от Max мессенджера. Содержит информацию о пользователе и подпись для проверки подлинности. Формат: hash=xxx&user=xxx&auth_date=xxx&..."
+        ),
+        x_selected_role: Optional[str] = Header(
+            None, 
+            alias="X-Selected-Role",
+            description="Выбранная роль пользователя для переключения между ролями. Доступные значения: 'student', 'teacher', 'admin', 'support'. Если не указано, используется роль по умолчанию (приоритет: admin > support > teacher > student)"
+        )
 ) -> Dict[str, Any]:
     """
     Получить текущего пользователя из initData
-    Если указана роль в заголовке X-Selected-Role, возвращает пользователя с этой ролью
+    
+    Авторизация происходит через initData от Max мессенджера.
+    Если указана роль в заголовке X-Selected-Role, возвращает пользователя с этой ролью.
+    Это позволяет пользователям с несколькими ролями переключаться между ними.
     """
     # Временный обход авторизации для локального тестирования
     import os

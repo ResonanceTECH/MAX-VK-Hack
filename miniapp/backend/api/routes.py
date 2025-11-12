@@ -46,9 +46,13 @@ class StudentResponse(BaseModel):
     is_headman: bool
 
 
-@router.get("/user/info")
+@router.get("/user/info", tags=["User"])
 async def get_user_info(user: Dict = Depends(get_current_user)):
-    """Получить информацию о текущем пользователе"""
+    """
+    Получить информацию о текущем пользователе
+    
+    Возвращает информацию о текущем пользователе, включая все доступные роли.
+    """
     all_roles = User.get_all_roles(user['max_user_id'])
     return {
         "id": user['id'],
@@ -59,9 +63,14 @@ async def get_user_info(user: Dict = Depends(get_current_user)):
     }
 
 
-@router.get("/groups")
+@router.get("/groups", tags=["Groups"])
 async def get_groups(user: Dict = Depends(get_current_user)):
-    """Получить группы пользователя"""
+    """
+    Получить группы пользователя
+    
+    Для студентов возвращает группы, в которых они состоят.
+    Для преподавателей возвращает группы, которые они ведут.
+    """
     if user['role'] == 'student':
         groups = Group.get_user_groups(user['id'])
     elif user['role'] == 'teacher':
@@ -72,12 +81,17 @@ async def get_groups(user: Dict = Depends(get_current_user)):
     return groups
 
 
-@router.get("/groups/{group_id}/students")
+@router.get("/groups/{group_id}/students", tags=["Groups"])
 async def get_group_students(
         group_id: int,
         user: Dict = Depends(get_current_user)
 ):
-    """Получить студентов группы"""
+    """
+    Получить список студентов группы
+    
+    - **group_id**: ID группы
+    - Доступно для студентов (только своей группы), преподавателей (только своих групп) и администрации (все группы)
+    """
     # Для студентов - проверяем, что они в этой группе
     if user['role'] == 'student':
         user_groups = Group.get_user_groups(user['id'])
@@ -96,26 +110,36 @@ async def get_group_students(
     return students
 
 
-@router.get("/messages")
+@router.get("/messages", tags=["Messages"])
 async def get_messages(
         status: Optional[str] = Query(None, description="Фильтр по статусу: unread, read"),
         group_id: Optional[int] = Query(None, description="Фильтр по группе"),
         user: Dict = Depends(get_current_user)
 ):
-    """Получить сообщения для пользователя"""
+    """
+    Получить сообщения для пользователя
+    
+    Возвращает все сообщения, отправленные текущему пользователю.
+    Поддерживает фильтрацию по статусу и группе.
+    """
     # Для всех ролей получаем все сообщения, которые были отправлены этому пользователю
     # (от студентов, преподавателей, поддержки, администрации - от всех)
     messages = Message.get_user_messages(user['id'], status=status, group_id=group_id)
     return messages
 
 
-@router.put("/messages/{message_id}/status")
+@router.put("/messages/{message_id}/status", tags=["Messages"])
 async def update_message_status(
         message_id: int,
         status_update: MessageStatusUpdate,
         user: Dict = Depends(get_current_user)
 ):
-    """Изменить статус сообщения"""
+    """
+    Изменить статус сообщения
+    
+    - **message_id**: ID сообщения
+    - **status**: Новый статус (unread или read)
+    """
     # Доступно для всех ролей
     if status_update.status not in ['unread', 'read']:
         raise HTTPException(status_code=400, detail="Неверный статус. Допустимые значения: unread, read")
@@ -130,9 +154,13 @@ async def update_message_status(
     return {"success": True, "message_id": message_id, "status": status_update.status}
 
 
-@router.get("/messages/stats")
+@router.get("/messages/stats", tags=["Messages"])
 async def get_messages_stats(user: Dict = Depends(get_current_user)):
-    """Получить статистику сообщений для пользователя"""
+    """
+    Получить статистику сообщений для пользователя
+    
+    Возвращает количество непрочитанных и прочитанных сообщений.
+    """
     # Статистика доступна для всех ролей
     stats = Message.get_teacher_stats(user['id'])  # Метод работает для любого user_id
     return stats
@@ -140,9 +168,14 @@ async def get_messages_stats(user: Dict = Depends(get_current_user)):
 
 # ========== Endpoints для студентов ==========
 
-@router.get("/teachers")
+@router.get("/teachers", tags=["Teachers"])
 async def get_student_teachers(user: Dict = Depends(get_current_user)):
-    """Получить преподавателей студента или всех преподавателей для преподавателя"""
+    """
+    Получить список преподавателей
+    
+    Для студентов возвращает преподавателей их групп.
+    Для преподавателей возвращает всех преподавателей (кроме себя).
+    """
     if user['role'] == 'student':
         teachers = Teacher.get_student_teachers(user['id'])
         return teachers
@@ -155,9 +188,13 @@ async def get_student_teachers(user: Dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Доступ только для студентов и преподавателей")
 
 
-@router.get("/news")
+@router.get("/news", tags=["News"])
 async def get_news(user: Dict = Depends(get_current_user)):
-    """Получить новости для пользователя"""
+    """
+    Получить новости для пользователя
+    
+    Возвращает новости в зависимости от роли пользователя и его групп.
+    """
     from db.models import News
     news = News.get_news_by_role(user['role'], user['id'], limit=50)
     return news
@@ -165,12 +202,17 @@ async def get_news(user: Dict = Depends(get_current_user)):
 
 # ========== Endpoints для поддержки ==========
 
-@router.get("/support/tickets")
+@router.get("/support/tickets", tags=["Support"])
 async def get_support_tickets(
-        status: Optional[str] = Query(None),
+        status: Optional[str] = Query(None, description="Фильтр по статусу: new, in_progress, resolved"),
         user: Dict = Depends(get_current_user)
 ):
-    """Получить обращения в поддержку"""
+    """
+    Получить обращения в поддержку
+    
+    Доступно только для роли support.
+    Поддерживает фильтрацию по статусу.
+    """
     if user['role'] != 'support':
         raise HTTPException(status_code=403, detail="Доступ только для поддержки")
 
@@ -182,13 +224,18 @@ async def get_support_tickets(
     return tickets
 
 
-@router.put("/support/tickets/{ticket_id}/status")
+@router.put("/support/tickets/{ticket_id}/status", tags=["Support"])
 async def update_ticket_status(
         ticket_id: int,
         status_update: Dict,
         user: Dict = Depends(get_current_user)
 ):
-    """Изменить статус обращения"""
+    """
+    Изменить статус обращения в поддержку
+    
+    - **ticket_id**: ID обращения
+    - **status**: Новый статус (new, in_progress, resolved)
+    """
     if user['role'] != 'support':
         raise HTTPException(status_code=403, detail="Доступ только для поддержки")
 
@@ -200,9 +247,13 @@ async def update_ticket_status(
     return {"success": True}
 
 
-@router.get("/support/stats")
+@router.get("/support/stats", tags=["Support"])
 async def get_support_stats(user: Dict = Depends(get_current_user)):
-    """Получить статистику поддержки"""
+    """
+    Получить статистику поддержки
+    
+    Возвращает статистику по обращениям в поддержку.
+    """
     if user['role'] != 'support':
         raise HTTPException(status_code=403, detail="Доступ только для поддержки")
 
@@ -212,9 +263,13 @@ async def get_support_stats(user: Dict = Depends(get_current_user)):
 
 # ========== Endpoints для администрации ==========
 
-@router.get("/admin/students")
+@router.get("/admin/students", tags=["Admin - Students"])
 async def get_all_students(user: Dict = Depends(get_current_user)):
-    """Получить всех студентов"""
+    """
+    Получить всех студентов
+    
+    Доступно только для роли admin.
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -222,9 +277,19 @@ async def get_all_students(user: Dict = Depends(get_current_user)):
     return students
 
 
-@router.post("/admin/students")
+@router.post("/admin/students", tags=["Admin - Students"])
 async def create_student(student_data: Dict, user: Dict = Depends(get_current_user)):
-    """Создать студента"""
+    """
+    Создать нового студента
+    
+    Обязательные поля:
+    - **max_user_id**: ID пользователя в Max
+    - **fio**: ФИО студента
+    
+    Опциональные поля:
+    - **phone**: Телефон
+    - **email**: Email
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -238,13 +303,18 @@ async def create_student(student_data: Dict, user: Dict = Depends(get_current_us
     return {"id": student_id, "success": True}
 
 
-@router.put("/admin/students/{student_id}")
+@router.put("/admin/students/{student_id}", tags=["Admin - Students"])
 async def update_student(
         student_id: int,
         student_data: Dict,
         user: Dict = Depends(get_current_user)
 ):
-    """Обновить студента"""
+    """
+    Обновить данные студента
+    
+    - **student_id**: ID студента
+    - Можно обновить: fio, phone, email
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -257,9 +327,13 @@ async def update_student(
     return {"success": True}
 
 
-@router.delete("/admin/students/{student_id}")
+@router.delete("/admin/students/{student_id}", tags=["Admin - Students"])
 async def delete_student(student_id: int, user: Dict = Depends(get_current_user)):
-    """Удалить студента"""
+    """
+    Удалить студента
+    
+    - **student_id**: ID студента
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -267,9 +341,13 @@ async def delete_student(student_id: int, user: Dict = Depends(get_current_user)
     return {"success": True}
 
 
-@router.get("/admin/teachers")
+@router.get("/admin/teachers", tags=["Admin - Teachers"])
 async def get_all_teachers(user: Dict = Depends(get_current_user)):
-    """Получить всех преподавателей"""
+    """
+    Получить всех преподавателей
+    
+    Доступно только для роли admin.
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -277,9 +355,19 @@ async def get_all_teachers(user: Dict = Depends(get_current_user)):
     return teachers
 
 
-@router.post("/admin/teachers")
+@router.post("/admin/teachers", tags=["Admin - Teachers"])
 async def create_teacher(teacher_data: Dict, user: Dict = Depends(get_current_user)):
-    """Создать преподавателя"""
+    """
+    Создать нового преподавателя
+    
+    Обязательные поля:
+    - **max_user_id**: ID пользователя в Max
+    - **fio**: ФИО преподавателя
+    
+    Опциональные поля:
+    - **phone**: Телефон
+    - **email**: Email
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -293,13 +381,18 @@ async def create_teacher(teacher_data: Dict, user: Dict = Depends(get_current_us
     return {"id": teacher_id, "success": True}
 
 
-@router.put("/admin/teachers/{teacher_id}")
+@router.put("/admin/teachers/{teacher_id}", tags=["Admin - Teachers"])
 async def update_teacher(
         teacher_id: int,
         teacher_data: Dict,
         user: Dict = Depends(get_current_user)
 ):
-    """Обновить преподавателя"""
+    """
+    Обновить данные преподавателя
+    
+    - **teacher_id**: ID преподавателя
+    - Можно обновить: fio, phone, email
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -312,9 +405,13 @@ async def update_teacher(
     return {"success": True}
 
 
-@router.delete("/admin/teachers/{teacher_id}")
+@router.delete("/admin/teachers/{teacher_id}", tags=["Admin - Teachers"])
 async def delete_teacher(teacher_id: int, user: Dict = Depends(get_current_user)):
-    """Удалить преподавателя"""
+    """
+    Удалить преподавателя
+    
+    - **teacher_id**: ID преподавателя
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -322,9 +419,13 @@ async def delete_teacher(teacher_id: int, user: Dict = Depends(get_current_user)
     return {"success": True}
 
 
-@router.get("/admin/groups")
+@router.get("/admin/groups", tags=["Admin - Groups"])
 async def get_all_groups(user: Dict = Depends(get_current_user)):
-    """Получить все группы"""
+    """
+    Получить все группы
+    
+    Доступно только для роли admin.
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -332,12 +433,21 @@ async def get_all_groups(user: Dict = Depends(get_current_user)):
     return groups
 
 
-@router.post("/admin/groups")
+@router.post("/admin/groups", tags=["Admin - Groups"])
 async def create_group(
         group_data: dict,
         user: Dict = Depends(get_current_user)
 ):
-    """Создать новую группу"""
+    """
+    Создать новую группу
+    
+    Обязательные поля:
+    - **name**: Название группы
+    
+    Опциональные поля:
+    - **semester**: Семестр
+    - **year**: Год
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -355,13 +465,18 @@ async def create_group(
     return {"success": True, "id": group_id}
 
 
-@router.put("/admin/groups/{group_id}")
+@router.put("/admin/groups/{group_id}", tags=["Admin - Groups"])
 async def update_group(
         group_id: int,
         group_data: dict,
         user: Dict = Depends(get_current_user)
 ):
-    """Обновить группу"""
+    """
+    Обновить группу
+    
+    - **group_id**: ID группы
+    - Можно обновить: name, semester, year
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -381,12 +496,16 @@ async def update_group(
     return {"success": True}
 
 
-@router.delete("/admin/groups/{group_id}")
+@router.delete("/admin/groups/{group_id}", tags=["Admin - Groups"])
 async def delete_group(
         group_id: int,
         user: Dict = Depends(get_current_user)
 ):
-    """Удалить группу"""
+    """
+    Удалить группу
+    
+    - **group_id**: ID группы
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -399,13 +518,18 @@ async def delete_group(
     return {"success": True}
 
 
-@router.post("/admin/groups/{group_id}/students/{student_id}")
+@router.post("/admin/groups/{group_id}/students/{student_id}", tags=["Admin - Groups"])
 async def add_student_to_group(
         group_id: int,
         student_id: int,
         user: Dict = Depends(get_current_user)
 ):
-    """Добавить студента в группу"""
+    """
+    Добавить студента в группу
+    
+    - **group_id**: ID группы
+    - **student_id**: ID студента
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -413,13 +537,18 @@ async def add_student_to_group(
     return {"success": True}
 
 
-@router.delete("/admin/groups/{group_id}/students/{student_id}")
+@router.delete("/admin/groups/{group_id}/students/{student_id}", tags=["Admin - Groups"])
 async def remove_student_from_group(
         group_id: int,
         student_id: int,
         user: Dict = Depends(get_current_user)
 ):
-    """Удалить студента из группы"""
+    """
+    Удалить студента из группы
+    
+    - **group_id**: ID группы
+    - **student_id**: ID студента
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -428,13 +557,18 @@ async def remove_student_from_group(
     return {"success": True}
 
 
-@router.put("/admin/groups/{group_id}/headman/{student_id}")
+@router.put("/admin/groups/{group_id}/headman/{student_id}", tags=["Admin - Groups"])
 async def set_headman(
         group_id: int,
         student_id: int,
         user: Dict = Depends(get_current_user)
 ):
-    """Назначить старосту группы"""
+    """
+    Назначить старосту группы
+    
+    - **group_id**: ID группы
+    - **student_id**: ID студента, который станет старостой
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 
@@ -448,9 +582,20 @@ async def set_headman(
     return {"success": True}
 
 
-@router.post("/admin/news")
+@router.post("/admin/news", tags=["Admin - News"])
 async def create_news(news_data: Dict, user: Dict = Depends(get_current_user)):
-    """Создать новость"""
+    """
+    Создать новость
+    
+    Обязательные поля:
+    - **title**: Заголовок новости
+    - **description**: Описание новости
+    
+    Опциональные поля:
+    - **hashtags**: Хэштеги через запятую
+    - **target_role**: Целевая роль (student, teacher, all или null для всех)
+    - **target_group_id**: ID целевой группы (null для всех групп)
+    """
     if user['role'] != 'admin':
         raise HTTPException(status_code=403, detail="Доступ только для администрации")
 

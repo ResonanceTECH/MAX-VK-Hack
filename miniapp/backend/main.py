@@ -53,7 +53,10 @@ app = FastAPI(
     title="Max Bot Miniapp API",
     description="API для мини-приложения бота Max",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # CORS для React приложения
