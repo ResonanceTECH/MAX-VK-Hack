@@ -17,8 +17,8 @@ else:
 sys.path.insert(0, project_root)
 
 # Устанавливаем переменные окружения для PostgreSQL из env или значения по умолчанию
-os.environ.setdefault('POSTGRES_HOST', os.getenv('POSTGRES_HOST', 'localhost'))
-os.environ.setdefault('POSTGRES_PORT', os.getenv('POSTGRES_PORT', '5431'))
+os.environ.setdefault('POSTGRES_HOST', os.getenv('POSTGRES_HOST', '178.72.139.15'))
+os.environ.setdefault('POSTGRES_PORT', os.getenv('POSTGRES_PORT', '5432'))
 os.environ.setdefault('POSTGRES_USER', os.getenv('POSTGRES_USER', 'maxbot'))
 os.environ.setdefault('POSTGRES_PASSWORD', os.getenv('POSTGRES_PASSWORD', 'maxbot123'))
 os.environ.setdefault('POSTGRES_DB', os.getenv('POSTGRES_DB', 'maxbot_db'))

@@ -21,16 +21,13 @@ services:
   bot:
     build: .
     container_name: max_bot
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST:-178.72.139.15}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER:-maxbot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maxbot123}
+      POSTGRES_DB: ${POSTGRES_DB:-maxbot_db}
     volumes:
       - .:/app
     restart: unless-stopped

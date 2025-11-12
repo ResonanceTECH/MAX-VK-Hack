@@ -252,3 +252,25 @@ class MaxAPI:
                     print(f"  Статус код: {e.response.status_code}")
                     print(f"  Текст ответа: {e.response.text[:500]}")
             return None
+
+    def set_webapp(self, webapp_url: str) -> bool:
+        """Настраивает URL миниприложения для бота"""
+        try:
+            response = requests.post(
+                f'{self.base_url}/setWebApp',
+                params=self._get_params(),
+                json={'url': webapp_url},
+                timeout=10
+            )
+            response.raise_for_status()
+            return True
+        except requests.exceptions.RequestException as e:
+            logger = logging.getLogger(__name__)
+            logger.error(f"Ошибка при настройке миниприложения: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    logger.error(f"  Детали ошибки: {error_data}")
+                except:
+                    logger.error(f"  Статус код: {e.response.status_code}")
+            return False
