@@ -32,7 +32,7 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
 
         # В режиме разработки hash может быть моковым
         import os
-        skip_verify = os.getenv('SKIP_INITDATA_VERIFY', 'true').lower() == 'true'
+        skip_verify = os.getenv('SKIP_INITDATA_VERIFY', 'false').lower() == 'true'
 
         if not user_str:
             raise ValueError("Отсутствует user в initData")
@@ -74,7 +74,7 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
             # В режиме разработки можем пропустить проверку подписи
             # В продакшене это обязательно!
             import os
-            skip_verify = os.getenv('SKIP_INITDATA_VERIFY', 'true').lower() == 'true'
+            skip_verify = os.getenv('SKIP_INITDATA_VERIFY', 'false').lower() == 'true'
             if not skip_verify:
                 raise ValueError("Неверная подпись initData")
 

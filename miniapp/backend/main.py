@@ -25,7 +25,7 @@ os.environ.setdefault('POSTGRES_DB', os.getenv('POSTGRES_DB', 'maxbot_db'))
 
 # Временный обход авторизации для локального тестирования (по умолчанию false в продакшене)
 os.environ.setdefault('SKIP_AUTH', os.getenv('SKIP_AUTH', 'false'))
-os.environ.setdefault('SKIP_INITDATA_VERIFY', os.getenv('SKIP_INITDATA_VERIFY', 'true'))
+os.environ.setdefault('SKIP_INITDATA_VERIFY', os.getenv('SKIP_INITDATA_VERIFY', 'false'))
 
 from db.models import User, Group, Teacher, Message
 from db.connection import get_connection, init_db_pool, close_db_pool
