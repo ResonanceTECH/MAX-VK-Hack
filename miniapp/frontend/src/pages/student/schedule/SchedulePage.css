@@ -29,6 +29,197 @@
   font-weight: 500;
 }
 
+/* Календарь недели */
+.week-calendar {
+  background: white;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calendar-nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.calendar-nav-btn:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.calendar-nav-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.calendar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  flex: 1;
+}
+
+.calendar-week {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  justify-items: center;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0;
+  width: 100%;
+}
+
+.calendar-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  justify-items: center;
+}
+
+.calendar-date {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 4px 2px;
+  min-height: 32px;
+  max-height: 32px;
+}
+
+.calendar-date:hover {
+  background: #f1f5f9;
+}
+
+.calendar-date.today {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-date.today .date-number {
+  color: white;
+}
+
+.calendar-date.selected {
+  background: rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(10px);
+  color: #2563eb;
+}
+
+.calendar-date .date-number {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.calendar-date.today .date-number {
+  color: white;
+}
+
+.calendar-date.selected .date-number {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.event-dot {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+  margin-top: 3px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.calendar-date.today .event-dot {
+  background: white;
+}
+
+.calendar-date.selected .event-dot {
+  background: #2563eb;
+}
+
+.calendar-date.has-events:not(.today):not(.selected) .event-dot {
+  background: #2563eb;
+}
+
+.selected-date-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #eff6ff;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.selected-date-display svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.clear-day-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-day-btn:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
 /* Селектор недели */
 .week-selector {
   display: flex;
@@ -46,7 +237,6 @@
   font-weight: 600;
   color: #64748b;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
 .week-btn:hover {
@@ -58,6 +248,19 @@
   background: #2563eb;
   border-color: #2563eb;
   color: white;
+}
+
+.week-btn.disabled,
+.week-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.week-btn.disabled:hover,
+.week-btn:disabled:hover {
+  border-color: #e2e8f0;
+  background: white;
 }
 
 /* Контент расписания */
@@ -141,7 +344,6 @@
   border-radius: 12px;
   padding: 18px;
   border: 1px solid #e2e8f0;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -155,7 +357,6 @@
   bottom: 0;
   width: 4px;
   background: #e2e8f0;
-  transition: all 0.3s ease;
 }
 
 .schedule-card::after {
@@ -167,7 +368,6 @@
   bottom: 0;
   background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent 60%);
   opacity: 0;
-  transition: opacity 0.3s ease;
   pointer-events: none;
 }
 
@@ -187,7 +387,6 @@
 }
 
 .schedule-card:hover {
-  transform: translateY(-3px) scale(1.01);
   box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
   border-color: #cbd5e1;
 }
@@ -234,7 +433,6 @@
   z-index: 1;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   border: 1px solid transparent;
-  transition: all 0.2s ease;
 }
 
 .class-type-badge.lecture {
@@ -261,9 +459,6 @@
   border-color: rgba(107, 33, 168, 0.2);
 }
 
-.schedule-card:hover .class-type-badge {
-  transform: scale(1.05);
-}
 
 /* Название пары */
 .lesson-title {
@@ -287,22 +482,22 @@
 }
 
 .detail-item {
-  display: flex;
+  display: inline-flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   font-size: 14px;
   color: #64748b;
-  padding: 6px 10px;
+  padding: 6px 12px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 8px;
   border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .detail-item:hover {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   border-color: rgba(37, 99, 235, 0.2);
-  transform: translateX(4px);
 }
 
 .detail-item .icon {
@@ -404,6 +599,50 @@
     font-size: 24px;
   }
 
+  .week-calendar {
+    padding: 8px 10px;
+  }
+
+  .calendar-title {
+    font-size: 14px;
+  }
+
+  .calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+  }
+
+  .calendar-nav-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .calendar-day-label {
+    font-size: 16px;
+  }
+
+  .calendar-date {
+    min-height: 28px;
+    max-height: 28px;
+    padding: 3px 2px;
+  }
+
+  .calendar-date .date-number {
+    font-size: 14px;
+  }
+
+  .event-dot {
+    width: 5px;
+    height: 5px;
+    margin-top: 1.5px;
+  }
+
+  .selected-date-display {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
   .week-selector {
     flex-direction: column;
   }
@@ -427,36 +666,6 @@
   }
 }
 
-/* Анимации появления */
-.day-section {
-  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.schedule-card {
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 /* Скрыть скроллбар для чистоты */
 .schedule-page::-webkit-scrollbar {

@@ -18,15 +18,15 @@ const StatsBar: React.FC<StatsBarProps> = ({ stats }) => {
     <div className="stats-bar">
       <div className="stat-item unread">
         <div className="stat-value">{stats.unread || 0}</div>
-        <div className="stat-label">Непрочитанные</div>
+        <div className="stat-label">НЕПРОЧИТАННЫЕ</div>
       </div>
       <div className="stat-item read">
         <div className="stat-value">{stats.read || 0}</div>
-        <div className="stat-label">Прочитанные</div>
+        <div className="stat-label">ПРОЧИТАННЫЕ</div>
       </div>
       <div className="stat-item total">
         <div className="stat-value">{stats.total}</div>
-        <div className="stat-label">Всего</div>
+        <div className="stat-label">ВСЕГО</div>
       </div>
     </div>
   )

@@ -2,15 +2,14 @@ import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import MessagesPage from './pages/MessagesPage'
 import Layout from './components/Layout'
-import RoleSelector from './components/RoleSelector'
 import { useAuth } from './hooks/useAuth'
 import './App.css'
 
 // Импорты страниц для студентов
-import MyGroupPage from './pages/student/MyGroupPage'
-import SchedulePage from './pages/student/SchedulePage'
-import TeachersPage from './pages/student/TeachersPage'
-import NewsPage from './pages/student/NewsPage'
+import MyGroupPage from './pages/student/my-group/MyGroupPage'
+import SchedulePage from './pages/student/schedule/SchedulePage'
+import TeachersPage from './pages/student/teachers/TeachersPage'
+import NewsPage from './pages/student/news/NewsPage'
 
 // Импорты страниц для преподавателей
 import MyGroupsPage from './pages/teacher/MyGroupsPage'
@@ -84,18 +83,8 @@ function AppContent() {
     )
   }
 
-  // Если у пользователя несколько ролей, показываем селектор
-  const hasMultipleRoles = user.all_roles && user.all_roles.length > 1
-
   return (
     <div className="app-container">
-      {hasMultipleRoles && (
-        <RoleSelector
-          roles={user.all_roles}
-          currentRole={user.role}
-          onRoleChange={setSelectedRole}
-        />
-      )}
       <Layout>
         <Routes>
           <Route path="/" element={<Navigate to={getDefaultRoute(user.role)} replace />} />
