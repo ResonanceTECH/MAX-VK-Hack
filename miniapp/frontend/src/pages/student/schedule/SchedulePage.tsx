@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { UserCircle2, MapPin, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
+import axios from 'axios'
+import { useAuth } from '../../../hooks/useAuth'
+import api from '../../../utils/api'
 import './SchedulePage.css'
 
 interface Event {
@@ -19,6 +22,7 @@ interface ScheduleData {
 }
 
 const SchedulePage: React.FC = () => {
+    const { user } = useAuth()
     const [schedule, setSchedule] = useState<Event[]>([])
     const [groupName, setGroupName] = useState<string>('')
     const [loading, setLoading] = useState(true)
@@ -46,64 +50,81 @@ const SchedulePage: React.FC = () => {
     useEffect(() => {
         const currentParity = getCurrentWeekParity()
         setSelectedWeekParity(currentParity)
-        loadSchedule()
-    }, [])
+        if (user) {
+            loadSchedule()
+        }
+    }, [user])
+
+    // Преобразование ФИО в формат "Фамилия И. О."
+    const formatTeacherName = (fio: string): string => {
+        const parts = fio.trim().split(/\s+/)
+        if (parts.length < 2) return fio
+        
+        const lastName = parts[0]
+        const firstName = parts[1]
+        const middleName = parts[2] || ''
+        
+        const firstInitial = firstName.charAt(0).toUpperCase()
+        const middleInitial = middleName ? middleName.charAt(0).toUpperCase() : ''
+        
+        return middleInitial 
+            ? `${lastName} ${firstInitial}. ${middleInitial}.`
+            : `${lastName} ${firstInitial}.`
+    }
 
     const loadSchedule = async () => {
         try {
             setLoading(true)
-            // Данные расписания
-            const scheduleData: ScheduleData = {
-                "events_by_calname": {
-                    "ИКБО-16-22": [
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "09:00", "end": "10:30", "day_of_week": "Понедельник", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "И-205-а (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "10:40", "end": "12:10", "day_of_week": "Понедельник", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "И-205-а (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ЛК Управление информационно-технологическими проектами", "start": "18:00", "end": "19:30", "day_of_week": "Понедельник", "description": "Преподаватель: Потапова Ксения Александровна\n\nГруппы:\nИКБО-01-22\nИКБО-02-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "нечетная" },
-                        { "summary": "ЛК Управление информационно-технологическими проектами", "start": "18:00", "end": "19:30", "day_of_week": "Понедельник", "description": "Преподаватель: Потапова Ксения Александровна\n\nГруппы:\nИКБО-01-22\nИКБО-02-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "четная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "09:00", "end": "10:30", "day_of_week": "Вторник", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "И-205-а (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "10:40", "end": "12:10", "day_of_week": "Вторник", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "И-205-а (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Имитационное моделирование клиент-серверных приложений", "start": "09:00", "end": "10:30", "day_of_week": "Среда", "description": "Преподаватель: Коваленко Михаил Андреевич\n", "location": "Г-227-1 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Имитационное моделирование клиент-серверных приложений", "start": "09:00", "end": "10:30", "day_of_week": "Среда", "description": "Преподаватель: Коваленко Михаил Андреевич\n", "location": "Г-227-1 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Имитационное моделирование клиент-серверных приложений", "start": "10:40", "end": "12:10", "day_of_week": "Среда", "description": "Преподаватель: Коваленко Михаил Андреевич\n", "location": "Г-227-1 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Имитационное моделирование клиент-серверных приложений", "start": "10:40", "end": "12:10", "day_of_week": "Среда", "description": "Преподаватель: Коваленко Михаил Андреевич\n", "location": "Г-227-1 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Проектирование клиент-серверных систем", "start": "09:00", "end": "10:30", "day_of_week": "Четверг", "description": "Преподаватель: Мельников Денис Александрович\n", "location": "И-203-б (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Проектирование клиент-серверных систем", "start": "09:00", "end": "10:30", "day_of_week": "Четверг", "description": "Преподаватель: Мельников Денис Александрович\n", "location": "И-203-б (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Проектирование клиент-серверных систем", "start": "10:40", "end": "12:10", "day_of_week": "Четверг", "description": "Преподаватель: Мельников Денис Александрович\n", "location": "И-203-б (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "10:40", "end": "12:10", "day_of_week": "Четверг", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "12:40", "end": "14:10", "day_of_week": "Четверг", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "Г-226-2 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Управление информационно-технологическими проектами", "start": "12:40", "end": "14:10", "day_of_week": "Четверг", "description": "Преподаватель: Габриелян Гайк Ашотович\n", "location": "Д-313 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Информационный менеджмент программных продуктов и систем", "start": "12:40", "end": "14:10", "day_of_week": "Четверг", "description": "Преподаватель: Братусь Надежда Валерьевна\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Управление информационно-технологическими проектами", "start": "12:40", "end": "14:10", "day_of_week": "Четверг", "description": "Преподаватель: Габриелян Гайк Ашотович\n", "location": "Д-313 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Управление информационно-технологическими проектами", "start": "14:20", "end": "15:50", "day_of_week": "Четверг", "description": "Преподаватель: Габриелян Гайк Ашотович\n", "location": "И-202-а (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Управление информационно-технологическими проектами", "start": "14:20", "end": "15:50", "day_of_week": "Четверг", "description": "Преподаватель: Габриелян Гайк Ашотович\n", "location": "И-202-а (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Разработка клиент-серверных приложений", "start": "09:00", "end": "10:30", "day_of_week": "Пятница", "description": "Преподаватель: Романченко Алексей Евгеньевич\n", "location": "Г-226-2 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Разработка клиент-серверных приложений", "start": "09:00", "end": "10:30", "day_of_week": "Пятница", "description": "Преподаватель: Романченко Алексей Евгеньевич\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Разработка клиент-серверных приложений", "start": "10:40", "end": "12:10", "day_of_week": "Пятница", "description": "Преподаватель: Романченко Алексей Евгеньевич\n", "location": "Г-226-2 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Разработка клиент-серверных приложений", "start": "10:40", "end": "12:10", "day_of_week": "Пятница", "description": "Преподаватель: Романченко Алексей Евгеньевич\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Технологии виртуализации клиент-серверных приложений", "start": "12:40", "end": "14:10", "day_of_week": "Пятница", "description": "Преподаватель: Волков Михаил Юрьевич\n", "location": "Г-226-2 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Технологии виртуализации клиент-серверных приложений", "start": "12:40", "end": "14:10", "day_of_week": "Пятница", "description": "Преподаватель: Волков Михаил Юрьевич\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Технологии виртуализации клиент-серверных приложений", "start": "14:20", "end": "15:50", "day_of_week": "Пятница", "description": "Преподаватель: Волков Михаил Юрьевич\n", "location": "Г-226-2 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Технологии виртуализации клиент-серверных приложений", "start": "14:20", "end": "15:50", "day_of_week": "Пятница", "description": "Преподаватель: Волков Михаил Юрьевич\n", "location": "Г-226-2 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Технологии и инструментарий анализа больших данных", "start": "16:20", "end": "17:50", "day_of_week": "Пятница", "description": "Преподаватель: Тетерин Николай Николаевич\n", "location": "А-421 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Технологии и инструментарий анализа больших данных", "start": "16:20", "end": "17:50", "day_of_week": "Пятница", "description": "Преподаватель: Тетерин Николай Николаевич\n", "location": "Г-413 (В-78)", "week_parity": "нечетная" },
-                        { "summary": "ПР Технологии и инструментарий анализа больших данных", "start": "16:20", "end": "17:50", "day_of_week": "Пятница", "description": "Преподаватель: Тетерин Николай Николаевич\n", "location": "А-421 (В-78)", "week_parity": "четная" },
-                        { "summary": "ПР Технологии и инструментарий анализа больших данных", "start": "16:20", "end": "17:50", "day_of_week": "Пятница", "description": "Преподаватель: Тетерин Николай Николаевич\n", "location": "Г-413 (В-78)", "week_parity": "четная" },
-                        { "summary": "ЛК Разработка клиент-серверных приложений", "start": "10:40", "end": "12:10", "day_of_week": "Суббота", "description": "Преподаватель: Коваленко Михаил Андреевич\n\nГруппы:\nИКБО-01-22\nИКБО-02-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "нечетная" },
-                        { "summary": "ЛК Технологии и инструментарий анализа больших данных", "start": "10:40", "end": "12:10", "day_of_week": "Суббота", "description": "Преподаватель: Юрченков Иван Александрович\n\nГруппы:\nИКБО-01-22\nИКБО-02-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "четная" },
-                        { "summary": "ЛК Имитационное моделирование клиент-серверных приложений", "start": "12:40", "end": "14:10", "day_of_week": "Суббота", "description": "Преподаватель: Акопов Андраник Сумбатович\n\nГруппы:\nИКБО-01-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "нечетная" },
-                        { "summary": "ЛК Проектирование клиент-серверных систем", "start": "12:40", "end": "14:10", "day_of_week": "Суббота", "description": "Преподаватель: Лобанов Александр Анатольевич\n\nГруппы:\nИКБО-01-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "четная" },
-                        { "summary": "ЛК Информационный менеджмент программных продуктов и систем", "start": "14:20", "end": "15:50", "day_of_week": "Суббота", "description": "Преподаватель: Лобанов Александр Анатольевич\n\nГруппы:\nИКБО-01-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "нечетная" },
-                        { "summary": "ЛК Информационный менеджмент программных продуктов и систем", "start": "14:20", "end": "15:50", "day_of_week": "Суббота", "description": "Преподаватель: Лобанов Александр Анатольевич\n\nГруппы:\nИКБО-01-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "четная" },
-                        { "summary": "ЛК Технологии виртуализации клиент-серверных приложений", "start": "16:20", "end": "17:50", "day_of_week": "Суббота", "description": "Преподаватель: Волков Михаил Юрьевич\n\nГруппы:\nИКБО-01-22\nИКБО-16-22\nИКБО-20-22\nИКБО-30-22\nИКБО-36-22\n", "location": "Дистанционно (СДО)", "week_parity": "нечетная" }
-                    ]
-                }
+            
+            if (!user) {
+                console.warn('Пользователь не загружен')
+                return
             }
 
+            let queryParam = ''
+            
+            // Формируем query параметр в зависимости от роли
+            if (user.role === 'student') {
+                // Для студентов получаем группу
+                try {
+                    const groupsResponse = await api.get('/groups')
+                    const groups = groupsResponse.data
+                    if (groups && groups.length > 0) {
+                        queryParam = groups[0].name // Берем первую группу
+                    }
+                } catch (error) {
+                    console.error('Ошибка загрузки групп:', error)
+                }
+            } else if (user.role === 'teacher') {
+                // Для преподавателей используем ФИО в формате "Фамилия И. О."
+                queryParam = formatTeacherName(user.fio)
+            }
+            
+            // Запрос к API расписания с query параметром
+            const scheduleApiUrl = import.meta.env.VITE_SCHEDULE_API_URL || '/api2'
+            const url = queryParam 
+                ? `${scheduleApiUrl}/schedule_1?query=${encodeURIComponent(queryParam)}`
+                : `${scheduleApiUrl}/schedule_1`
+            
+            const response = await axios.get(url)
+            
+            const scheduleData: ScheduleData = response.data
+
+            if (!scheduleData.events_by_calname || Object.keys(scheduleData.events_by_calname).length === 0) {
+                console.warn('Расписание пустое или не найдено')
+                setSchedule([])
+                setGroupName('')
+                return
+            }
+
+            // Берем первую группу из расписания
             const firstGroupName = Object.keys(scheduleData.events_by_calname)[0]
             setGroupName(firstGroupName)
             setSchedule(scheduleData.events_by_calname[firstGroupName])
         } catch (error) {
             console.error('Ошибка загрузки расписания:', error)
+            setSchedule([])
+            setGroupName('')
         } finally {
             setLoading(false)
         }
