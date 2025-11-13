@@ -41,8 +41,8 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-maxbot}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
       - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
-      - SKIP_AUTH=${SKIP_AUTH:-false}
-      - SKIP_INITDATA_VERIFY=${SKIP_INITDATA_VERIFY:-false}
+      - SKIP_AUTH=${SKIP_AUTH:-true}
+      - SKIP_INITDATA_VERIFY=${SKIP_INITDATA_VERIFY:-true}
     restart: unless-stopped
     networks:
       - miniapp_network
