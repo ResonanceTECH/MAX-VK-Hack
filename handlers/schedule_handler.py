@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # URL для API расписания
-SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "http://schedule:8001/schedule_1")
+SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "http://178.72.139.15:8001/api2")
 
 
 def get_schedule_from_api(query: str) -> Dict:

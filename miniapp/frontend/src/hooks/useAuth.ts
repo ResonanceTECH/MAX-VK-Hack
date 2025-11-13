@@ -88,7 +88,7 @@ export const useAuth = () => {
         : selectedRole || localStorage.getItem(SELECTED_ROLE_KEY)
 
       // Запрос к API с initData в заголовке
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://178.72.139.15:8000/api'
       const headers: Record<string, string> = {
         'X-Init-Data': initData
       }
