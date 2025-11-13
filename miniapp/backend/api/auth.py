@@ -117,7 +117,8 @@ def get_current_user(
 
     if skip_auth:
         # Получаем пользователя напрямую из БД без проверки initData
-        max_user_id = 96855100
+        # Можно указать DEV_USER_MAX_ID в переменных окружения для локальной разработки
+        max_user_id = int(os.getenv('DEV_USER_MAX_ID', '96855100'))
         if x_selected_role:
             # Если указана роль, получаем пользователя с этой ролью
             user = User.get_by_max_id(max_user_id, role=x_selected_role)

@@ -37,8 +37,9 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   let initData = getInitData()
   
-  // В режиме разработки, если нет initData, создаем мок
-  if (!initData && import.meta.env.DEV) {
+  // Если нет initData, создаем мок (для работы в контейнере/без Max мессенджера)
+  // Бэкенд пропустит проверку если SKIP_AUTH=true и SKIP_INITDATA_VERIFY=true
+  if (!initData) {
     initData = createMockInitData()
   }
   

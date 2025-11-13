@@ -71,15 +71,10 @@ export const useAuth = () => {
       // Получаем initData из Max WebApp
       let initData = getInitData()
       
-      // В режиме разработки, если нет initData, создаем мок
-      if (!initData && import.meta.env.DEV) {
-        initData = createMockInitData()
-      }
-      
+      // Если нет initData, создаем мок (для работы в контейнере/без Max мессенджера)
+      // Бэкенд пропустит проверку если SKIP_AUTH=true и SKIP_INITDATA_VERIFY=true
       if (!initData) {
-        console.warn('initData не найден. Проверьте, что мини-приложение открыто из Max мессенджера.')
-        setLoading(false)
-        return
+        initData = createMockInitData()
       }
 
       // Определяем роль для запроса
@@ -131,7 +126,8 @@ export const useAuth = () => {
   const getAuthHeaders = (): Record<string, string> => {
     let initData = getInitData()
     
-    if (!initData && import.meta.env.DEV) {
+    // Если нет initData, создаем мок (для работы в контейнере/без Max мессенджера)
+    if (!initData) {
       initData = createMockInitData()
     }
     

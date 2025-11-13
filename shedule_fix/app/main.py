@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from app.services.schedule_service import get_schedule
 
-app = FastAPI()
+app = FastAPI(
+    root_path="/api2"  # Указываем префикс для работы за nginx прокси
+)
 
 
 @app.get("/schedule_1")

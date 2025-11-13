@@ -17,7 +17,7 @@ else:
 sys.path.insert(0, project_root)
 
 # Устанавливаем переменные окружения для PostgreSQL из env или значения по умолчанию
-os.environ.setdefault('POSTGRES_HOST', os.getenv('POSTGRES_HOST', '178.72.139.15'))
+os.environ.setdefault('POSTGRES_HOST', os.getenv('POSTGRES_HOST', 'db'))
 os.environ.setdefault('POSTGRES_PORT', os.getenv('POSTGRES_PORT', '5432'))
 os.environ.setdefault('POSTGRES_USER', os.getenv('POSTGRES_USER', 'maxbot'))
 os.environ.setdefault('POSTGRES_PASSWORD', os.getenv('POSTGRES_PASSWORD', 'maxbot123'))
@@ -61,7 +61,8 @@ app = FastAPI(
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
-    openapi_url="/openapi.json"
+    openapi_url="/openapi.json",
+    root_path="/api"  # Указываем префикс для работы за nginx прокси
 )
 
 # CORS для React приложения
