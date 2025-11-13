@@ -18,11 +18,17 @@ class BotStartedHandler(BaseHandler):
         user = update.get('user', {})
         max_user_id = user.get('user_id')
         first_name = user.get('first_name', 'Unknown')
+        last_name = user.get('last_name', '')
 
         if not max_user_id:
             return
 
-        logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=bot_started")
+        # Формируем строку с именем и фамилией
+        name_str = f"{first_name}"
+        if last_name:
+            name_str += f" {last_name}"
+        
+        logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=bot_started")
 
         # Проверка верификации
         if not self.is_user_verified(max_user_id):

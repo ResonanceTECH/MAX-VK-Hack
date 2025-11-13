@@ -35,6 +35,7 @@ class CallbackHandler(BaseHandler):
         user = callback.get('user', {})
         max_user_id = user.get('user_id')
         first_name = user.get('first_name', 'Unknown')
+        last_name = user.get('last_name', '')
         payload = callback.get('payload', '')
         callback_id = callback.get('callback_id', '')
 
@@ -57,7 +58,11 @@ class CallbackHandler(BaseHandler):
 
         # Определяем действие для логирования
         action = self._get_action_for_logging(payload)
-        logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action={action}")
+        # Формируем строку с именем и фамилией
+        name_str = f"{first_name}"
+        if last_name:
+            name_str += f" {last_name}"
+        logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action={action}")
 
         # Роутинг по payload
         try:

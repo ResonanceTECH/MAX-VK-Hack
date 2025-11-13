@@ -20,14 +20,20 @@ class MessageHandler(BaseHandler):
         sender = message.get('sender', {})
         max_user_id = sender.get('user_id')
         first_name = sender.get('first_name', 'Unknown')
+        last_name = sender.get('last_name', '')
 
         if not max_user_id:
             return
 
+        # Формируем строку с именем и фамилией
+        name_str = f"{first_name}"
+        if last_name:
+            name_str += f" {last_name}"
+
         # Проверка верификации
         if not self.is_user_verified(max_user_id):
             logger.info(
-                f"[USER] user_id={max_user_id}, first_name={first_name}, action=неверифицированная_попытка_письма")
+                f"[USER] user_id={max_user_id}, name={name_str}, action=неверифицированная_попытка_письма")
             api.send_message(
                 user_id=max_user_id,
                 text="❌ Вы не зарегистрированы в системе. Обратитесь к администрации."
@@ -56,53 +62,53 @@ class MessageHandler(BaseHandler):
             # Обработка состояний отправки сообщений
             if state == 'waiting_message_to_teacher':
                 logger.info(
-                    f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_преподавателю")
+                    f"[USER] user_id={max_user_id}, name={name_str}, action=отправка_сообщения_преподавателю")
                 self.handle_send_to_teacher(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_message_to_support':
                 logger.info(
-                    f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_в_поддержку")
+                    f"[USER] user_id={max_user_id}, name={name_str}, action=отправка_сообщения_в_поддержку")
                 self.handle_send_to_support(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_broadcast_message':
-                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_группе")
+                logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=рассылка_группе")
                 self.handle_broadcast_message(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_message_to_student':
                 logger.info(
-                    f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту")
+                    f"[USER] user_id={max_user_id}, name={name_str}, action=отправка_сообщения_студенту")
                 self.handle_send_to_student(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_group_message':
                 logger.info(
-                    f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_от_группы")
+                    f"[USER] user_id={max_user_id}, name={name_str}, action=отправка_сообщения_от_группы")
                 self.handle_group_message(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_message_to_student_student':
                 logger.info(
-                    f"[USER] user_id={max_user_id}, first_name={first_name}, action=отправка_сообщения_студенту_студенту")
+                    f"[USER] user_id={max_user_id}, name={name_str}, action=отправка_сообщения_студенту_студенту")
                 self.handle_send_to_student_student(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'waiting_broadcast_headmen':
-                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=рассылка_старостам")
+                logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=рассылка_старостам")
                 self.handle_broadcast_headmen(user, max_user_id, text, state_data, api, message_id)
                 return
             elif state == 'admin_schedule_edit':
-                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=редактирование_расписания")
+                logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=редактирование_расписания")
                 self.handle_edit_schedule(user, max_user_id, text, api, message_id)
                 return
             elif state.startswith('admin_'):
-                logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=админ_{state}")
+                logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=админ_{state}")
                 self.handle_admin_state(user, max_user_id, text, state, state_data, api, message_id)
                 return
 
         # Обработка команд
         if text.startswith('/'):
-            logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=команда_{text}")
+            logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=команда_{text}")
             self.handle_command(text, user, chat_id, max_user_id, api)
         else:
             # Обычное сообщение - показываем главное меню
-            logger.info(f"[USER] user_id={max_user_id}, first_name={first_name}, action=показ_главного_меню")
+            logger.info(f"[USER] user_id={max_user_id}, name={name_str}, action=показ_главного_меню")
             self.show_main_menu(user, chat_id, max_user_id, api)
 
     def handle_command(self, command: str, user: Dict, chat_id: int,
