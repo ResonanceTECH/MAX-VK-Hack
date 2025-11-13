@@ -7,7 +7,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://178.72.139.15:8000',
+        target: process.env.VITE_API_URL || 'http://backend:8000',
+        changeOrigin: true
+      },
+      '/api2': {
+        target: process.env.VITE_SCHEDULE_API_URL || 'http://schedule:8001',
         changeOrigin: true
       }
     }
