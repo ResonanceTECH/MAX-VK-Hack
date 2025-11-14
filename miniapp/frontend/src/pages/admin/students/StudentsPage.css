@@ -203,12 +203,14 @@
 
 .students-table td:last-child {
   display: flex;
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
 }
 
 .students-table button {
-  padding: 8px;
+  padding: 0;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -220,6 +222,8 @@
   width: 36px;
   height: 36px;
   flex-shrink: 0;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .students-table button:first-of-type {
