@@ -255,6 +255,9 @@
 .students-table button svg {
   width: 18px;
   height: 18px;
+  stroke: white;
+  fill: none;
+  display: block;
 }
 
 /* Карточки студентов для мобильных */
@@ -589,6 +592,15 @@
     max-width: 36px !important;
     max-height: 36px !important;
     margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .students-table button svg {
+    width: 18px !important;
+    height: 18px !important;
+    stroke: white !important;
+    fill: none !important;
+    display: block !important;
   }
 }
 

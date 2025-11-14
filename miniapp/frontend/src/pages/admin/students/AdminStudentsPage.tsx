@@ -197,10 +197,10 @@ const AdminStudentsPage: React.FC = () => {
                             <td>{student.email || '-'}</td>
                             <td>
                                 <button onClick={() => handleEdit(student)}>
-                                    <EditIcon size={16} />
+                                    <EditIcon size={18} />
                                 </button>
                                 <button onClick={() => handleDelete(student.id)}>
-                                    <DeleteIcon size={16} />
+                                    <DeleteIcon size={18} />
                                 </button>
                             </td>
                         </tr>
