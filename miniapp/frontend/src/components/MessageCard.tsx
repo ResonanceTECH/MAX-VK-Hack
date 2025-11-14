@@ -74,7 +74,7 @@ const MessageCard: React.FC<MessageCardProps> = ({ message, onStatusChange }) =>
         <div className="message-sender">
           <div className="sender-info">
             <UserIcon size={18} />
-            <strong>{message.from_user_fio}</strong>
+          <strong>{message.from_user_fio}</strong>
           </div>
           {message.group_name && (
             <div className="message-group">
