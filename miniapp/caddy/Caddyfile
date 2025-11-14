@@ -1,8 +1,7 @@
 {
-    # Для локальной разработки - используем внутренние сертификаты
-    # Для продакшена с доменом раскомментируйте и укажите email:
-    # email your-email@example.com
-    # Caddy автоматически получит сертификат от Let's Encrypt
+    # Email для Let's Encrypt (нужен для получения сертификатов)
+    # Замените на свой email
+    email your-email@example.com
 }
 
 # Для локальной разработки (закомментировано для продакшена)
@@ -79,16 +78,18 @@
 #     header @static_files Cache-Control "public, max-age=31536000, immutable"
 # }
 
-# Для доступа по IP-адресу (продакшен)
-178.72.139.15 {
+# Для доступа через nip.io (продакшен)
+# nip.io автоматически резолвит домен в IP адрес
+# Домен: 178.72.139.15.nip.io
+178.72.139.15.nip.io {
     # Редирект HTTP на HTTPS
     @http {
         protocol http
     }
     redir @http https://{host}{uri} permanent
     
-    # TLS настройки - используем тот же сертификат (включает этот IP)
-    tls /etc/caddy/ssl/localhost.pem /etc/caddy/ssl/localhost-key.pem
+    # Caddy автоматически получит сертификат от Let's Encrypt для nip.io
+    # Не нужно указывать tls - Caddy сделает это сам
     
     # Проксирование на schedule сервис (/api2)
     handle /api2/* {

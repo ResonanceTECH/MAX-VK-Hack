@@ -7,7 +7,7 @@ from api.max_api import MaxAPI
 load_dotenv()
 
 # URL миниприложения
-MINIAPP_URL = os.getenv('MINIAPP_URL', 'https://178.72.139.15')
+MINIAPP_URL = os.getenv('MINIAPP_URL', 'https://178.72.139.15.nip.io')
 
 def main():
     """Настраивает миниприложение для бота"""
