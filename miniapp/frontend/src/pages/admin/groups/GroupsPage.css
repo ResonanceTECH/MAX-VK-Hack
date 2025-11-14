@@ -290,26 +290,30 @@
 .students-table td:last-child {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  gap: 10px;
+  flex-wrap: nowrap;
+  min-width: 200px;
 }
 
 .students-table button {
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  min-height: 40px;
 }
 
 .students-table .btn-set-headman {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: var(--primary-500, #2563eb);
   color: white;
+  flex-shrink: 0;
 }
 
 .students-table .btn-set-headman:hover {
@@ -322,7 +326,7 @@
 }
 
 .students-table .btn-delete-student {
-  padding: 8px 16px;
+  padding: 10px 20px;
   background: #ef4444;
   color: white;
   flex-shrink: 0;
