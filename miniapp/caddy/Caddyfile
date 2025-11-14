@@ -93,7 +93,10 @@
     
     # Проксирование на schedule сервис (/api2)
     # Соответствует nginx: location /api2/ { rewrite ^/api2/(.*)$ /$1 break; proxy_pass http://schedule; }
-    handle /api2/* {
+    @api2 {
+        path /api2/*
+    }
+    handle @api2 {
         uri strip_prefix /api2
         reverse_proxy schedule:8001 {
             header_up X-Real-IP {remote_host}
@@ -104,7 +107,10 @@
     }
     
     # Соответствует nginx: location = /api2 { proxy_pass http://schedule/; }
-    handle /api2 {
+    @api2_root {
+        path /api2
+    }
+    handle @api2_root {
         reverse_proxy schedule:8001 {
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
