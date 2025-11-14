@@ -16,6 +16,12 @@
   position: relative;
   z-index: 100;
   min-height: 64px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
 }
 
 .navbar-role-selector {
@@ -26,17 +32,33 @@
 .navbar-menu {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex: 1;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
   min-width: 0;
+  padding-right: 20px;
+  gap: 0;
 }
 
 .navbar-menu::-webkit-scrollbar {
-  display: none;
+  height: 6px;
+}
+
+.navbar-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.navbar-menu::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.navbar-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .nav-item {
@@ -53,6 +75,7 @@
   font-weight: 500;
   white-space: nowrap;
   min-height: 64px;
+  flex-shrink: 0;
 }
 
 .nav-item::after {
