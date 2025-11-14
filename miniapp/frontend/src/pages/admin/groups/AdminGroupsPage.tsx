@@ -296,14 +296,20 @@ const AdminGroupsPage: React.FC = () => {
                                         {students.map(student => (
                                             <tr key={student.id}>
                                                 <td>{student.fio}</td>
-                                                <td>{student.is_headman ? '⭐ Староста' : 'Студент'}</td>
+                                                <td>{student.is_headman ? '⭐ Староста' : 'Студент'}</td>                                                       
                                                 <td>
-                                                    {!student.is_headman && (
-                                                        <button onClick={() => handleSetHeadman(student.id)}>
+                                                    {!student.is_headman && (   
+                                                        <button
+                                                            className="btn-set-headman"                                                                         
+                                                            onClick={() => handleSetHeadman(student.id)}                                                        
+                                                        >
                                                             Назначить старостой
                                                         </button>
                                                     )}
-                                                    <button onClick={() => handleRemoveStudent(student.id)}>
+                                                    <button
+                                                        className="btn-delete-student"                                                                          
+                                                        onClick={() => handleRemoveStudent(student.id)}                                                         
+                                                    >
                                                         Удалить
                                                     </button>
                                                 </td>
@@ -311,6 +317,41 @@ const AdminGroupsPage: React.FC = () => {
                                         ))}
                                     </tbody>
                                 </table>
+                                
+                                {/* Карточки студентов для мобильных */}
+                                <div className="students-cards">
+                                    {students.map(student => (
+                                        <div key={student.id} className="student-card">
+                                            <div className="student-card-header">
+                                                <div className="student-card-name">{student.fio}</div>
+                                            </div>
+                                            <div className="student-card-body">
+                                                <div className="student-card-field">
+                                                    <span className="field-label">Статус:</span>
+                                                    <span className="field-value">
+                                                        {student.is_headman ? '⭐ Староста' : 'Студент'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="student-card-actions">
+                                                {!student.is_headman && (
+                                                    <button
+                                                        className="btn-set-headman-card"
+                                                        onClick={() => handleSetHeadman(student.id)}
+                                                    >
+                                                        Назначить старостой
+                                                    </button>
+                                                )}
+                                                <button
+                                                    className="btn-delete-student-card"
+                                                    onClick={() => handleRemoveStudent(student.id)}
+                                                >
+                                                    Удалить
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="add-student-section">
