@@ -15,7 +15,10 @@ localhost {
     
     # TLS настройки для локальной разработки
     # Используем доверенные сертификаты от mkcert
-    tls /etc/caddy/ssl/localhost.pem /etc/caddy/ssl/localhost-key.pem
+    tls {
+        certificate /etc/caddy/ssl/localhost.pem
+        key /etc/caddy/ssl/localhost-key.pem
+    }
     
     # Проксирование на schedule сервис (/api2)
     handle /api2/* {
@@ -88,7 +91,10 @@ localhost {
     redir @http https://{host}{uri} permanent
     
     # TLS настройки - используем тот же сертификат (включает этот IP)
-    tls /etc/caddy/ssl/localhost.pem /etc/caddy/ssl/localhost-key.pem
+    tls {
+        certificate /etc/caddy/ssl/localhost.pem
+        key /etc/caddy/ssl/localhost-key.pem
+    }
     
     # Проксирование на schedule сервис (/api2)
     handle /api2/* {
