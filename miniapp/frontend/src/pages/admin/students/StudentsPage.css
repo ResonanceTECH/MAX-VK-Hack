@@ -201,18 +201,25 @@
   font-weight: 500;
 }
 
+.students-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .students-table button {
-  padding: 8px 12px;
-  margin-right: 8px;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 0;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .students-table button:first-of-type {
@@ -236,8 +243,8 @@
 }
 
 .students-table button svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 /* Карточки студентов для мобильных */
