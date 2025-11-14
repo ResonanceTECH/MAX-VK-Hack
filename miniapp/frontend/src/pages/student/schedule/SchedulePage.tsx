@@ -1,29 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { UserCircle2, MapPin, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
-import axios from 'axios'
-import { useAuth } from '../../../hooks/useAuth'
-import api from '../../../utils/api'
 import LoadingSpinner from '../../../components/LoadingSpinner'
+import { mockStudentSchedule, Event } from './mockSchedule'
 import './SchedulePage.css'
 
-interface Event {
-    summary: string
-    start: string
-    end: string
-    day_of_week: string
-    description: string
-    location: string
-    week_parity: string
-}
-
-interface ScheduleData {
-    events_by_calname: {
-        [key: string]: Event[]
-    }
-}
-
 const SchedulePage: React.FC = () => {
-    const { user } = useAuth()
     const [schedule, setSchedule] = useState<Event[]>([])
     const [groupName, setGroupName] = useState<string>('')
     const [loading, setLoading] = useState(true)
@@ -51,44 +32,15 @@ const SchedulePage: React.FC = () => {
     useEffect(() => {
         const currentParity = getCurrentWeekParity()
         setSelectedWeekParity(currentParity)
-        if (user) {
-            loadSchedule()
-        }
-    }, [user])
+        loadSchedule()
+    }, [])
 
-    const loadSchedule = async () => {
+    const loadSchedule = () => {
         try {
             setLoading(true)
 
-            if (!user) {
-                console.warn('Пользователь не загружен')
-                return
-            }
-
-            let queryParam = ''
-
-            // Для студентов получаем группу
-            if (user.role === 'student') {
-                try {
-                    const groupsResponse = await api.get('/groups')
-                    const groups = groupsResponse.data
-                    if (groups && groups.length > 0) {
-                        queryParam = groups[0].name // Берем первую группу
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки групп:', error)
-                }
-            }
-
-            // Запрос к API расписания с query параметром
-            const scheduleApiUrl = import.meta.env.VITE_SCHEDULE_API_URL || '/api2'
-            const url = queryParam
-                ? `${scheduleApiUrl}/schedule_1?query=${encodeURIComponent(queryParam)}`
-                : `${scheduleApiUrl}/schedule_1`
-
-            const response = await axios.get(url)
-
-            const scheduleData: ScheduleData = response.data
+            // Используем mock-данные
+            const scheduleData = mockStudentSchedule
 
             if (!scheduleData.events_by_calname || Object.keys(scheduleData.events_by_calname).length === 0) {
                 console.warn('Расписание пустое или не найдено')
