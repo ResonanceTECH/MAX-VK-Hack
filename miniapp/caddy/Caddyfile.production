@@ -21,8 +21,9 @@
     # Не нужно явно обрабатывать этот путь - Caddy сделает это сам
     
     # Проксирование на schedule сервис (/api2)
+    # Важно: обрабатываем /api2* ДО всех остальных путей
     @api2 {
-        path /api2/*
+        path /api2*
     }
     handle @api2 {
         uri strip_prefix /api2
@@ -30,18 +31,7 @@
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
             header_up X-Forwarded-Proto {scheme}
-        }
-    }
-    
-    @api2_root {
-        path /api2
-    }
-    handle @api2_root {
-        rewrite * /
-        reverse_proxy schedule:8001 {
-            header_up X-Real-IP {remote_host}
-            header_up X-Forwarded-For {remote_host}
-            header_up X-Forwarded-Proto {scheme}
+            header_up Host schedule:8001
         }
     }
     
@@ -72,11 +62,13 @@
     }
     
     # Все остальное - на frontend (SPA роутинг)
-    # Исключаем /.well-known/* чтобы Caddy мог обрабатывать ACME challenge
-    @not_well_known {
+    # Исключаем /.well-known/*, /api* и /api2* чтобы они обрабатывались выше
+    @not_well_known_or_apis {
         not path /.well-known/*
+        not path /api*
+        not path /api2*
     }
-    handle @not_well_known {
+    handle @not_well_known_or_apis {
         reverse_proxy frontend:3000 {
             header_up X-Real-IP {remote_host}
         }
