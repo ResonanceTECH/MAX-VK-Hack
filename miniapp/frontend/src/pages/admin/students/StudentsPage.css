@@ -202,11 +202,15 @@
 }
 
 .students-table td:last-child {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
   gap: 8px;
+  flex-wrap: nowrap !important;
+  white-space: nowrap;
+  min-width: 90px;
+  width: auto;
 }
 
 .students-table button {
@@ -216,14 +220,16 @@
   cursor: pointer;
   font-size: 0;
   transition: all 0.2s ease;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  flex-shrink: 0;
-  min-width: 36px;
-  min-height: 36px;
+  flex-shrink: 0 !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
 }
 
 .students-table button:first-of-type {
@@ -544,6 +550,45 @@
   .btn-delete-card svg {
     width: 14px;
     height: 14px;
+  }
+}
+
+/* Стили для больших экранов - гарантируем горизонтальное расположение кнопок */
+@media (min-width: 769px) {
+  .students-table {
+    table-layout: auto;
+  }
+
+  .students-table th:last-child,
+  .students-table td:last-child {
+    width: auto;
+    min-width: 90px;
+    max-width: none;
+  }
+
+  .students-table td:last-child {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    min-width: 90px !important;
+    padding: 16px 20px !important;
+  }
+
+  .students-table button {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-shrink: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    margin: 0 !important;
   }
 }
 
