@@ -289,10 +289,10 @@
 /* Кнопки действий в таблице */
 .students-table td:last-child {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap;
-  min-width: 200px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 180px;
 }
 
 .students-table button {
@@ -306,11 +306,12 @@
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  min-height: 40px;
+  min-height: 42px;
+  width: 100%;
+  padding: 12px 20px;
 }
 
 .students-table .btn-set-headman {
-  padding: 10px 20px;
   background: var(--primary-500, #2563eb);
   color: white;
   flex-shrink: 0;
@@ -326,7 +327,6 @@
 }
 
 .students-table .btn-delete-student {
-  padding: 10px 20px;
   background: #ef4444;
   color: white;
   flex-shrink: 0;
