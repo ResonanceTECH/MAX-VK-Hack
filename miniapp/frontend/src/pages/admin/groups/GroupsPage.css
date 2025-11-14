@@ -287,35 +287,170 @@
 }
 
 /* Кнопки действий в таблице */
+.students-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .students-table button {
-  padding: 8px 16px;
-  margin-right: 8px;
-  background: var(--primary-500, #2563eb);
-  color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.students-table button:hover {
+.students-table .btn-set-headman {
+  padding: 8px 16px;
+  background: var(--primary-500, #2563eb);
+  color: white;
+}
+
+.students-table .btn-set-headman:hover {
   background: var(--primary-600, #1d4ed8);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
-.students-table button:active {
+.students-table .btn-set-headman:active {
   transform: translateY(1px);
 }
 
-.students-table button:last-child {
+.students-table .btn-delete-student {
+  padding: 8px 16px;
   background: #ef4444;
+  color: white;
+  flex-shrink: 0;
 }
 
-.students-table button:last-child:hover {
+.students-table .btn-delete-student:hover {
   background: #dc2626;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.students-table .btn-delete-student:active {
+  transform: translateY(1px);
+}
+
+/* Карточки студентов для мобильных */
+.students-cards {
+  display: none;
+}
+
+.student-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.student-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-500, #2563eb);
+}
+
+.student-card-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.student-card-name {
+  margin: 0;
+  color: var(--gray-800, #1e293b);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.student-card-body {
+  margin-bottom: 16px;
+}
+
+.student-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100, #f1f5f9);
+}
+
+.student-card-field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600, #475569);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.field-value {
+  font-size: 14px;
+  color: var(--gray-700, #334155);
+  word-break: break-word;
+  flex: 1;
+  margin-left: 16px;
+}
+
+.student-card-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.btn-set-headman-card,
+.btn-delete-student-card {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-set-headman-card {
+  background: var(--primary-500, #2563eb);
+  color: white;
+}
+
+.btn-set-headman-card:hover {
+  background: var(--primary-600, #1d4ed8);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-set-headman-card:active {
+  transform: translateY(1px);
+}
+
+.btn-delete-student-card {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete-student-card:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete-student-card:active {
+  transform: translateY(1px);
 }
 
 /* Секция добавления студента */
@@ -667,69 +802,49 @@
   }
 
   .students-table {
+    display: none;
+  }
+
+  /* Показываем карточки на мобильных */
+  .students-cards {
     display: block;
-    overflow-x: auto;
-    min-width: 500px;
-    border-radius: 8px;
   }
 
-  .students-table thead,
-  .students-table tbody,
-  .students-table tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+  .student-card {
+    margin-bottom: 12px;
+    padding: 16px;
   }
 
-  .students-table th {
-    padding: 12px 10px;
+  .student-card-name {
+    font-size: 16px;
+  }
+
+  .student-card-field {
+    padding: 10px 0;
+  }
+
+  .field-label {
     font-size: 12px;
+    min-width: 90px;
   }
 
-  .students-table td {
-    padding: 12px 10px;
+  .field-value {
     font-size: 13px;
   }
 
-  .students-table td:first-child {
-    font-size: 13px;
-    word-wrap: break-word;
-  }
-
-  /* Уменьшаем ширину колонок для мобильных */
-  .students-table th:nth-child(1),
-  .students-table td:nth-child(1) {
-    width: 40%;
-    min-width: 150px;
-  }
-
-  .students-table th:nth-child(2),
-  .students-table td:nth-child(2) {
-    width: 25%;
-    min-width: 100px;
-  }
-
-  .students-table th:nth-child(3),
-  .students-table td:nth-child(3) {
-    width: 35%;
-    min-width: 150px;
-  }
-
-  /* Кнопки действий в таблице */
-  .students-table td:last-child {
-    display: flex;
+  .student-card-actions {
     flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
+    gap: 10px;
+    padding-top: 12px;
   }
 
-  .students-table button {
-    padding: 6px 12px;
-    margin-right: 0;
-    font-size: 12px;
+  .btn-set-headman-card,
+  .btn-delete-student-card {
     width: 100%;
-    text-align: center;
+    padding: 10px 16px;
+    font-size: 13px;
   }
+
 
   .add-student-section {
     margin-top: 24px;
@@ -836,28 +951,31 @@
     font-size: 16px;
   }
 
-  /* Таблица студентов для очень маленьких экранов */
-  .students-table {
-    min-width: 450px;
+  /* Карточки для очень маленьких экранов */
+  .student-card {
+    padding: 14px;
+    margin-bottom: 10px;
   }
 
-  .students-table th {
-    padding: 10px 8px;
+  .student-card-name {
+    font-size: 15px;
+  }
+
+  .student-card-field {
+    padding: 8px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .field-label {
     font-size: 11px;
+    min-width: auto;
   }
 
-  .students-table td {
-    padding: 10px 8px;
+  .field-value {
     font-size: 12px;
-  }
-
-  .students-table td:first-child {
-    font-size: 12px;
-  }
-
-  .students-table button {
-    padding: 5px 10px;
-    font-size: 11px;
+    margin-left: 0;
   }
 
   .add-student-section {
