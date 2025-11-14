@@ -1,13 +1,16 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: miniapp_nginx
+  caddy:
+    image: caddy:2-alpine
+    container_name: miniapp_caddy
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/ssl:/etc/caddy/ssl:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - frontend
       - backend
@@ -15,7 +18,6 @@ services:
     restart: unless-stopped
     networks:
       - miniapp_network
-    entrypoint: ["/bin/sh", "-c", "if [ ! -f /etc/nginx/ssl/nginx.crt ]; then apk add --no-cache openssl > /dev/null 2>&1 && mkdir -p /etc/nginx/ssl && openssl req -x509 -nodes -days 365 -newkey rsa:4096 -keyout /etc/nginx/ssl/nginx.key -out /etc/nginx/ssl/nginx.crt -subj '/C=RU/ST=Moscow/L=Moscow/O=MaxBot/CN=localhost' -addext 'subjectAltName=IP:127.0.0.1,IP:::1,DNS:localhost' && chmod 600 /etc/nginx/ssl/nginx.key && chmod 644 /etc/nginx/ssl/nginx.crt && echo 'SSL certificate generated for localhost'; fi && exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
 
   frontend:
     build:
@@ -52,6 +54,9 @@ services:
       - ../db:/app/root/db:ro  # Монтируем db для импорта
       - ../config.py:/app/root/config.py:ro  # Монтируем config
       - ../utils:/app/root/utils:ro  # Монтируем utils для импорта
+    depends_on:
+      db:
+        condition: service_healthy
 
   schedule:
     build:
@@ -73,6 +78,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-maxbot_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ../db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ../db/seed_data.sql:/docker-entrypoint-initdb.d/02-seed_data.sql:ro
     ports:
       - "5433:5432"  # Используем 5433 для локального запуска, чтобы не конфликтовать с локальной БД
     healthcheck:
@@ -83,10 +90,33 @@ services:
     networks:
       - miniapp_network
 
+  bot:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: max_bot
+    environment:
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
+      - POSTGRES_HOST=${POSTGRES_HOST:-db}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_USER=${POSTGRES_USER:-maxbot}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
+      - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
+    volumes:
+      - ..:/app
+    restart: unless-stopped
+    networks:
+      - miniapp_network
+    depends_on:
+      db:
+        condition: service_healthy
+
 networks:
   miniapp_network:
     driver: bridge
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
 
