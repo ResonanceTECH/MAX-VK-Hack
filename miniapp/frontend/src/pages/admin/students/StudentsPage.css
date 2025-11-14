@@ -4,6 +4,16 @@
   min-height: 100vh;
 }
 
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--gray-600, #475569);
+  font-size: 16px;
+  font-weight: 500;
+}
+
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -228,5 +238,201 @@
 .students-table button svg {
   width: 16px;
   height: 16px;
+}
+
+/* Адаптив для мобильных устройств */
+@media (max-width: 768px) {
+  .admin-students-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .page-header button {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .form-content {
+    width: 95%;
+    padding: 24px 20px;
+    margin: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .form-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .form-actions button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  /* Обертка для таблицы с горизонтальной прокруткой */
+  .admin-students-page {
+    overflow-x: auto;
+  }
+
+  /* Таблица с горизонтальной прокруткой */
+  .students-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    min-width: 600px;
+  }
+
+  .students-table thead,
+  .students-table tbody,
+  .students-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .students-table th,
+  .students-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+    word-wrap: break-word;
+  }
+
+  .students-table th {
+    font-size: 12px;
+    padding: 10px 8px;
+  }
+
+  .students-table td {
+    font-size: 13px;
+  }
+
+  /* Уменьшаем ширину колонок для мобильных */
+  .students-table th:nth-child(1),
+  .students-table td:nth-child(1) {
+    width: 50px;
+    min-width: 50px;
+  }
+
+  .students-table th:nth-child(2),
+  .students-table td:nth-child(2) {
+    width: 150px;
+    min-width: 150px;
+  }
+
+  .students-table th:nth-child(3),
+  .students-table td:nth-child(3) {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .students-table th:nth-child(4),
+  .students-table td:nth-child(4) {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .students-table th:nth-child(5),
+  .students-table td:nth-child(5) {
+    width: 150px;
+    min-width: 150px;
+  }
+
+  .students-table th:nth-child(6),
+  .students-table td:nth-child(6) {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .students-table button {
+    padding: 6px 10px;
+    margin-right: 6px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .students-table button svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Адаптив для очень маленьких экранов */
+@media (max-width: 480px) {
+  .admin-students-page {
+    padding: 12px;
+    overflow-x: auto;
+  }
+
+  .loading {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .form-content {
+    padding: 20px 16px;
+  }
+
+  .form-content h2 {
+    font-size: 18px;
+  }
+
+  .students-table th,
+  .students-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .students-table th {
+    font-size: 11px;
+    padding: 8px 6px;
+  }
+
+  .students-table button {
+    padding: 5px 8px;
+    margin-right: 4px;
+    font-size: 11px;
+  }
+
+  .students-table button svg {
+    width: 12px;
+    height: 12px;
+  }
 }
 

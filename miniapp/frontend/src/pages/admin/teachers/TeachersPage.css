@@ -258,3 +258,215 @@
   }
 }
 
+/* Адаптив для мобильных устройств */
+@media (max-width: 768px) {
+  .admin-teachers-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .page-header button {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .form-content {
+    width: 95%;
+    padding: 24px 20px;
+    margin: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .form-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .form-actions button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  /* Обертка для таблицы с горизонтальной прокруткой */
+  .admin-teachers-page {
+    overflow-x: auto;
+  }
+
+  /* Таблица с горизонтальной прокруткой */
+  .teachers-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    min-width: 600px;
+  }
+
+  .teachers-table thead,
+  .teachers-table tbody,
+  .teachers-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .teachers-table th,
+  .teachers-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+    word-wrap: break-word;
+  }
+
+  .teachers-table th {
+    font-size: 12px;
+    padding: 10px 8px;
+  }
+
+  .teachers-table td {
+    font-size: 13px;
+  }
+
+  /* Уменьшаем ширину колонок для мобильных */
+  .teachers-table th:nth-child(1),
+  .teachers-table td:nth-child(1) {
+    width: 50px;
+    min-width: 50px;
+  }
+
+  .teachers-table th:nth-child(2),
+  .teachers-table td:nth-child(2) {
+    width: 150px;
+    min-width: 150px;
+  }
+
+  .teachers-table th:nth-child(3),
+  .teachers-table td:nth-child(3) {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .teachers-table th:nth-child(4),
+  .teachers-table td:nth-child(4) {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .teachers-table th:nth-child(5),
+  .teachers-table td:nth-child(5) {
+    width: 150px;
+    min-width: 150px;
+  }
+
+  .teachers-table th:nth-child(6),
+  .teachers-table td:nth-child(6) {
+    width: 100px;
+    min-width: 100px;
+  }
+
+  .teachers-table button {
+    padding: 6px 10px;
+    margin-right: 6px;
+    font-size: 12px;
+    gap: 4px;
+  }
+
+  .teachers-table button svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .loading {
+    padding: 40px 20px;
+    font-size: 16px;
+  }
+
+  .loading::before {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+/* Адаптив для очень маленьких экранов */
+@media (max-width: 480px) {
+  .admin-teachers-page {
+    padding: 12px;
+    overflow-x: auto;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .form-content {
+    padding: 20px 16px;
+  }
+
+  .form-content h2 {
+    font-size: 18px;
+  }
+
+  .teachers-table th,
+  .teachers-table td {
+    padding: 10px 6px;
+    font-size: 12px;
+  }
+
+  .teachers-table th {
+    font-size: 11px;
+    padding: 8px 6px;
+  }
+
+  .teachers-table button {
+    padding: 5px 8px;
+    margin-right: 4px;
+    font-size: 11px;
+  }
+
+  .teachers-table button svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .loading {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  .loading::before {
+    width: 35px;
+    height: 35px;
+  }
+}
+
