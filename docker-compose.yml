@@ -55,7 +55,8 @@ services:
       - ./config.py:/app/root/config.py:ro
       - ./utils:/app/root/utils:ro
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   schedule:
     build:
@@ -77,6 +78,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-maxbot_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed_data.sql:/docker-entrypoint-initdb.d/02-seed_data.sql:ro
     ports:
       - "5433:5432"
     healthcheck:
