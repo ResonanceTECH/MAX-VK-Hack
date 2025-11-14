@@ -51,6 +51,9 @@ const MessagesPage: React.FC = () => {
     }
   }
 
+  // Показываем фильтр по группам только для студентов и преподавателей
+  const showGroupFilter = user && (user.role === 'student' || user.role === 'teacher')
+
   useEffect(() => {
     loadMessages()
     loadStats()
@@ -61,7 +64,7 @@ const MessagesPage: React.FC = () => {
       setLoading(true)
       const params: any = {}
       if (statusFilter) params.status = statusFilter
-      if (groupFilter) params.group_id = groupFilter
+      if (showGroupFilter && groupFilter) params.group_id = groupFilter
 
       const response = await api.get('/messages', { params })
       setMessages(response.data)
@@ -115,7 +118,7 @@ const MessagesPage: React.FC = () => {
       
       <MessageFilters
         statusFilter={statusFilter}
-        groupFilter={groupFilter}
+        groupFilter={showGroupFilter ? groupFilter : null}
         onStatusChange={setStatusFilter}
         onGroupChange={setGroupFilter}
       />

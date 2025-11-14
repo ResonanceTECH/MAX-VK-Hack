@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../utils/api'
+import { useAuth } from '../hooks/useAuth'
 import './MessageFilters.css'
 
 // Иконки в стиле Hugeicons
@@ -39,11 +40,17 @@ const MessageFilters: React.FC<MessageFiltersProps> = ({
   onStatusChange,
   onGroupChange
 }) => {
+  const { user } = useAuth()
   const [groups, setGroups] = useState<Group[]>([])
 
+  // Показываем фильтр по группам только для студентов и преподавателей
+  const showGroupFilter = user && (user.role === 'student' || user.role === 'teacher')
+
   useEffect(() => {
-    loadGroups()
-  }, [])
+    if (showGroupFilter) {
+      loadGroups()
+    }
+  }, [showGroupFilter])
 
   const loadGroups = async () => {
     try {
@@ -71,25 +78,27 @@ const MessageFilters: React.FC<MessageFiltersProps> = ({
         </select>
       </div>
 
-      <div className="filter-group">
-        <label>
-          <UsersIcon size={16} />
-          Группа:
-        </label>
-        <select
-          value={groupFilter || ''}
-          onChange={(e) => onGroupChange(e.target.value ? parseInt(e.target.value) : null)}
-        >
-          <option value="">Все группы</option>
-          {groups.map(group => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {showGroupFilter && (
+        <div className="filter-group">
+          <label>
+            <UsersIcon size={16} />
+            Группа:
+          </label>
+          <select
+            value={groupFilter || ''}
+            onChange={(e) => onGroupChange(e.target.value ? parseInt(e.target.value) : null)}
+          >
+            <option value="">Все группы</option>
+            {groups.map(group => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      {(statusFilter || groupFilter) && (
+      {(statusFilter || (showGroupFilter && groupFilter)) && (
         <button
           className="clear-filters"
           onClick={() => {

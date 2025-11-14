@@ -134,15 +134,28 @@
   .message-filters {
     flex-direction: column;
     gap: 12px;
+    padding: 16px;
+  }
+
+  .filter-group {
+    width: 100%;
   }
 
   .filter-group select {
     min-width: 100%;
+    width: 100%;
   }
 
   .clear-filters {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Адаптация для случая, когда только один фильтр */
+@media (min-width: 769px) {
+  .message-filters:has(.filter-group:only-child) {
+    justify-content: flex-start;
   }
 }
 
