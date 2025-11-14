@@ -201,18 +201,25 @@
   font-weight: 500;
 }
 
+.students-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .students-table button {
-  padding: 8px 12px;
-  margin-right: 8px;
+  padding: 8px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 0;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .students-table button:first-of-type {
@@ -236,6 +243,132 @@
 }
 
 .students-table button svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Карточки студентов для мобильных */
+.students-cards {
+  display: none;
+}
+
+.student-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.student-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-500, #2563eb);
+}
+
+.student-card-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.student-card-id {
+  font-size: 12px;
+  color: var(--gray-500, #64748b);
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.student-card-name {
+  margin: 0;
+  color: var(--gray-800, #1e293b);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.student-card-body {
+  margin-bottom: 16px;
+}
+
+.student-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100, #f1f5f9);
+}
+
+.student-card-field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600, #475569);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.field-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-800, #1e293b);
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+  margin-left: 16px;
+}
+
+.student-card-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.btn-edit-card,
+.btn-delete-card {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-edit-card {
+  background: var(--primary-500, #2563eb);
+  color: white;
+}
+
+.btn-edit-card:hover {
+  background: var(--primary-600, #1d4ed8);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-delete-card {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete-card:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-edit-card svg,
+.btn-delete-card svg {
   width: 16px;
   height: 16px;
 }
@@ -301,91 +434,49 @@
     padding: 12px 20px;
   }
 
-  /* Обертка для таблицы с горизонтальной прокруткой */
-  .admin-students-page {
-    overflow-x: auto;
-  }
-
-  /* Таблица с горизонтальной прокруткой */
+  /* Скрываем таблицу на мобильных */
   .students-table {
+    display: none;
+  }
+
+  /* Показываем карточки на мобильных */
+  .students-cards {
     display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 8px;
-    min-width: 600px;
   }
 
-  .students-table thead,
-  .students-table tbody,
-  .students-table tr {
-    display: table;
+  .student-card {
+    margin-bottom: 12px;
+    padding: 16px;
+  }
+
+  .student-card-name {
+    font-size: 16px;
+  }
+
+  .student-card-field {
+    padding: 10px 0;
+  }
+
+  .field-label {
+    font-size: 12px;
+    min-width: 90px;
+  }
+
+  .field-value {
+    font-size: 13px;
+  }
+
+  .student-card-actions {
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .btn-edit-card,
+  .btn-delete-card {
     width: 100%;
-    table-layout: fixed;
-  }
-
-  .students-table th,
-  .students-table td {
-    padding: 12px 10px;
+    padding: 10px 16px;
     font-size: 13px;
-    word-wrap: break-word;
-  }
-
-  .students-table th {
-    font-size: 12px;
-    padding: 10px 8px;
-  }
-
-  .students-table td {
-    font-size: 13px;
-  }
-
-  /* Уменьшаем ширину колонок для мобильных */
-  .students-table th:nth-child(1),
-  .students-table td:nth-child(1) {
-    width: 50px;
-    min-width: 50px;
-  }
-
-  .students-table th:nth-child(2),
-  .students-table td:nth-child(2) {
-    width: 150px;
-    min-width: 150px;
-  }
-
-  .students-table th:nth-child(3),
-  .students-table td:nth-child(3) {
-    width: 100px;
-    min-width: 100px;
-  }
-
-  .students-table th:nth-child(4),
-  .students-table td:nth-child(4) {
-    width: 120px;
-    min-width: 120px;
-  }
-
-  .students-table th:nth-child(5),
-  .students-table td:nth-child(5) {
-    width: 150px;
-    min-width: 150px;
-  }
-
-  .students-table th:nth-child(6),
-  .students-table td:nth-child(6) {
-    width: 100px;
-    min-width: 100px;
-  }
-
-  .students-table button {
-    padding: 6px 10px;
-    margin-right: 6px;
-    font-size: 12px;
-    gap: 4px;
-  }
-
-  .students-table button svg {
-    width: 14px;
-    height: 14px;
   }
 }
 
@@ -393,7 +484,6 @@
 @media (max-width: 480px) {
   .admin-students-page {
     padding: 12px;
-    overflow-x: auto;
   }
 
   .loading {
@@ -413,26 +503,43 @@
     font-size: 18px;
   }
 
-  .students-table th,
-  .students-table td {
-    padding: 10px 6px;
+  .student-card {
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .student-card-name {
+    font-size: 15px;
+  }
+
+  .student-card-field {
+    padding: 8px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .field-label {
+    font-size: 11px;
+    min-width: auto;
+  }
+
+  .field-value {
+    font-size: 12px;
+    text-align: left;
+    margin-left: 0;
+  }
+
+  .btn-edit-card,
+  .btn-delete-card {
+    padding: 10px 14px;
     font-size: 12px;
   }
 
-  .students-table th {
-    font-size: 11px;
-    padding: 8px 6px;
-  }
-
-  .students-table button {
-    padding: 5px 8px;
-    margin-right: 4px;
-    font-size: 11px;
-  }
-
-  .students-table button svg {
-    width: 12px;
-    height: 12px;
+  .btn-edit-card svg,
+  .btn-delete-card svg {
+    width: 14px;
+    height: 14px;
   }
 }
 
