@@ -1,31 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { UserCircle2, MapPin, ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
-import axios from 'axios'
-import { useAuth } from '../../../hooks/useAuth'
-import api from '../../../utils/api'
+import { mockTeacherSchedule, Event } from './mockSchedule'
 import LoadingSpinner from '../../../components/LoadingSpinner'
-import './SchedulePage.css'
+import '../../student/schedule/SchedulePage.css'
 
-interface Event {
-    summary: string
-    start: string
-    end: string
-    day_of_week: string
-    description: string
-    location: string
-    week_parity: string
-}
-
-interface ScheduleData {
-    events_by_calname: {
-        [key: string]: Event[]
-    }
-}
-
-const SchedulePage: React.FC = () => {
-    const { user } = useAuth()
+const TeacherSchedulePage: React.FC = () => {
     const [schedule, setSchedule] = useState<Event[]>([])
-    const [groupName, setGroupName] = useState<string>('')
+    const [teacherName, setTeacherName] = useState<string>('')
     const [loading, setLoading] = useState(true)
     const [selectedWeekParity, setSelectedWeekParity] = useState<'четная' | 'нечетная'>('нечетная')
     const [currentWeek, setCurrentWeek] = useState<Date>(new Date())
@@ -33,78 +14,42 @@ const SchedulePage: React.FC = () => {
 
     // Определение текущей недели (четная/нечетная)
     const getCurrentWeekParity = (): 'четная' | 'нечетная' => {
-        // Дата начала учебного года (1 сентября 2024)
-        const startDate = new Date(2024, 8, 1) // месяц 8 = сентябрь (0-indexed)
+        const startDate = new Date(2024, 8, 1)
         const today = new Date()
-
-        // Разница в днях
         const diffTime = today.getTime() - startDate.getTime()
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-        // Номер недели с начала учебного года
         const weekNumber = Math.floor(diffDays / 7)
-
-        // Четная или нечетная неделя
         return weekNumber % 2 === 0 ? 'нечетная' : 'четная'
     }
 
     useEffect(() => {
         const currentParity = getCurrentWeekParity()
         setSelectedWeekParity(currentParity)
-        if (user) {
-            loadSchedule()
-        }
-    }, [user])
+        loadSchedule()
+    }, [])
 
-    const loadSchedule = async () => {
+    const loadSchedule = () => {
         try {
             setLoading(true)
 
-            if (!user) {
-                console.warn('Пользователь не загружен')
-                return
-            }
-
-            let queryParam = ''
-
-            // Для студентов получаем группу
-            if (user.role === 'student') {
-                try {
-                    const groupsResponse = await api.get('/groups')
-                    const groups = groupsResponse.data
-                    if (groups && groups.length > 0) {
-                        queryParam = groups[0].name // Берем первую группу
-                    }
-                } catch (error) {
-                    console.error('Ошибка загрузки групп:', error)
-                }
-            }
-
-            // Запрос к API расписания с query параметром
-            const scheduleApiUrl = import.meta.env.VITE_SCHEDULE_API_URL || '/api2'
-            const url = queryParam
-                ? `${scheduleApiUrl}/schedule_1?query=${encodeURIComponent(queryParam)}`
-                : `${scheduleApiUrl}/schedule_1`
-
-            const response = await axios.get(url)
-
-            const scheduleData: ScheduleData = response.data
+            // Используем mock-данные
+            const scheduleData = mockTeacherSchedule
 
             if (!scheduleData.events_by_calname || Object.keys(scheduleData.events_by_calname).length === 0) {
                 console.warn('Расписание пустое или не найдено')
                 setSchedule([])
-                setGroupName('')
+                setTeacherName('')
                 return
             }
 
-            // Берем первую группу из расписания
-            const firstGroupName = Object.keys(scheduleData.events_by_calname)[0]
-            setGroupName(firstGroupName)
-            setSchedule(scheduleData.events_by_calname[firstGroupName])
+            // Берем первого преподавателя из расписания
+            const firstTeacherName = Object.keys(scheduleData.events_by_calname)[0]
+            setTeacherName(firstTeacherName)
+            setSchedule(scheduleData.events_by_calname[firstTeacherName])
         } catch (error) {
             console.error('Ошибка загрузки расписания:', error)
             setSchedule([])
-            setGroupName('')
+            setTeacherName('')
         } finally {
             setLoading(false)
         }
@@ -124,9 +69,10 @@ const SchedulePage: React.FC = () => {
         return 'Занятие'
     }
 
-    const extractTeacher = (description: string): string => {
-        const match = description.match(/Преподаватель: (.+)/);
-        return match ? match[1].trim() : 'Не указан'
+    const extractGroups = (description: string): string => {
+        // Извлекаем группы из описания
+        const groups = description.trim().split('\n').filter(line => line.trim())
+        return groups.length > 0 ? groups.join(', ') : 'Группы не указаны'
     }
 
     const cleanSummary = (summary: string): string => {
@@ -137,15 +83,13 @@ const SchedulePage: React.FC = () => {
     const daysOfWeekShort = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
     const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 
-    // Получить начало недели (понедельник)
     const getWeekStart = (date: Date): Date => {
         const d = new Date(date)
         const day = d.getDay()
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Понедельник = 1
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1)
         return new Date(d.setDate(diff))
     }
 
-    // Получить даты недели
     const getWeekDates = (date: Date): Date[] => {
         const weekStart = getWeekStart(date)
         const dates: Date[] = []
@@ -157,35 +101,27 @@ const SchedulePage: React.FC = () => {
         return dates
     }
 
-    // Получить номер недели с начала учебного года (1 сентября)
     const getWeekNumber = (date: Date): number => {
-        // Определяем год начала учебного года
         const currentYear = date.getFullYear()
-        const currentMonth = date.getMonth() // 0-11
+        const currentMonth = date.getMonth()
         let academicYearStart: Date
 
-        // Если текущая дата до сентября, то учебный год начался в прошлом году
-        if (currentMonth < 8) { // 8 = сентябрь (0-indexed)
-            academicYearStart = new Date(currentYear - 1, 8, 1) // 1 сентября прошлого года
+        if (currentMonth < 8) {
+            academicYearStart = new Date(currentYear - 1, 8, 1)
         } else {
-            academicYearStart = new Date(currentYear, 8, 1) // 1 сентября текущего года
+            academicYearStart = new Date(currentYear, 8, 1)
         }
 
-        // Разница в днях
         const diffTime = date.getTime() - academicYearStart.getTime()
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
-
-        // Номер недели с начала учебного года (начинаем с 1)
         return Math.floor(diffDays / 7) + 1
     }
 
-    // Получить четность недели по дате
     const getWeekParity = (date: Date): 'четная' | 'нечетная' => {
         const weekNumber = getWeekNumber(date)
         return weekNumber % 2 === 0 ? 'четная' : 'нечетная'
     }
 
-    // Получить русское название дня недели по дате
     const getDayOfWeekByDate = (date: Date): string => {
         const dayIndex = date.getDay()
         const dayMap: { [key: number]: string } = {
@@ -200,7 +136,6 @@ const SchedulePage: React.FC = () => {
         return dayMap[dayIndex] || 'Понедельник'
     }
 
-    // Проверить, есть ли события в день
     const hasEventsOnDay = (dayName: string): boolean => {
         return schedule.some(event =>
             event.day_of_week === dayName &&
@@ -208,7 +143,6 @@ const SchedulePage: React.FC = () => {
         )
     }
 
-    // Навигация по неделям
     const goToPreviousWeek = () => {
         const newDate = new Date(currentWeek)
         newDate.setDate(newDate.getDate() - 7)
@@ -221,7 +155,6 @@ const SchedulePage: React.FC = () => {
         setCurrentWeek(newDate)
     }
 
-    // Определить доступные недели для выбранного дня
     const getAvailableWeekParities = (dayName: string): ('четная' | 'нечетная')[] => {
         const dayEvents = schedule.filter(event => event.day_of_week === dayName)
         const parities = new Set<'четная' | 'нечетная'>()
@@ -233,16 +166,13 @@ const SchedulePage: React.FC = () => {
         return Array.from(parities)
     }
 
-    // Автоматически определить неделю для выбранного дня
     useEffect(() => {
         if (selectedDay) {
             const availableParities = getAvailableWeekParities(selectedDay)
             if (availableParities.length > 0) {
-                // Если есть занятия только на одну неделю, автоматически выбрать её
                 if (availableParities.length === 1) {
                     setSelectedWeekParity(availableParities[0])
                 } else {
-                    // Если есть на обе недели, использовать текущую выбранную или первую доступную
                     setSelectedWeekParity(prevParity => {
                         if (availableParities.includes(prevParity)) {
                             return prevParity
@@ -259,14 +189,12 @@ const SchedulePage: React.FC = () => {
 
         let filteredSchedule = schedule
 
-        // Если выбран конкретный день, фильтруем по дню и неделе
         if (selectedDay) {
             filteredSchedule = schedule.filter(event =>
                 event.day_of_week === selectedDay &&
                 event.week_parity === selectedWeekParity
             )
         } else {
-            // Если день не выбран, показываем все расписание без фильтрации по неделе
             filteredSchedule = schedule
         }
 
@@ -277,7 +205,6 @@ const SchedulePage: React.FC = () => {
             grouped[event.day_of_week].push(event)
         })
 
-        // Сортируем по времени внутри каждого дня
         Object.keys(grouped).forEach(day => {
             grouped[day].sort((a, b) => a.start.localeCompare(b.start))
         })
@@ -285,13 +212,10 @@ const SchedulePage: React.FC = () => {
         return grouped
     }
 
-    // Обработчик клика по дню в календаре
     const handleDayClick = (dayName: string) => {
         if (selectedDay === dayName) {
-            // Если кликнули по уже выбранному дню, снимаем выбор
             setSelectedDay(null)
         } else {
-            // Выбираем новый день
             setSelectedDay(dayName)
         }
     }
@@ -316,13 +240,10 @@ const SchedulePage: React.FC = () => {
         <div className="schedule-page">
             <div className="schedule-header">
                 <div className="header-content">
-                    <h1>
-                        Расписание
-                    </h1>
-                    <p className="group-name">{groupName}</p>
+                    <h1>Расписание</h1>
+                    <p className="group-name">{teacherName}</p>
                 </div>
 
-                {/* Календарь недели */}
                 <div className="week-calendar">
                     <div className="calendar-header">
                         <button className="calendar-nav-btn" onClick={goToPreviousWeek}>
@@ -414,7 +335,7 @@ const SchedulePage: React.FC = () => {
                                         <div className="lesson-details">
                                             <div className="detail-item">
                                                 <UserCircle2 className="icon" size={18} strokeWidth={2} />
-                                                <span className="text">{extractTeacher(event.description)}</span>
+                                                <span className="text">{extractGroups(event.description)}</span>
                                             </div>
                                             <div className="detail-item">
                                                 <MapPin className="icon" size={18} strokeWidth={2} />
@@ -440,4 +361,5 @@ const SchedulePage: React.FC = () => {
     )
 }
 
-export default SchedulePage
+export default TeacherSchedulePage
+

@@ -1,0 +1,686 @@
+/* Основной контейнер */
+.schedule-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+  padding: 20px;
+}
+
+/* Заголовок */
+.schedule-header {
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.header-content h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.group-name {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Календарь недели */
+.week-calendar {
+  background: white;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-top: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.calendar-nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.calendar-nav-btn:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+
+.calendar-nav-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.calendar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  flex: 1;
+}
+
+.calendar-week {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  justify-items: center;
+}
+
+.calendar-day-label {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #64748b;
+  padding: 0;
+  width: 100%;
+}
+
+.calendar-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  justify-items: center;
+}
+
+.calendar-date {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 4px 2px;
+  min-height: 32px;
+  max-height: 32px;
+}
+
+.calendar-date:hover {
+  background: #f1f5f9;
+}
+
+.calendar-date.today {
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-date.today .date-number {
+  color: white;
+}
+
+.calendar-date.selected {
+  background: rgba(37, 99, 235, 0.15);
+  backdrop-filter: blur(10px);
+  color: #2563eb;
+}
+
+.calendar-date .date-number {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.calendar-date.today .date-number {
+  color: white;
+}
+
+.calendar-date.selected .date-number {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.event-dot {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+  border-radius: 50%;
+  background: #2563eb;
+  margin-top: 3px;
+  flex-shrink: 0;
+  display: block;
+}
+
+.calendar-date.today .event-dot {
+  background: white;
+}
+
+.calendar-date.selected .event-dot {
+  background: #2563eb;
+}
+
+.calendar-date.has-events:not(.today):not(.selected) .event-dot {
+  background: #2563eb;
+}
+
+.selected-date-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #eff6ff;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+  color: #1e40af;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.selected-date-display svg {
+  color: #2563eb;
+  flex-shrink: 0;
+}
+
+.clear-day-btn {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-day-btn:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Селектор недели */
+.week-selector {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.week-btn {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.week-btn:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.week-btn.active {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.week-btn.disabled,
+.week-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.week-btn.disabled:hover,
+.week-btn:disabled:hover {
+  border-color: #e2e8f0;
+  background: white;
+}
+
+/* Контент расписания */
+.schedule-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Секция дня */
+.day-section {
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  position: relative;
+  overflow: hidden;
+}
+
+.day-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%);
+  opacity: 0.6;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  margin-top: 4px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.day-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.day-header h2::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+}
+
+.lessons-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2563eb;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* Список пар */
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Карточка пары */
+.schedule-card {
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.schedule-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #e2e8f0;
+}
+
+.schedule-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.03), transparent 60%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.schedule-card.lecture::before {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+.schedule-card.practice::before {
+  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.schedule-card.lab::before {
+  background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.schedule-card:hover {
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e1;
+}
+
+.schedule-card:hover::after {
+  opacity: 1;
+}
+
+/* Заголовок карточки */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.time-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #2563eb;
+  text-shadow: 0 1px 2px rgba(37, 99, 235, 0.1);
+}
+
+.time-separator {
+  color: #cbd5e1;
+  font-weight: 500;
+  margin: 0 2px;
+}
+
+/* Бейджи типов занятий */
+.class-type-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border: 1px solid transparent;
+}
+
+.class-type-badge.lecture {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border-color: rgba(30, 64, 175, 0.2);
+}
+
+.class-type-badge.practice {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border-color: rgba(6, 95, 70, 0.2);
+}
+
+.class-type-badge.lab {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+  color: #92400e;
+  border-color: rgba(146, 64, 14, 0.2);
+}
+
+.class-type-badge.other {
+  background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+  color: #6b21a8;
+  border-color: rgba(107, 33, 168, 0.2);
+}
+
+
+/* Название пары */
+.lesson-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 14px 0;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+  letter-spacing: -0.01em;
+}
+
+/* Детали пары */
+.lesson-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.detail-item {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: #64748b;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.detail-item:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.detail-item .icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.detail-item .text {
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+/* Пустое состояние */
+.empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.empty-icon {
+  font-size: 72px;
+  margin-bottom: 20px;
+  filter: grayscale(0.3);
+  opacity: 0.8;
+}
+
+.empty-state h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 10px 0;
+}
+
+.empty-state p {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Loading состояние */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 56px;
+  height: 56px;
+  border: 5px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-right-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner p {
+  font-size: 17px;
+  font-weight: 600;
+  color: #64748b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .schedule-page {
+    padding: 16px;
+  }
+
+  .schedule-header {
+    padding: 20px;
+  }
+
+  .header-content h1 {
+    font-size: 24px;
+  }
+
+  .week-calendar {
+    padding: 8px 10px;
+  }
+
+  .calendar-title {
+    font-size: 14px;
+  }
+
+  .calendar-nav-btn {
+    width: 28px;
+    height: 28px;
+    padding: 4px;
+  }
+
+  .calendar-nav-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .calendar-day-label {
+    font-size: 16px;
+  }
+
+  .calendar-date {
+    min-height: 28px;
+    max-height: 28px;
+    padding: 3px 2px;
+  }
+
+  .calendar-date .date-number {
+    font-size: 14px;
+  }
+
+  .event-dot {
+    width: 5px;
+    height: 5px;
+    margin-top: 1.5px;
+  }
+
+  .selected-date-display {
+    padding: 6px 8px;
+    font-size: 14px;
+  }
+
+  .week-selector {
+    flex-direction: column;
+  }
+
+  .day-section {
+    padding: 16px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .time-block {
+    font-size: 14px;
+  }
+
+  .lesson-title {
+    font-size: 15px;
+  }
+}
+
+
+/* Скрыть скроллбар для чистоты */
+.schedule-page::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedule-page::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.schedule-page::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.schedule-page::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

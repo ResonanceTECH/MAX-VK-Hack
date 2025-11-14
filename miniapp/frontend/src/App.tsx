@@ -14,6 +14,7 @@ import NewsPage from './pages/student/news/NewsPage'
 // Импорты страниц для преподавателей
 import MyGroupsPage from './pages/teacher/MyGroupsPage'
 import GroupStudentsPage from './pages/teacher/GroupStudentsPage'
+import TeacherSchedulePage from './pages/teacher/schedule/TeacherSchedulePage'
 
 // Импорты страниц для поддержки
 import SupportTicketsPage from './pages/support/SupportTicketsPage'
@@ -94,7 +95,7 @@ function AppContent() {
 
           {/* Маршруты для студентов */}
           <Route path="/my-group" element={<MyGroupPage />} />
-          <Route path="/schedule" element={<SchedulePage />} />
+          <Route path="/schedule" element={user?.role === 'teacher' ? <TeacherSchedulePage /> : <SchedulePage />} />
           <Route path="/teachers" element={<TeachersPage />} />
           <Route path="/news" element={<NewsPage />} />
 

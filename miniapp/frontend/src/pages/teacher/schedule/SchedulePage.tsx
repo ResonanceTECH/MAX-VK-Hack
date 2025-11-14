@@ -56,6 +56,23 @@ const SchedulePage: React.FC = () => {
         }
     }, [user])
 
+    // Преобразование ФИО в формат "Фамилия И. О."
+    const formatTeacherName = (fio: string): string => {
+        const parts = fio.trim().split(/\s+/)
+        if (parts.length < 2) return fio
+
+        const lastName = parts[0]
+        const firstName = parts[1]
+        const middleName = parts[2] || ''
+
+        const firstInitial = firstName.charAt(0).toUpperCase()
+        const middleInitial = middleName ? middleName.charAt(0).toUpperCase() : ''
+
+        return middleInitial
+            ? `${lastName} ${firstInitial}. ${middleInitial}.`
+            : `${lastName} ${firstInitial}.`
+    }
+
     const loadSchedule = async () => {
         try {
             setLoading(true)
@@ -67,8 +84,9 @@ const SchedulePage: React.FC = () => {
 
             let queryParam = ''
 
-            // Для студентов получаем группу
+            // Формируем query параметр в зависимости от роли
             if (user.role === 'student') {
+                // Для студентов получаем группу
                 try {
                     const groupsResponse = await api.get('/groups')
                     const groups = groupsResponse.data
@@ -78,6 +96,9 @@ const SchedulePage: React.FC = () => {
                 } catch (error) {
                     console.error('Ошибка загрузки групп:', error)
                 }
+            } else if (user.role === 'teacher') {
+                // Для преподавателей используем ФИО в формате "Фамилия И. О."
+                queryParam = formatTeacherName(user.fio)
             }
 
             // Запрос к API расписания с query параметром
