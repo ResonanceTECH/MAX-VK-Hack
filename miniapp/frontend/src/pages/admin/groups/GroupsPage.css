@@ -287,35 +287,62 @@
 }
 
 /* Кнопки действий в таблице */
+.students-table td:last-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .students-table button {
-  padding: 8px 16px;
-  margin-right: 8px;
-  background: var(--primary-500, #2563eb);
-  color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.students-table button:hover {
+.students-table .btn-set-headman {
+  padding: 8px 16px;
+  background: var(--primary-500, #2563eb);
+  color: white;
+}
+
+.students-table .btn-set-headman:hover {
   background: var(--primary-600, #1d4ed8);
   box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
-.students-table button:active {
+.students-table .btn-set-headman:active {
   transform: translateY(1px);
 }
 
-.students-table button:last-child {
+.students-table .btn-delete-student {
+  padding: 8px;
   background: #ef4444;
+  color: white;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  font-size: 0;
 }
 
-.students-table button:last-child:hover {
+.students-table .btn-delete-student:hover {
   background: #dc2626;
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.students-table .btn-delete-student:active {
+  transform: translateY(1px);
+}
+
+.students-table .btn-delete-student svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* Секция добавления студента */
@@ -669,7 +696,7 @@
   .students-table {
     display: block;
     overflow-x: auto;
-    min-width: 500px;
+    min-width: 450px;
     border-radius: 8px;
   }
 
@@ -699,36 +726,47 @@
   /* Уменьшаем ширину колонок для мобильных */
   .students-table th:nth-child(1),
   .students-table td:nth-child(1) {
-    width: 40%;
-    min-width: 150px;
+    width: 35%;
+    min-width: 120px;
   }
 
   .students-table th:nth-child(2),
   .students-table td:nth-child(2) {
     width: 25%;
-    min-width: 100px;
+    min-width: 90px;
   }
 
   .students-table th:nth-child(3),
   .students-table td:nth-child(3) {
-    width: 35%;
-    min-width: 150px;
+    width: 40%;
+    min-width: 140px;
   }
 
   /* Кнопки действий в таблице */
   .students-table td:last-child {
     display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
-  .students-table button {
+  .students-table .btn-set-headman {
     padding: 6px 12px;
-    margin-right: 0;
     font-size: 12px;
-    width: 100%;
-    text-align: center;
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .students-table .btn-delete-student {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .students-table .btn-delete-student svg {
+    width: 16px;
+    height: 16px;
   }
 
   .add-student-section {
@@ -838,7 +876,7 @@
 
   /* Таблица студентов для очень маленьких экранов */
   .students-table {
-    min-width: 450px;
+    min-width: 400px;
   }
 
   .students-table th {
@@ -855,9 +893,28 @@
     font-size: 12px;
   }
 
-  .students-table button {
-    padding: 5px 10px;
+  .students-table td:last-child {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .students-table .btn-set-headman {
+    padding: 6px 10px;
     font-size: 11px;
+    width: 100%;
+    min-width: auto;
+  }
+
+  .students-table .btn-delete-student {
+    width: 100%;
+    height: 32px;
+    padding: 6px;
+  }
+
+  .students-table .btn-delete-student svg {
+    width: 16px;
+    height: 16px;
   }
 
   .add-student-section {

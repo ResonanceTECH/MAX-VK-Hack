@@ -299,12 +299,19 @@ const AdminGroupsPage: React.FC = () => {
                                                 <td>{student.is_headman ? '⭐ Староста' : 'Студент'}</td>
                                                 <td>
                                                     {!student.is_headman && (
-                                                        <button onClick={() => handleSetHeadman(student.id)}>
+                                                        <button 
+                                                            className="btn-set-headman"
+                                                            onClick={() => handleSetHeadman(student.id)}
+                                                        >
                                                             Назначить старостой
                                                         </button>
                                                     )}
-                                                    <button onClick={() => handleRemoveStudent(student.id)}>
-                                                        Удалить
+                                                    <button 
+                                                        className="btn-delete-student"
+                                                        onClick={() => handleRemoveStudent(student.id)}
+                                                        title="Удалить"
+                                                    >
+                                                        <DeleteIcon size={16} />
                                                     </button>
                                                 </td>
                                             </tr>
