@@ -7,7 +7,7 @@ services:
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./miniapp/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./miniapp/caddy/Caddyfile.production:/etc/caddy/Caddyfile:ro
       - ./miniapp/caddy/ssl:/etc/caddy/ssl:ro
       - caddy_data:/data
       - caddy_config:/config
