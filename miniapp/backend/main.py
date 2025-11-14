@@ -66,9 +66,16 @@ app = FastAPI(
 )
 
 # CORS для React приложения
+# В продакшене можно ограничить origins для безопасности
+cors_origins = os.getenv('CORS_ORIGINS', '*').split(',')
+if cors_origins == ['*']:
+    cors_origins = ["*"]  # Разрешить все для простоты
+else:
+    cors_origins = [origin.strip() for origin in cors_origins]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В продакшене укажите конкретные домены
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

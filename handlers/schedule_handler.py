@@ -9,7 +9,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 # URL для API расписания
-SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "http://178.72.139.15:8001/api2")
+# По умолчанию используем внешний URL через Caddy
+# Можно переопределить через переменную окружения SCHEDULE_API_URL
+SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "https://178.72.139.15/api2")
 
 
 def get_schedule_from_api(query: str) -> Dict:

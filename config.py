@@ -2,10 +2,11 @@
 import os
 from dotenv import load_dotenv
 
-# Загрузка переменных окружения из .env файла
+# Загрузка переменных окружения из .env файла (если есть)
+# В продакшене можно использовать переменные окружения напрямую
 load_dotenv()
 
-# Токен бота
+# Токен бота (обязателен, но проверяется при запуске)
 TOKEN = os.getenv('MAX_BOT_TOKEN')
 
 # Настройки API
@@ -16,7 +17,8 @@ POLLING_TIMEOUT = int(os.getenv('POLLING_TIMEOUT', '30'))
 POLLING_LIMIT = int(os.getenv('POLLING_LIMIT', '100'))
 
 # Настройки PostgreSQL
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', '178.72.139.15')
+# В Docker Compose по умолчанию используется 'db', для внешнего подключения - IP
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'db')
 POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'maxbot')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'maxbot123')

@@ -9,8 +9,10 @@ from typing import Optional, Dict, Any
 
 from dotenv import load_dotenv
 
+# Загрузка .env если есть (не обязательно)
 load_dotenv()
 
+# Токен бота (должен быть установлен через переменную окружения)
 TOKEN = os.getenv('MAX_BOT_TOKEN')
 API_BASE_URL = 'https://platform-api.max.ru'
 
