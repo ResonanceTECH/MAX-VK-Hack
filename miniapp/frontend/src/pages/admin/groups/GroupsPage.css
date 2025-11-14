@@ -598,3 +598,292 @@
   }
 }
 
+/* Адаптив для мобильных устройств */
+@media (max-width: 768px) {
+  .admin-groups-page {
+    padding: 16px;
+  }
+
+  .admin-groups-page h1 {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .groups-layout {
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .groups-sidebar {
+    padding: 16px;
+  }
+
+  .groups-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .groups-header h2 {
+    font-size: 18px;
+  }
+
+  .btn-create {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+  }
+
+  .groups-list {
+    max-height: 300px;
+  }
+
+  .group-item {
+    padding: 12px 14px;
+  }
+
+  .group-item-content {
+    font-size: 14px;
+  }
+
+  .groups-content {
+    padding: 20px;
+  }
+
+  .groups-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .students-section h3 {
+    font-size: 18px;
+  }
+
+  /* Адаптация таблицы студентов для мобильных */
+  .students-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .students-table {
+    display: block;
+    overflow-x: auto;
+    min-width: 500px;
+    border-radius: 8px;
+  }
+
+  .students-table thead,
+  .students-table tbody,
+  .students-table tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .students-table th {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+
+  .students-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .students-table td:first-child {
+    font-size: 13px;
+    word-wrap: break-word;
+  }
+
+  /* Уменьшаем ширину колонок для мобильных */
+  .students-table th:nth-child(1),
+  .students-table td:nth-child(1) {
+    width: 40%;
+    min-width: 150px;
+  }
+
+  .students-table th:nth-child(2),
+  .students-table td:nth-child(2) {
+    width: 25%;
+    min-width: 100px;
+  }
+
+  .students-table th:nth-child(3),
+  .students-table td:nth-child(3) {
+    width: 35%;
+    min-width: 150px;
+  }
+
+  /* Кнопки действий в таблице */
+  .students-table td:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .students-table button {
+    padding: 6px 12px;
+    margin-right: 0;
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .add-student-section {
+    margin-top: 24px;
+    padding: 20px;
+  }
+
+  .add-student-section h3 {
+    font-size: 16px;
+  }
+
+  .add-student-section select {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  /* Модальные окна */
+  .modal-content {
+    width: 95%;
+    padding: 24px 20px;
+    margin: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+
+  .toast {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    padding: 14px 20px;
+    font-size: 13px;
+  }
+
+  .loading {
+    padding: 40px 20px;
+    font-size: 16px;
+  }
+
+  .loading::before {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+/* Адаптив для очень маленьких экранов */
+@media (max-width: 480px) {
+  .admin-groups-page {
+    padding: 12px;
+  }
+
+  .admin-groups-page h1 {
+    font-size: 20px;
+  }
+
+  .groups-sidebar {
+    padding: 14px;
+  }
+
+  .groups-header h2 {
+    font-size: 16px;
+  }
+
+  .groups-content {
+    padding: 16px;
+  }
+
+  .groups-content h2 {
+    font-size: 18px;
+  }
+
+  .students-section h3 {
+    font-size: 16px;
+  }
+
+  /* Таблица студентов для очень маленьких экранов */
+  .students-table {
+    min-width: 450px;
+  }
+
+  .students-table th {
+    padding: 10px 8px;
+    font-size: 11px;
+  }
+
+  .students-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .students-table td:first-child {
+    font-size: 12px;
+  }
+
+  .students-table button {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .add-student-section {
+    padding: 16px;
+  }
+
+  .add-student-section h3 {
+    font-size: 15px;
+  }
+
+  .modal-content {
+    padding: 20px 16px;
+  }
+
+  .modal-content h2 {
+    font-size: 18px;
+  }
+
+  .loading {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  .loading::before {
+    width: 35px;
+    height: 35px;
+  }
+}
+

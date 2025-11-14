@@ -170,6 +170,7 @@ const AdminTeachersPage: React.FC = () => {
                 </div>
             )}
 
+            {/* Таблица для десктопа */}
             <table className="teachers-table">
                 <thead>
                     <tr>
@@ -201,6 +202,48 @@ const AdminTeachersPage: React.FC = () => {
                     ))}
                 </tbody>
             </table>
+
+            {/* Карточки для мобильных устройств */}
+            <div className="teachers-cards">
+                {teachers.map(teacher => (
+                    <div key={teacher.id} className="teacher-card">
+                        <div className="teacher-card-header">
+                            <div className="teacher-card-id">ID: {teacher.id}</div>
+                            <h3 className="teacher-card-name">{teacher.fio}</h3>
+                        </div>
+                        <div className="teacher-card-body">
+                            <div className="teacher-card-field">
+                                <span className="field-label">Max User ID:</span>
+                                <span className="field-value">{teacher.max_user_id || '-'}</span>
+                            </div>
+                            <div className="teacher-card-field">
+                                <span className="field-label">Телефон:</span>
+                                <span className="field-value">{teacher.phone || '-'}</span>
+                            </div>
+                            <div className="teacher-card-field">
+                                <span className="field-label">Email:</span>
+                                <span className="field-value">{teacher.email || '-'}</span>
+                            </div>
+                        </div>
+                        <div className="teacher-card-actions">
+                            <button 
+                                className="btn-edit-card"
+                                onClick={() => handleEdit(teacher)}
+                            >
+                                <EditIcon size={16} />
+                                Редактировать
+                            </button>
+                            <button 
+                                className="btn-delete-card"
+                                onClick={() => handleDelete(teacher.id)}
+                            >
+                                <DeleteIcon size={16} />
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

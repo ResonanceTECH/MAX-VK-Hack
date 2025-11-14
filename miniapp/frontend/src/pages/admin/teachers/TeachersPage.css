@@ -230,6 +230,132 @@
   height: 16px;
 }
 
+/* Карточки преподавателей для мобильных */
+.teachers-cards {
+  display: none;
+}
+
+.teacher-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.teacher-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-500, #2563eb);
+}
+
+.teacher-card-header {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.teacher-card-id {
+  font-size: 12px;
+  color: var(--gray-500, #64748b);
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.teacher-card-name {
+  margin: 0;
+  color: var(--gray-800, #1e293b);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.teacher-card-body {
+  margin-bottom: 16px;
+}
+
+.teacher-card-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100, #f1f5f9);
+}
+
+.teacher-card-field:last-child {
+  border-bottom: none;
+}
+
+.teacher-card .field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600, #475569);
+  min-width: 100px;
+  flex-shrink: 0;
+}
+
+.teacher-card .field-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-800, #1e293b);
+  text-align: right;
+  word-break: break-word;
+  flex: 1;
+  margin-left: 16px;
+}
+
+.teacher-card-actions {
+  display: flex;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-200, #e2e8f0);
+}
+
+.btn-edit-card,
+.btn-delete-card {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-edit-card {
+  background: var(--primary-500, #2563eb);
+  color: white;
+}
+
+.btn-edit-card:hover {
+  background: var(--primary-600, #1d4ed8);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.btn-delete-card {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-delete-card:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-edit-card svg,
+.btn-delete-card svg {
+  width: 16px;
+  height: 16px;
+}
+
 .loading {
   text-align: center;
   padding: 60px 40px;
@@ -255,6 +381,192 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Адаптив для мобильных устройств */
+@media (max-width: 768px) {
+  .admin-teachers-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .page-header button {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .form-content {
+    width: 95%;
+    padding: 24px 20px;
+    margin: 20px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .form-content h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .form-actions button {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  /* Скрываем таблицу на мобильных */
+  .teachers-table {
+    display: none;
+  }
+
+  /* Показываем карточки на мобильных */
+  .teachers-cards {
+    display: block;
+  }
+
+  .teacher-card {
+    margin-bottom: 12px;
+    padding: 16px;
+  }
+
+  .teacher-card-name {
+    font-size: 16px;
+  }
+
+  .teacher-card-field {
+    padding: 10px 0;
+  }
+
+  .teacher-card .field-label {
+    font-size: 12px;
+    min-width: 90px;
+  }
+
+  .teacher-card .field-value {
+    font-size: 13px;
+  }
+
+  .teacher-card-actions {
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 12px;
+  }
+
+  .btn-edit-card,
+  .btn-delete-card {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .loading {
+    padding: 40px 20px;
+    font-size: 16px;
+  }
+
+  .loading::before {
+    width: 40px;
+    height: 40px;
+    border-width: 3px;
+  }
+}
+
+/* Адаптив для очень маленьких экранов */
+@media (max-width: 480px) {
+  .admin-teachers-page {
+    padding: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 20px;
+  }
+
+  .form-content {
+    padding: 20px 16px;
+  }
+
+  .form-content h2 {
+    font-size: 18px;
+  }
+
+  .teacher-card {
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .teacher-card-name {
+    font-size: 15px;
+  }
+
+  .teacher-card-field {
+    padding: 8px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .teacher-card .field-label {
+    font-size: 11px;
+    min-width: auto;
+  }
+
+  .teacher-card .field-value {
+    font-size: 12px;
+    text-align: left;
+    margin-left: 0;
+  }
+
+  .btn-edit-card,
+  .btn-delete-card {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+
+  .btn-edit-card svg,
+  .btn-delete-card svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .loading {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  .loading::before {
+    width: 35px;
+    height: 35px;
   }
 }
 
