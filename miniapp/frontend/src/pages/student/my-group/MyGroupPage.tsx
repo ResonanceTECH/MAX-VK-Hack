@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../../../utils/api'
+import LoadingSpinner from '../../../components/LoadingSpinner'
 import './MyGroupPage.css'
 
 // Иконки в стиле Hugeicons
@@ -95,10 +96,7 @@ const MyGroupPage: React.FC = () => {
         return (
             <div className="my-group-page">
                 <h1>Моя группа</h1>
-                <div className="loading">
-                    <div className="loading-spinner"></div>
-                    <p>Загрузка данных группы...</p>
-                </div>
+                <LoadingSpinner text="Загрузка данных группы..." />
             </div>
         )
     }

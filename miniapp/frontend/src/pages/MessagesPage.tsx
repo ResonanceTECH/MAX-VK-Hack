@@ -3,6 +3,7 @@ import api from '../utils/api'
 import MessageCard from '../components/MessageCard'
 import MessageFilters from '../components/MessageFilters'
 import StatsBar from '../components/StatsBar'
+import LoadingSpinner from '../components/LoadingSpinner'
 import { useAuth } from '../hooks/useAuth'
 import './MessagesPage.css'
 
@@ -102,10 +103,7 @@ const MessagesPage: React.FC = () => {
     return (
       <div className="messages-page">
         <h1>{getPageTitle()}</h1>
-        <div className="loading">
-          <div className="loading-spinner"></div>
-          <p>Загрузка сообщений...</p>
-        </div>
+        <LoadingSpinner text="Загрузка сообщений..." />
       </div>
     )
   }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../../../utils/api'
+import LoadingSpinner from '../../../components/LoadingSpinner'
 import './StudentsPage.css'
 
 // Иконки в стиле Hugeicons
@@ -101,7 +102,11 @@ const AdminStudentsPage: React.FC = () => {
     }
 
     if (loading) {
-        return <div className="loading">Загрузка...</div>
+        return (
+            <div className="admin-students-page">
+                <LoadingSpinner text="Загрузка..." />
+            </div>
+        )
     }
 
     return (

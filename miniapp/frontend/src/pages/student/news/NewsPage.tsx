@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../../../utils/api'
+import LoadingSpinner from '../../../components/LoadingSpinner'
 import './NewsPage.css'
 
 const CalendarIcon = ({ size = 16 }: { size?: number }) => (
@@ -41,10 +42,7 @@ const NewsPage: React.FC = () => {
         return (
             <div className="news-page">
                 <h1>Новости</h1>
-                <div className="loading">
-                    <div className="loading-spinner"></div>
-                    <p>Загрузка новостей...</p>
-                </div>
+                <LoadingSpinner text="Загрузка новостей..." />
             </div>
         )
     }

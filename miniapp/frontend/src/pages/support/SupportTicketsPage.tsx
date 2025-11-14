@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import api from '../../utils/api'
+import LoadingSpinner from '../../components/LoadingSpinner'
 import './SupportTicketsPage.css'
 
 // Иконки в стиле Hugeicons
@@ -37,12 +38,6 @@ const CalendarIcon = ({ size = 18 }: { size?: number }) => (
     </svg>
 )
 
-const LoadingSpinner = () => (
-    <div className="loading-spinner">
-        <div className="spinner"></div>
-        <p>Загрузка...</p>
-    </div>
-)
 
 interface Ticket {
   id: number

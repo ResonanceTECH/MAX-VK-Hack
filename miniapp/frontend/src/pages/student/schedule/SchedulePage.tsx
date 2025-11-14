@@ -3,6 +3,7 @@ import { UserCircle2, MapPin, ChevronLeft, ChevronRight, Calendar } from 'lucide
 import axios from 'axios'
 import { useAuth } from '../../../hooks/useAuth'
 import api from '../../../utils/api'
+import LoadingSpinner from '../../../components/LoadingSpinner'
 import './SchedulePage.css'
 
 interface Event {
@@ -59,15 +60,15 @@ const SchedulePage: React.FC = () => {
     const formatTeacherName = (fio: string): string => {
         const parts = fio.trim().split(/\s+/)
         if (parts.length < 2) return fio
-        
+
         const lastName = parts[0]
         const firstName = parts[1]
         const middleName = parts[2] || ''
-        
+
         const firstInitial = firstName.charAt(0).toUpperCase()
         const middleInitial = middleName ? middleName.charAt(0).toUpperCase() : ''
-        
-        return middleInitial 
+
+        return middleInitial
             ? `${lastName} ${firstInitial}. ${middleInitial}.`
             : `${lastName} ${firstInitial}.`
     }
@@ -75,14 +76,14 @@ const SchedulePage: React.FC = () => {
     const loadSchedule = async () => {
         try {
             setLoading(true)
-            
+
             if (!user) {
                 console.warn('Пользователь не загружен')
                 return
             }
 
             let queryParam = ''
-            
+
             // Формируем query параметр в зависимости от роли
             if (user.role === 'student') {
                 // Для студентов получаем группу
@@ -99,15 +100,15 @@ const SchedulePage: React.FC = () => {
                 // Для преподавателей используем ФИО в формате "Фамилия И. О."
                 queryParam = formatTeacherName(user.fio)
             }
-            
+
             // Запрос к API расписания с query параметром
             const scheduleApiUrl = import.meta.env.VITE_SCHEDULE_API_URL || '/api2'
-            const url = queryParam 
+            const url = queryParam
                 ? `${scheduleApiUrl}/schedule_1?query=${encodeURIComponent(queryParam)}`
                 : `${scheduleApiUrl}/schedule_1`
-            
+
             const response = await axios.get(url)
-            
+
             const scheduleData: ScheduleData = response.data
 
             if (!scheduleData.events_by_calname || Object.keys(scheduleData.events_by_calname).length === 0) {
@@ -319,10 +320,7 @@ const SchedulePage: React.FC = () => {
     if (loading) {
         return (
             <div className="schedule-page">
-                <div className="loading-spinner">
-                    <div className="spinner"></div>
-                    <p>Загрузка расписания...</p>
-                </div>
+                <LoadingSpinner text="Загрузка расписания..." />
             </div>
         )
     }
