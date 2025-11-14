@@ -96,12 +96,14 @@
         uri strip_prefix /api2
         reverse_proxy schedule:8001 {
             header_up X-Real-IP {remote_host}
+            header_up Host {upstream_hostport}
         }
     }
     
     handle /api2 {
         reverse_proxy schedule:8001 {
             header_up X-Real-IP {remote_host}
+            header_up Host {upstream_hostport}
         }
     }
     
