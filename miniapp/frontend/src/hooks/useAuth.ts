@@ -51,6 +51,31 @@ export const useAuth = () => {
       if (window.MaxWebApp.expand) {
         window.MaxWebApp.expand()
       }
+      
+      // Подписываемся на события, если Max их поддерживает
+      // Это может помочь получить данные, если они приходят асинхронно
+      if (window.MaxWebApp.onEvent) {
+        try {
+          window.MaxWebApp.onEvent('initData', () => {
+            console.log('[initMaxWebApp] Получено событие initData от Max')
+            // Перезагружаем пользователя при получении новых данных
+            const savedRole = localStorage.getItem(SELECTED_ROLE_KEY)
+            fetchUser(savedRole)
+          })
+        } catch (e) {
+          // Игнорируем ошибки, если события не поддерживаются
+          console.debug('[initMaxWebApp] События не поддерживаются:', e)
+        }
+      }
+      
+      console.log('[initMaxWebApp] Max WebApp инициализирован:', {
+        hasInitData: !!window.MaxWebApp.initData,
+        hasInitDataUnsafe: !!window.MaxWebApp.initDataUnsafe,
+        version: window.MaxWebApp.version,
+        platform: window.MaxWebApp.platform
+      })
+    } else {
+      console.warn('[initMaxWebApp] window.MaxWebApp не найден - возможно, приложение запущено не из Max мессенджера')
     }
   }
 
@@ -74,14 +99,25 @@ export const useAuth = () => {
       // Пытаемся извлечь user_id из реального initData от Max
       const realUserId = getCurrentUserId()
       if (realUserId) {
-        console.log('Обнаружен пользователь Max с ID:', realUserId)
+        console.log('[useAuth] Обнаружен пользователь Max с ID:', realUserId)
+      } else {
+        console.warn('[useAuth] Не удалось получить user_id из Max WebApp')
+        // Дополнительная диагностика
+        console.log('[useAuth] Диагностика Max WebApp:', {
+          hasMaxWebApp: !!window.MaxWebApp,
+          hasInitData: !!window.MaxWebApp?.initData,
+          hasInitDataUnsafe: !!window.MaxWebApp?.initDataUnsafe,
+          hasUser: !!window.MaxWebApp?.initDataUnsafe?.user,
+          userObject: window.MaxWebApp?.initDataUnsafe?.user,
+          initDataPreview: initData ? initData.substring(0, 200) : 'нет'
+        })
       }
       
       // Если нет initData, создаем мок (для работы в контейнере/без Max мессенджера)
       // Бэкенд пропустит проверку если SKIP_AUTH=true и SKIP_INITDATA_VERIFY=true
       if (!initData) {
         initData = createMockInitData()
-        console.log('Используется мок initData для локальной разработки')
+        console.log('[useAuth] Используется мок initData для локальной разработки')
       }
 
       // Определяем роль для запроса
@@ -126,7 +162,19 @@ export const useAuth = () => {
       setSelectedRoleState(savedRole)
     }
     
+    // Пытаемся получить данные сразу
     fetchUser(savedRole)
+    
+    // Если Max WebApp еще не инициализирован, ждем немного и пробуем снова
+    // Это нужно, так как Max может загружать данные асинхронно
+    if (!window.MaxWebApp?.initData && !window.MaxWebApp?.initDataUnsafe) {
+      const retryTimeout = setTimeout(() => {
+        console.log('[useAuth] Повторная попытка получения данных от Max WebApp')
+        fetchUser(savedRole)
+      }, 500) // Ждем 500мс и пробуем снова
+      
+      return () => clearTimeout(retryTimeout)
+    }
   }, [])
 
   // Функция для получения заголовков с выбранной ролью

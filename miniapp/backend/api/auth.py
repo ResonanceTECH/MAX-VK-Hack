@@ -118,7 +118,30 @@ def get_current_user(
     if skip_auth:
         # Получаем пользователя напрямую из БД без проверки initData
         # Можно указать DEV_USER_MAX_ID в переменных окружения для локальной разработки
-        max_user_id = int(os.getenv('DEV_USER_MAX_ID', '96855100'))
+        # Если не указан, пытаемся извлечь из initData (даже если это мок)
+        dev_user_max_id = os.getenv('DEV_USER_MAX_ID')
+        
+        if dev_user_max_id:
+            # Используем жестко заданный ID
+            max_user_id = int(dev_user_max_id)
+        elif x_init_data:
+            # Пытаемся извлечь user_id из initData (даже без проверки подписи)
+            try:
+                parsed = parse_qs(x_init_data)
+                user_str = parsed.get('user', [None])[0]
+                if user_str:
+                    user_data = json.loads(unquote(user_str))
+                    max_user_id = user_data.get('id')
+                else:
+                    raise HTTPException(status_code=401, detail="Не удалось извлечь user_id из initData")
+            except Exception as e:
+                raise HTTPException(status_code=401, detail=f"Ошибка парсинга initData: {str(e)}")
+        else:
+            raise HTTPException(status_code=401, detail="Отсутствует initData и DEV_USER_MAX_ID не задан")
+        
+        if not max_user_id:
+            raise HTTPException(status_code=401, detail="Не удалось определить user_id")
+            
         if x_selected_role:
             # Если указана роль, получаем пользователя с этой ролью
             user = User.get_by_max_id(max_user_id, role=x_selected_role)

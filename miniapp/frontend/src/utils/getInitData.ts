@@ -53,14 +53,35 @@ export function extractUserIdFromInitData(initData: string): number | null {
 
 /**
  * Получает user_id текущего пользователя из Max WebApp
+ * Пробует несколько способов для максимальной совместимости
  * @returns user_id или null, если не удалось получить
  */
 export function getCurrentUserId(): number | null {
-  const initData = getInitData()
-  if (!initData) {
-    return null
+  // Способ 1: Прямой доступ через initDataUnsafe (самый надежный, если Max предоставляет)
+  if (window.MaxWebApp?.initDataUnsafe?.user?.id) {
+    const userId = window.MaxWebApp.initDataUnsafe.user.id
+    console.log('[getCurrentUserId] Найден user_id через initDataUnsafe:', userId)
+    return userId
   }
   
-  return extractUserIdFromInitData(initData)
+  // Способ 2: Извлечение из строки initData
+  const initData = getInitData()
+  if (initData) {
+    const userId = extractUserIdFromInitData(initData)
+    if (userId) {
+      console.log('[getCurrentUserId] Найден user_id из initData строки:', userId)
+      return userId
+    }
+    console.warn('[getCurrentUserId] initData есть, но не удалось извлечь user_id. initData:', initData.substring(0, 100))
+  } else {
+    console.warn('[getCurrentUserId] initData не найден. window.MaxWebApp:', {
+      exists: !!window.MaxWebApp,
+      hasInitData: !!window.MaxWebApp?.initData,
+      hasInitDataUnsafe: !!window.MaxWebApp?.initDataUnsafe,
+      hasUser: !!window.MaxWebApp?.initDataUnsafe?.user
+    })
+  }
+  
+  return null
 }
 
