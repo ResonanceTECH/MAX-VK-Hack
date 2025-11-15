@@ -288,17 +288,17 @@
 
 /* Кнопки действий в таблице */
 .students-table th:last-child {
-  min-width: 220px;
-  width: 220px;
+  min-width: auto;
+  width: auto;
 }
 
 .students-table td:last-child {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 10px;
-  min-width: 220px;
-  width: 220px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: auto;
+  width: auto;
   padding: 16px 20px;
 }
 
@@ -306,18 +306,16 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  min-height: 44px;
-  width: 100%;
-  padding: 12px 24px;
-  overflow: visible;
-  text-overflow: clip;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .students-table .btn-set-headman {
@@ -425,12 +423,14 @@
 
 .btn-set-headman-card,
 .btn-delete-student-card {
-  flex: 1;
-  padding: 12px 16px;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -853,9 +853,9 @@
 
   .btn-set-headman-card,
   .btn-delete-student-card {
-    width: 100%;
-    padding: 10px 16px;
-    font-size: 13px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
   }
 
 
