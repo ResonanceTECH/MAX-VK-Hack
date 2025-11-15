@@ -264,12 +264,12 @@ def create_help_menu_keyboard(role: str = 'student') -> Dict:
         }
     }
 
-def create_group_menu_teacher_keyboard() -> Dict:
+def create_group_menu_teacher_keyboard(group_id: int) -> Dict:
     """Создать меню группы для преподавателя"""
     buttons = [
-        [{"type": "callback", "text": "👥 Список студентов", "payload": "group_students_list_teacher"}],
-        [{"type": "callback", "text": "💬 Написать студенту", "payload": "write_student"}],
-        [{"type": "callback", "text": "📢 Рассылка группе", "payload": "broadcast_group"}],
+        [{"type": "callback", "text": "👥 Список студентов", "payload": f"group_students_{group_id}"}],
+        [{"type": "callback", "text": "💬 Написать студенту", "payload": f"write_student_group_{group_id}"}],
+        [{"type": "callback", "text": "📢 Рассылка группе", "payload": f"broadcast_group_{group_id}"}],
         [{"type": "callback", "text": "◀️ Назад", "payload": "menu_my_groups"}]
     ]
     

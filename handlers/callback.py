@@ -228,10 +228,10 @@ class CallbackHandler(BaseHandler):
                     text=text,
                     attachments=[keyboard]
                 )
-        elif payload.startswith('group_') and not payload.startswith('group_message'):
+        elif payload.startswith('group_') and not payload.startswith('group_message') and not payload.startswith('group_students'):
             group_id = int(payload.split('_')[1])
             from utils.keyboard import create_group_menu_teacher_keyboard
-            keyboard = create_group_menu_teacher_keyboard()
+            keyboard = create_group_menu_teacher_keyboard(group_id)
             group = Group.get_by_id(group_id)
             text = f"👥 Группа: {group['name'] if group else ''}\n\nВыберите действие:"
             api.send_message(
@@ -244,6 +244,9 @@ class CallbackHandler(BaseHandler):
             self.teacher_handler.show_group_members(group_id, user_data, max_user_id, api)
         elif payload == 'write_student':
             self.teacher_handler.show_teacher_groups(user_data, max_user_id, api)
+        elif payload.startswith('write_student_group_'):
+            group_id = int(payload.split('_')[3])
+            self.teacher_handler.show_group_members(group_id, user_data, max_user_id, api)
         elif payload == 'broadcast_group':
             self.teacher_handler.show_teacher_groups(user_data, max_user_id, api, broadcast=True)
         elif payload.startswith('broadcast_group_'):
