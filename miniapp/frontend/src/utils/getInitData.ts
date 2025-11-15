@@ -26,3 +26,41 @@ export function getInitData(): string {
   return initData
 }
 
+/**
+ * Извлекает user_id из initData
+ * @param initData - строка initData в формате query string
+ * @returns user_id или null, если не удалось извлечь
+ */
+export function extractUserIdFromInitData(initData: string): number | null {
+  try {
+    const params = new URLSearchParams(initData)
+    const userStr = params.get('user')
+    
+    if (!userStr) {
+      return null
+    }
+    
+    // Декодируем URL-encoded строку
+    const decodedUserStr = decodeURIComponent(userStr)
+    const userData = JSON.parse(decodedUserStr)
+    
+    return userData.id || null
+  } catch (error) {
+    console.error('Ошибка извлечения user_id из initData:', error)
+    return null
+  }
+}
+
+/**
+ * Получает user_id текущего пользователя из Max WebApp
+ * @returns user_id или null, если не удалось получить
+ */
+export function getCurrentUserId(): number | null {
+  const initData = getInitData()
+  if (!initData) {
+    return null
+  }
+  
+  return extractUserIdFromInitData(initData)
+}
+

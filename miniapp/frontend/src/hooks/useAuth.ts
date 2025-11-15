@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { getInitData } from '../utils/getInitData'
+import { getInitData, getCurrentUserId } from '../utils/getInitData'
 
 interface User {
   id: number
@@ -71,10 +71,17 @@ export const useAuth = () => {
       // Получаем initData из Max WebApp
       let initData = getInitData()
       
+      // Пытаемся извлечь user_id из реального initData от Max
+      const realUserId = getCurrentUserId()
+      if (realUserId) {
+        console.log('Обнаружен пользователь Max с ID:', realUserId)
+      }
+      
       // Если нет initData, создаем мок (для работы в контейнере/без Max мессенджера)
       // Бэкенд пропустит проверку если SKIP_AUTH=true и SKIP_INITDATA_VERIFY=true
       if (!initData) {
         initData = createMockInitData()
+        console.log('Используется мок initData для локальной разработки')
       }
 
       // Определяем роль для запроса
