@@ -312,7 +312,7 @@ const AdminGroupsPage: React.FC = () => {
                                                     {!student.is_headman && (   
                                                         <button
                                                             className="btn-set-headman"                                                                         
-                                                            onClick={() => handleSetHeadman(student.id)}
+                                                            onClick={() => handleSetHeadman(student.id)}                                                        
                                                             title="Назначить старостой"
                                                         >
                                                             <StarIcon size={18} />
@@ -320,7 +320,7 @@ const AdminGroupsPage: React.FC = () => {
                                                     )}
                                                     <button
                                                         className="btn-delete-student"                                                                          
-                                                        onClick={() => handleRemoveStudent(student.id)}
+                                                        onClick={() => handleRemoveStudent(student.id)}                                                         
                                                         title="Удалить"
                                                     >
                                                         <DeleteIcon size={18} />

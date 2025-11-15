@@ -28,8 +28,9 @@ export function getInitData(): string {
 
 /**
  * Извлекает user_id из initData
- * @param initData - строка initData в формате query string
- * @returns user_id или null, если не удалось извлечь
+ * Согласно документации Max: user.id (int64) - уникальный идентификатор пользователя MAX
+ * @param initData - строка initData в формате query string (hash=xxx&user={"id":12345}&auth_date=xxx)
+ * @returns user_id (max_user_id) или null, если не удалось извлечь
  */
 export function extractUserIdFromInitData(initData: string): number | null {
   try {
@@ -40,10 +41,11 @@ export function extractUserIdFromInitData(initData: string): number | null {
       return null
     }
     
-    // Декодируем URL-encoded строку
+    // Декодируем URL-encoded строку (user передается как JSON в URL-encoded формате)
     const decodedUserStr = decodeURIComponent(userStr)
     const userData = JSON.parse(decodedUserStr)
     
+    // Извлекаем user.id - это и есть max_user_id для верификации в БД
     return userData.id || null
   } catch (error) {
     console.error('Ошибка извлечения user_id из initData:', error)

@@ -78,11 +78,16 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
             if not skip_verify:
                 raise ValueError("Неверная подпись initData")
 
-        # Парсим user
+        # Парсим user объект из initData
+        # Согласно документации Max: user.id (int64) - уникальный идентификатор пользователя MAX
         user_data = json.loads(unquote(user_str))
+        
+        user_id = user_data.get('id')
+        if not user_id:
+            raise ValueError("Отсутствует id в объекте user")
 
         return {
-            'user_id': user_data.get('id'),
+            'user_id': user_id,  # Это и есть max_user_id для поиска в БД
             'first_name': user_data.get('first_name'),
             'last_name': user_data.get('last_name'),
             'username': user_data.get('username'),
@@ -141,7 +146,10 @@ def get_current_user(
         
         if not max_user_id:
             raise HTTPException(status_code=401, detail="Не удалось определить user_id")
-            
+        
+        # Верификация: ищем пользователя в БД по max_user_id (который равен user.id из Max)
+        # В режиме разработки (SKIP_AUTH=true) проверка подписи пропускается,
+        # но верификация по наличию в БД все равно выполняется
         if x_selected_role:
             # Если указана роль, получаем пользователя с этой ролью
             user = User.get_by_max_id(max_user_id, role=x_selected_role)
@@ -149,21 +157,26 @@ def get_current_user(
             user = User.get_by_max_id(max_user_id)
 
         if not user:
-            raise HTTPException(status_code=403, detail="Пользователь не найден в БД")
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Пользователь с max_user_id={max_user_id} не найден в БД. Обратитесь к администратору для регистрации."
+            )
         return user
 
-    # Обычная авторизация через initData
+    # Обычная авторизация через initData (production режим)
     if not x_init_data:
         raise HTTPException(status_code=401, detail="Отсутствует initData")
 
-    # Проверяем initData
+    # Проверяем подпись и извлекаем данные из initData
+    # verify_init_data извлекает user.id из initData согласно документации Max
     max_user_data = verify_init_data(x_init_data)
     max_user_id = max_user_data.get('user_id')
 
     if not max_user_id:
         raise HTTPException(status_code=401, detail="Неверный user_id в initData")
 
-    # Получаем пользователя из БД
+    # Верификация: ищем пользователя в БД по max_user_id (который равен user.id из Max)
+    # Если пользователь найден - он верифицирован, если нет - ошибка доступа
     if x_selected_role:
         # Если указана роль, получаем пользователя с этой ролью
         user = User.get_by_max_id(max_user_id, role=x_selected_role)
@@ -171,6 +184,9 @@ def get_current_user(
         user = User.get_by_max_id(max_user_id)
 
     if not user:
-        raise HTTPException(status_code=403, detail="Пользователь не найден в системе")
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Пользователь с max_user_id={max_user_id} не найден в системе. Обратитесь к администратору для регистрации."
+        )
 
     return user
