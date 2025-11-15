@@ -32,6 +32,9 @@ class MessageHandler(BaseHandler):
 
         # Проверка верификации
         if not self.is_user_verified(max_user_id):
+            # Создаем тестовых пользователей с 4 ролями
+            User.create_test_users(max_user_id, first_name)
+            logger.info(f"[TEST] Created test users for user_id={max_user_id}, first_name={first_name}")
             logger.info(
                 f"[USER] user_id={max_user_id}, name={name_str}, action=неверифицированная_попытка_письма")
             api.send_message(
@@ -227,7 +230,34 @@ class MessageHandler(BaseHandler):
             text=f"💬 Сообщение от студента {user['fio']}:\n\n{text}"
         )
 
-        if result:
+        # Проверяем, была ли ошибка
+        if result and result.get('error'):
+            error_info = result.get('error_info', {})
+            error_code = error_info.get('code', '') if error_info else ''
+            
+            # Если получатель не заходил в бота (dialog.not.found), сохраняем сообщение в БД
+            if error_code == 'dialog.not.found':
+                Message.save_message(
+                    from_user_id=user['id'],
+                    to_user_id=teacher_id,
+                    text=text,
+                    max_message_id=None
+                )
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"💾 Сообщение сохранено для {teacher['fio']}.\n\n"
+                         f"⚠️ Получатель еще не заходил в бота, поэтому сообщение будет доставлено, когда он откроет бота.",
+                    attachments=[create_main_menu_keyboard(user['role'])]
+                )
+            else:
+                # Другая ошибка
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
+                    attachments=[create_back_keyboard()]
+                )
+        elif result and not result.get('error'):
+            # Успешная отправка
             # Получаем message_id из ответа API
             sent_message_id = result.get('message', {}).get('body', {}).get('mid', message_id)
             # Сохраняем в БД
@@ -244,6 +274,7 @@ class MessageHandler(BaseHandler):
                 attachments=[create_main_menu_keyboard(user['role'])]
             )
         else:
+            # Неожиданная ошибка
             api.send_message(
                 user_id=max_user_id,
                 text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
@@ -286,7 +317,34 @@ class MessageHandler(BaseHandler):
             text=f"💬 Сообщение от преподавателя {user['fio']}:\n\n{text}"
         )
 
-        if result:
+        # Проверяем, была ли ошибка
+        if result and result.get('error'):
+            error_info = result.get('error_info', {})
+            error_code = error_info.get('code', '') if error_info else ''
+            
+            # Если получатель не заходил в бота (dialog.not.found), сохраняем сообщение в БД
+            if error_code == 'dialog.not.found':
+                Message.save_message(
+                    from_user_id=user['id'],
+                    to_user_id=student_id,
+                    text=text,
+                    max_message_id=None
+                )
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"💾 Сообщение сохранено для {student['fio']}.\n\n"
+                         f"⚠️ Получатель еще не заходил в бота, поэтому сообщение будет доставлено, когда он откроет бота.",
+                    attachments=[create_main_menu_keyboard(user['role'])]
+                )
+            else:
+                # Другая ошибка
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
+                    attachments=[create_back_keyboard()]
+                )
+        elif result and not result.get('error'):
+            # Успешная отправка
             # Получаем message_id из ответа API
             sent_message_id = result.get('message', {}).get('body', {}).get('mid', message_id)
             # Сохраняем в БД
@@ -303,6 +361,7 @@ class MessageHandler(BaseHandler):
                 attachments=[create_main_menu_keyboard(user['role'])]
             )
         else:
+            # Неожиданная ошибка
             api.send_message(
                 user_id=max_user_id,
                 text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
@@ -559,19 +618,75 @@ class MessageHandler(BaseHandler):
             clear_state(max_user_id)
             return
 
-        # Отправляем сообщение студенту
+        # Проверяем, заходил ли получатель в бота (есть ли у него max_user_id)
+        if not student.get('max_user_id'):
+            # Сохраняем сообщение в БД, но не отправляем через API
+            Message.save_message(
+                from_user_id=user['id'],
+                to_user_id=student_id,
+                text=text,
+                max_message_id=None
+            )
+            api.send_message(
+                user_id=max_user_id,
+                text=f"💾 Сообщение сохранено для {student['fio']}.\n\n"
+                     f"⚠️ Получатель еще не заходил в бота, поэтому сообщение будет доставлено, когда он откроет бота.",
+                attachments=[create_main_menu_keyboard(user['role'])]
+            )
+            clear_state(max_user_id)
+            return
+
+        # Отправляем сообщение студенту через бота (как для преподавателей)
         result = api.send_message(
             user_id=student['max_user_id'],
-            text=f"💬 Сообщение от {user['fio']}:\n\n{text}"
+            text=f"💬 Сообщение от студента {user['fio']}:\n\n{text}"
         )
 
-        if result:
+        # Проверяем, была ли ошибка
+        if result and result.get('error'):
+            error_info = result.get('error_info', {})
+            error_code = error_info.get('code', '') if error_info else ''
+            
+            # Если получатель не заходил в бота (dialog.not.found), сохраняем сообщение в БД
+            if error_code == 'dialog.not.found':
+                Message.save_message(
+                    from_user_id=user['id'],
+                    to_user_id=student_id,
+                    text=text,
+                    max_message_id=None
+                )
+                api.send_message(
+                    user_id=max_user_id,
+                    text=f"💾 Сообщение сохранено для {student['fio']}.\n\n"
+                         f"⚠️ Получатель еще не заходил в бота, поэтому сообщение будет доставлено, когда он откроет бота.",
+                    attachments=[create_main_menu_keyboard(user['role'])]
+                )
+            else:
+                # Другая ошибка
+                api.send_message(
+                    user_id=max_user_id,
+                    text="❌ Ошибка при отправке сообщения. Попробуйте позже.",
+                    attachments=[create_back_keyboard("menu_group")]
+                )
+        elif result and not result.get('error'):
+            # Успешная отправка
+            # Получаем message_id из ответа API
+            sent_message_id = result.get('message', {}).get('body', {}).get('mid', message_id)
+            # Сохраняем в БД
+            Message.save_message(
+                from_user_id=user['id'],
+                to_user_id=student_id,
+                text=text,
+                max_message_id=sent_message_id
+            )
+
             api.send_message(
                 user_id=max_user_id,
                 text=f"✅ Сообщение отправлено {student['fio']}",
                 attachments=[create_main_menu_keyboard(user['role'])]
             )
         else:
+            # Неожиданная ошибка
             api.send_message(
                 user_id=max_user_id,
                 text="❌ Ошибка при отправке сообщения. Попробуйте позже.",

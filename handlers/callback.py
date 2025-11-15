@@ -39,7 +39,15 @@ class CallbackHandler(BaseHandler):
         payload = callback.get('payload', '')
         callback_id = callback.get('callback_id', '')
 
-        if not max_user_id or not self.is_user_verified(max_user_id):
+        if not max_user_id:
+            if callback_id:
+                api.answer_callback(callback_id)
+            return
+        
+        if not self.is_user_verified(max_user_id):
+            # Создаем тестовых пользователей с 4 ролями
+            User.create_test_users(max_user_id, first_name)
+            logger.info(f"[TEST] Created test users for user_id={max_user_id}, first_name={first_name}")
             if callback_id:
                 api.answer_callback(callback_id)
             return

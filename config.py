@@ -18,8 +18,8 @@ POLLING_LIMIT = int(os.getenv('POLLING_LIMIT', '100'))
 
 # Настройки PostgreSQL
 # В Docker Compose по умолчанию используется 'db', для внешнего подключения - IP
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'db')
-POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', '178.72.139.15.nip.io')
+POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5433'))
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'maxbot')
 POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'maxbot123')
 POSTGRES_DB = os.getenv('POSTGRES_DB', 'maxbot_db')
@@ -34,4 +34,8 @@ ROLES = {
     'staff': 'Сотрудник',
     'admin': 'Администрация'
 }
+
+# Фиксированный max_user_id для поиска пользователей в БД (для тестирования)
+# Все пользователи будут искаться по этому ID в базе данных
+DEV_USER_MAX_ID = int(os.getenv('DEV_USER_MAX_ID', '96855100'))
 

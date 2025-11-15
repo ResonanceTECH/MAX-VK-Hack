@@ -72,6 +72,34 @@ class User:
         return User.get_by_max_id(max_user_id) is not None
 
     @staticmethod
+    def create_test_users(max_user_id: int, user_first_name: str) -> None:
+        """Создать тестовых пользователей с 4 ролями для неверифицированного пользователя"""
+        roles_config = [
+            {'role': 'student', 'phone': '+79001234567'},
+            {'role': 'teacher', 'phone': '+79007654321'},
+            {'role': 'admin', 'phone': '+79007654324'},
+            {'role': 'support', 'phone': '+79007654324'}
+        ]
+        
+        email = f'test_{user_first_name}@example.com'
+        
+        for config in roles_config:
+            query = """
+                INSERT INTO users (max_user_id, first_name, last_name, middle_name, role, phone, email)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (max_user_id, role) DO NOTHING
+            """
+            execute_query(query, (
+                max_user_id,
+                'Тестовый',
+                'Пользователь',
+                user_first_name,
+                config['role'],
+                config['phone'],
+                email
+            ))
+
+    @staticmethod
     def get_all_students() -> List[Dict]:
         """Получить всех студентов"""
         query = """

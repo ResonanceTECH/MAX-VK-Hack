@@ -111,6 +111,21 @@ class MaxAPI:
             )
             response.raise_for_status()
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            # Сохраняем информацию об ошибке для дальнейшей обработки
+            error_info = None
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_info = error_data
+                    print(f"Ошибка при отправке сообщения: {e}")
+                    print(f"  Детали ошибки: {error_data}")
+                except:
+                    print(f"Ошибка при отправке сообщения: {e}")
+            else:
+                print(f"Ошибка при отправке сообщения: {e}")
+            # Возвращаем словарь с информацией об ошибке вместо None
+            return {'error': True, 'error_info': error_info, 'status_code': e.response.status_code if hasattr(e, 'response') and e.response else None}
         except requests.exceptions.RequestException as e:
             print(f"Ошибка при отправке сообщения: {e}")
             if hasattr(e, 'response') and e.response is not None:
@@ -119,7 +134,7 @@ class MaxAPI:
                     print(f"  Детали ошибки: {error_data}")
                 except:
                     pass
-            return None
+            return {'error': True, 'error_info': None}
 
     def send_action(self, chat_id: int, action: str) -> bool:
         """Отправляет действие бота (typing_on, sending_photo, etc.)"""

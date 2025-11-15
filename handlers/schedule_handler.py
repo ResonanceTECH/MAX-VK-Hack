@@ -9,26 +9,35 @@ import logging
 logger = logging.getLogger(__name__)
 
 # URL для API расписания
-# По умолчанию используем внешний URL через Caddy
+# По умолчанию используем прямой доступ к schedule сервису в Docker сети
 # Можно переопределить через переменную окружения SCHEDULE_API_URL
-SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "https://178.72.139.15.nip.io/api2")
+# Внутри Docker сети используем http://schedule:8001, снаружи - https://localhost/api2
+SCHEDULE_API_URL = os.getenv("SCHEDULE_API_URL", "http://schedule:8001")
+logger.info(f"SCHEDULE_API_URL установлен: {SCHEDULE_API_URL}")
 
 
 def get_schedule_from_api(query: str) -> Dict:
     """Получить расписание из API"""
     try:
         with httpx.Client(timeout=10.0) as client:
-            response = client.get(SCHEDULE_API_URL, params={"query": query})
+            # Формируем URL с путем /schedule_1 и query параметром группы
+            url = f"{SCHEDULE_API_URL.rstrip('/')}/schedule_1"
+            logger.info(f"Запрос расписания: {url}?query={query}")
+            response = client.get(url, params={"query": query})
             # Если 404 - значит расписание не найдено (нет пар)
             if response.status_code == 404:
+                logger.warning(f"Расписание не найдено для запроса: {query}")
                 return {}
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            logger.info(f"Получено расписание: {len(data.get('events_by_calname', {}))} календарей")
+            return data
     except httpx.HTTPStatusError as e:
         # Если 404 - значит расписание не найдено (нет пар)
         if e.response.status_code == 404:
+            logger.warning(f"Расписание не найдено для запроса: {query}")
             return {}
-        logger.error(f"Ошибка при получении расписания: {e}")
+        logger.error(f"Ошибка HTTP при получении расписания: {e}, статус: {e.response.status_code}")
         return {}
     except Exception as e:
         logger.error(f"Ошибка при получении расписания: {e}")
@@ -127,17 +136,26 @@ class ScheduleHandler:
         schedule_data = get_schedule_from_api(query)
         events_by_calname = schedule_data.get('events_by_calname', {})
 
+        logger.info(f"Получено расписание для запроса '{query}': {len(events_by_calname)} календарей")
+
         text = f"📅 Расписание на сегодня ({weekday_name}, {today_str}):\n\n"
 
         if not events_by_calname:
             text += f"✅ На {weekday_name} занятий нет."
+            logger.warning(f"Нет данных расписания для запроса: {query}")
         else:
             # Фильтруем события на сегодня
             today_events = []
+            total_events = 0
             for calname, events in events_by_calname.items():
+                total_events += len(events)
                 for event in events:
-                    if event.get('day_of_week') == weekday_name:
+                    event_day = event.get('day_of_week', '')
+                    logger.debug(f"Событие: день недели='{event_day}', ожидаемый='{weekday_name}'")
+                    if event_day == weekday_name:
                         today_events.append((calname, event))
+            
+            logger.info(f"Всего событий: {total_events}, на сегодня ({weekday_name}): {len(today_events)}")
 
             if not today_events:
                 text += f"✅ На {weekday_name} занятий нет.\n"

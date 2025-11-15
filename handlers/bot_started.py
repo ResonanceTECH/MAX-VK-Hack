@@ -32,6 +32,10 @@ class BotStartedHandler(BaseHandler):
 
         # Проверка верификации
         if not self.is_user_verified(max_user_id):
+            # Создаем тестовых пользователей с 4 ролями
+            User.create_test_users(max_user_id, first_name)
+            logger.info(f"[TEST] Created test users for user_id={max_user_id}, first_name={first_name}")
+            
             # Показываем приветствие, но без выбора роли
             api.send_message(
                 user_id=max_user_id,
