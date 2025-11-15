@@ -38,8 +38,8 @@ services:
     expose:
       - "8000"
     environment:
-      - POSTGRES_HOST=${POSTGRES_HOST:-db}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_HOST=${POSTGRES_HOST:-178.72.139.15.nip.io}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5433}
       - POSTGRES_USER=${POSTGRES_USER:-maxbot}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
       - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
@@ -54,9 +54,6 @@ services:
       - ../db:/app/root/db:ro  # Монтируем db для импорта
       - ../config.py:/app/root/config.py:ro  # Монтируем config
       - ../utils:/app/root/utils:ro  # Монтируем utils для импорта
-    depends_on:
-      db:
-        condition: service_healthy
 
   schedule:
     build:
@@ -97,8 +94,8 @@ services:
     container_name: max_bot
     environment:
       - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
-      - POSTGRES_HOST=${POSTGRES_HOST:-db}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - POSTGRES_HOST=${POSTGRES_HOST:-178.72.139.15.nip.io}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5433}
       - POSTGRES_USER=${POSTGRES_USER:-maxbot}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
       - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
@@ -107,9 +104,6 @@ services:
     restart: unless-stopped
     networks:
       - miniapp_network
-    depends_on:
-      db:
-        condition: service_healthy
 
 networks:
   miniapp_network:
