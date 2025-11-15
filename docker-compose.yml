@@ -90,26 +90,23 @@ services:
     networks:
       - miniapp_network
 
-  bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: max_bot
-    environment:
-      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
-      - POSTGRES_HOST=${POSTGRES_HOST:-db}
-      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
-      - POSTGRES_USER=${POSTGRES_USER:-maxbot}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
-      - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
-    volumes:
-      - .:/app
-    restart: unless-stopped
-    networks:
-      - miniapp_network
-    depends_on:
-      db:
-        condition: service_healthy
+#  bot:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: max_bot
+#    environment:
+#      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
+#      - POSTGRES_HOST=${POSTGRES_HOST:-178.72.139.15.nip.io}
+#      - POSTGRES_PORT=${POSTGRES_PORT:-5433}
+#      - POSTGRES_USER=${POSTGRES_USER:-maxbot}
+#      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-maxbot123}
+#      - POSTGRES_DB=${POSTGRES_DB:-maxbot_db}
+#    volumes:
+#      - .:/app
+#    restart: unless-stopped
+#    networks:
+#      - miniapp_network
 
 networks:
   miniapp_network:
