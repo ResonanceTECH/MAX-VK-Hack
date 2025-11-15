@@ -78,16 +78,11 @@ def verify_init_data(init_data: str) -> Dict[str, Any]:
             if not skip_verify:
                 raise ValueError("Неверная подпись initData")
 
-        # Парсим user объект из initData
-        # Согласно документации Max: user.id (int64) - уникальный идентификатор пользователя MAX
+        # Парсим user
         user_data = json.loads(unquote(user_str))
-        
-        user_id = user_data.get('id')
-        if not user_id:
-            raise ValueError("Отсутствует id в объекте user")
 
         return {
-            'user_id': user_id,  # Это и есть max_user_id для поиска в БД
+            'user_id': user_data.get('id'),
             'first_name': user_data.get('first_name'),
             'last_name': user_data.get('last_name'),
             'username': user_data.get('username'),
@@ -123,33 +118,7 @@ def get_current_user(
     if skip_auth:
         # Получаем пользователя напрямую из БД без проверки initData
         # Можно указать DEV_USER_MAX_ID в переменных окружения для локальной разработки
-        # Если не указан, пытаемся извлечь из initData (даже если это мок)
-        dev_user_max_id = os.getenv('DEV_USER_MAX_ID')
-        
-        if dev_user_max_id:
-            # Используем жестко заданный ID
-            max_user_id = int(dev_user_max_id)
-        elif x_init_data:
-            # Пытаемся извлечь user_id из initData (даже без проверки подписи)
-            try:
-                parsed = parse_qs(x_init_data)
-                user_str = parsed.get('user', [None])[0]
-                if user_str:
-                    user_data = json.loads(unquote(user_str))
-                    max_user_id = user_data.get('id')
-                else:
-                    raise HTTPException(status_code=401, detail="Не удалось извлечь user_id из initData")
-            except Exception as e:
-                raise HTTPException(status_code=401, detail=f"Ошибка парсинга initData: {str(e)}")
-        else:
-            raise HTTPException(status_code=401, detail="Отсутствует initData и DEV_USER_MAX_ID не задан")
-        
-        if not max_user_id:
-            raise HTTPException(status_code=401, detail="Не удалось определить user_id")
-        
-        # Верификация: ищем пользователя в БД по max_user_id (который равен user.id из Max)
-        # В режиме разработки (SKIP_AUTH=true) проверка подписи пропускается,
-        # но верификация по наличию в БД все равно выполняется
+        max_user_id = int(os.getenv('DEV_USER_MAX_ID', '96855100'))
         if x_selected_role:
             # Если указана роль, получаем пользователя с этой ролью
             user = User.get_by_max_id(max_user_id, role=x_selected_role)
@@ -157,26 +126,21 @@ def get_current_user(
             user = User.get_by_max_id(max_user_id)
 
         if not user:
-            raise HTTPException(
-                status_code=403, 
-                detail=f"Пользователь с max_user_id={max_user_id} не найден в БД. Обратитесь к администратору для регистрации."
-            )
+            raise HTTPException(status_code=403, detail="Пользователь не найден в БД")
         return user
 
-    # Обычная авторизация через initData (production режим)
+    # Обычная авторизация через initData
     if not x_init_data:
         raise HTTPException(status_code=401, detail="Отсутствует initData")
 
-    # Проверяем подпись и извлекаем данные из initData
-    # verify_init_data извлекает user.id из initData согласно документации Max
+    # Проверяем initData
     max_user_data = verify_init_data(x_init_data)
     max_user_id = max_user_data.get('user_id')
 
     if not max_user_id:
         raise HTTPException(status_code=401, detail="Неверный user_id в initData")
 
-    # Верификация: ищем пользователя в БД по max_user_id (который равен user.id из Max)
-    # Если пользователь найден - он верифицирован, если нет - ошибка доступа
+    # Получаем пользователя из БД
     if x_selected_role:
         # Если указана роль, получаем пользователя с этой ролью
         user = User.get_by_max_id(max_user_id, role=x_selected_role)
@@ -184,9 +148,6 @@ def get_current_user(
         user = User.get_by_max_id(max_user_id)
 
     if not user:
-        raise HTTPException(
-            status_code=403, 
-            detail=f"Пользователь с max_user_id={max_user_id} не найден в системе. Обратитесь к администратору для регистрации."
-        )
+        raise HTTPException(status_code=403, detail="Пользователь не найден в системе")
 
     return user
